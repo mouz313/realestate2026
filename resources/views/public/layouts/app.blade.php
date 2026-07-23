@@ -10,8 +10,8 @@
     <meta name="keywords" content="@yield('meta_keywords', 'real estate, property, house, plot, Pakistan, Islamabad, Lahore, Karachi, buy, sell, rent')">
     <meta name="author" content="{{ config('app.name') }}">
     <link rel="canonical" href="{{ url()->current() }}">
-    <meta property="og:title" content="@yield('og_title', @yield('title'))">
-    <meta property="og:description" content="@yield('og_description', @yield('meta_description'))">
+    <meta property="og:title" content="@yield('og_title', config('app.name'))">
+    <meta property="og:description" content="@yield('og_description', config('app.name', 'Real Estate Agency') . ' - Find your dream property in Pakistan')">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:type" content="@yield('og_type', 'website')">
     <meta property="og:site_name" content="{{ config('app.name') }}">
@@ -124,10 +124,10 @@
                     <h6 class="d-flex align-items-center"><i class="ti ti-building-skyscraper me-2"></i>{{ config('app.name') }}</h6>
                     <p class="small">Your trusted real estate partner in Pakistan. We help you find the perfect property for your needs.</p>
                     <div class="d-flex gap-2 mt-3">
-                        <a href="#" class="social-link"><i class="ti ti-brand-facebook"></i></a>
-                        <a href="#" class="social-link"><i class="ti ti-brand-instagram"></i></a>
-                        <a href="#" class="social-link"><i class="ti ti-brand-whatsapp"></i></a>
-                        <a href="#" class="social-link"><i class="ti ti-brand-youtube"></i></a>
+                        <a href="{{ $social['facebook'] ?? '#' }}" class="social-link" target="_blank" rel="noopener"><i class="ti ti-brand-facebook"></i></a>
+                        <a href="{{ $social['instagram'] ?? '#' }}" class="social-link" target="_blank" rel="noopener"><i class="ti ti-brand-instagram"></i></a>
+                        <a href="{{ $social['whatsapp'] ?? '#' }}" class="social-link" target="_blank" rel="noopener"><i class="ti ti-brand-whatsapp"></i></a>
+                        <a href="{{ $social['youtube'] ?? '#' }}" class="social-link" target="_blank" rel="noopener"><i class="ti ti-brand-youtube"></i></a>
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-4">
@@ -148,13 +148,12 @@
                         <li class="mb-2"><a href="{{ route('website.properties', ['type' => 'commercial']) }}">Commercial</a></li>
                     </ul>
                 </div>
-                @php $contactSettings = \App\Models\Setting::whereIn('key', ['address', 'phone', 'email'])->pluck('value', 'key'); @endphp
                 <div class="col-lg-3 col-md-4">
                     <h6>Contact Info</h6>
                     <ul class="list-unstyled small">
-                        <li class="mb-2"><i class="ti ti-map-pin me-1"></i> {{ $contactSettings['address'] ?? 'Islamabad, Pakistan' }}</li>
-                        <li class="mb-2"><i class="ti ti-phone me-1"></i> {{ $contactSettings['phone'] ?? '+92 300 1234567' }}</li>
-                        <li class="mb-2"><i class="ti ti-mail me-1"></i> {{ $contactSettings['email'] ?? 'info@example.com' }}</li>
+                        <li class="mb-2"><i class="ti ti-map-pin me-1"></i> {{ $contactInfo['address'] ?? 'Islamabad, Pakistan' }}</li>
+                        <li class="mb-2"><i class="ti ti-phone me-1"></i> {{ $contactInfo['phone'] ?? '+92 300 1234567' }}</li>
+                        <li class="mb-2"><i class="ti ti-mail me-1"></i> {{ $contactInfo['email'] ?? 'info@example.com' }}</li>
                     </ul>
                 </div>
             </div>

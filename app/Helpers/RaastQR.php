@@ -11,7 +11,8 @@ class RaastQR
             'reference' => $reference,
             'iban' => $iban,
         ]);
-        return route('payments.raast.redirect') . '?' . $params;
+
+        return route('payments.raast.redirect').'?'.$params;
     }
 
     public static function qrCodeData(string $iban, string $amount, string $reference): array
@@ -20,7 +21,7 @@ class RaastQR
             'iban' => $iban,
             'amount' => $amount,
             'reference' => $reference,
-            'upi' => $iban . '@raast',
+            'upi' => $iban.'@raast',
         ];
     }
 }

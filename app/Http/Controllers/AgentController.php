@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Agent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 
 class AgentController extends Controller
 {
@@ -16,6 +17,7 @@ class AgentController extends Controller
     public function index()
     {
         $agents = Agent::latest()->paginate(15);
+
         return view('agents.index', compact('agents'));
     }
 
@@ -60,12 +62,14 @@ class AgentController extends Controller
 
         Agent::create($data);
         toastr()->success('Agent added successfully.');
+
         return redirect()->route('agents.index');
     }
 
     public function show(Agent $agent)
     {
         $agent->load(['deals' => fn ($q) => $q->latest()->limit(10), 'commissions' => fn ($c) => $c->latest()->limit(10)]);
+
         return view('agents.show', compact('agent'));
     }
 
@@ -106,13 +110,14 @@ class AgentController extends Controller
 
         if ($request->hasFile('photo')) {
             if ($agent->photo) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($agent->photo);
+                Storage::disk('public')->delete($agent->photo);
             }
             $data['photo'] = $request->file('photo')->store('agents', 'public');
         }
 
         $agent->update($data);
         toastr()->success('Agent updated successfully.');
+
         return redirect()->route('agents.index');
     }
 
@@ -120,6 +125,7 @@ class AgentController extends Controller
     {
         $agent->delete();
         toastr()->success('Agent deleted successfully.');
+
         return redirect()->route('agents.index');
     }
 }

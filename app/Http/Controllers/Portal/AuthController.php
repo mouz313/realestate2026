@@ -23,12 +23,13 @@ class AuthController extends Controller
 
         $client = Client::where('email', $request->email)->first();
 
-        if (!$client || !$client->password || !Hash::check($request->password, $client->password)) {
+        if (! $client || ! $client->password || ! Hash::check($request->password, $client->password)) {
             return back()->withErrors(['email' => 'Invalid credentials or no portal access.']);
         }
 
         session(['client_id' => $client->id, 'client_name' => $client->name, 'portal_last_activity' => now()]);
         $request->session()->regenerate();
+
         return redirect()->route('portal.quotations');
     }
 
@@ -37,6 +38,7 @@ class AuthController extends Controller
         session()->forget(['client_id', 'client_name', 'portal_last_activity']);
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect()->route('portal.login');
     }
 }

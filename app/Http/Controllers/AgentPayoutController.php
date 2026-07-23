@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Agent;
 use App\Models\AgentPayout;
-use App\Models\Commission;
 use Illuminate\Http\Request;
 
 class AgentPayoutController extends Controller
@@ -13,14 +12,16 @@ class AgentPayoutController extends Controller
     {
         $agentId = auth()->user()->isAgent() ? auth()->user()->agent_id : null;
         $agentPayouts = AgentPayout::with('agent')
-            ->when($agentId, fn($q) => $q->where('agent_id', $agentId))
+            ->when($agentId, fn ($q) => $q->where('agent_id', $agentId))
             ->latest()->paginate(15);
+
         return view('agent_payouts.index', compact('agentPayouts'));
     }
 
     public function create()
     {
         $agents = Agent::orderBy('name')->get();
+
         return view('agent_payouts.create', compact('agents'));
     }
 
@@ -40,6 +41,7 @@ class AgentPayoutController extends Controller
 
         AgentPayout::create($data);
         toastr()->success('Agent payout added successfully.');
+
         return redirect()->route('agent-payouts.index');
     }
 
@@ -47,6 +49,7 @@ class AgentPayoutController extends Controller
     {
         $this->authorizeAgentAccess($agentPayout);
         $agentPayout->load('agent');
+
         return view('agent_payouts.show', compact('agentPayout'));
     }
 
@@ -54,6 +57,7 @@ class AgentPayoutController extends Controller
     {
         $this->authorizeAgentAccess($agentPayout);
         $agents = Agent::orderBy('name')->get();
+
         return view('agent_payouts.edit', compact('agentPayout', 'agents'));
     }
 
@@ -74,6 +78,7 @@ class AgentPayoutController extends Controller
 
         $agentPayout->update($data);
         toastr()->success('Agent payout updated successfully.');
+
         return redirect()->route('agent-payouts.index');
     }
 
@@ -82,6 +87,7 @@ class AgentPayoutController extends Controller
         $this->authorizeAgentAccess($agentPayout);
         $agentPayout->delete();
         toastr()->success('Agent payout deleted successfully.');
+
         return redirect()->route('agent-payouts.index');
     }
 }

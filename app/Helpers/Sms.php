@@ -4,6 +4,7 @@ namespace App\Helpers;
 
 use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class Sms
 {
@@ -21,7 +22,8 @@ class Sms
 
     public static function sendViaTwilio(string $to, string $message, array $settings): bool
     {
-        \Illuminate\Support\Facades\Log::info('SMS via Twilio', ['to' => $to, 'message' => $message]);
+        Log::info('SMS via Twilio', ['to' => $to, 'message' => $message]);
+
         return true;
     }
 
@@ -43,42 +45,47 @@ class Sms
             ]);
 
             if ($response->successful()) {
-                \Illuminate\Support\Facades\Log::info('SMS via Connectix', ['response' => $response->body()]);
+                Log::info('SMS via Connectix', ['response' => $response->body()]);
+
                 return true;
             }
 
-            \Illuminate\Support\Facades\Log::error('SMS failed via Connectix', ['response' => $response->body()]);
+            Log::error('SMS failed via Connectix', ['response' => $response->body()]);
+
             return false;
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('SMS failed', ['error' => $e->getMessage()]);
+            Log::error('SMS failed', ['error' => $e->getMessage()]);
+
             return false;
         }
     }
 
     public static function logSms(string $to, string $message): bool
     {
-        \Illuminate\Support\Facades\Log::info('SMS logged', ['to' => $to, 'message' => $message]);
+        Log::info('SMS logged', ['to' => $to, 'message' => $message]);
+
         return true;
     }
 
     public static function visitReminder($visit): string
     {
         $date = $visit->scheduled_date->format('d M Y h:i A');
+
         return "Reminder: You have a property visit scheduled on {$date} at {$visit->property?->title}. Contact us for details.";
     }
 
     public static function tokenReceived($deal, $token): string
     {
-        return "Token/Bayana of PKR " . number_format($token->amount, 0) . " received for Deal {$deal->deal_number}. Thank you!";
+        return 'Token/Bayana of PKR '.number_format($token->amount, 0)." received for Deal {$deal->deal_number}. Thank you!";
     }
 
     public static function installmentDue($installment): string
     {
-        return "Reminder: Installment #{$installment->installment_no} of PKR " . number_format($installment->amount, 0) . " is due on {$installment->due_date->format('d M Y')}. Please pay on time.";
+        return "Reminder: Installment #{$installment->installment_no} of PKR ".number_format($installment->amount, 0)." is due on {$installment->due_date->format('d M Y')}. Please pay on time.";
     }
 
     public static function rentOverdue($agreement): string
     {
-        return "Reminder: Your rent of PKR " . number_format($agreement->rent_amount, 0) . " is overdue. Please pay at the earliest to avoid late fees.";
+        return 'Reminder: Your rent of PKR '.number_format($agreement->rent_amount, 0).' is overdue. Please pay at the earliest to avoid late fees.';
     }
 }

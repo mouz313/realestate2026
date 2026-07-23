@@ -10,7 +10,7 @@ class MailSettings
     {
         $settings = Setting::pluck('value', 'key')->toArray();
 
-        if (!empty($settings['mail_host'])) {
+        if (! empty($settings['mail_host'])) {
             config([
                 'mail.default' => $settings['mail_driver'] ?? 'smtp',
                 'mail.mailers.smtp.host' => $settings['mail_host'],

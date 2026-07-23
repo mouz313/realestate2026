@@ -2,21 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\InvoiceMail;
+use App\Mail\MailSettings;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Item;
-use App\Models\Payment;
 use App\Models\Quotation;
 use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class InvoiceController extends Controller
 {
     public function index()
     {
         $invoices = Invoice::with('client')->latest()->paginate(15);
+
         return view('invoices.index', compact('invoices'));
     }
 
@@ -28,6 +31,7 @@ class InvoiceController extends Controller
         $taxRate = $settings['tax_rate'] ?? 0;
         $taxLabel = $settings['tax_label'] ?? 'GST';
         $currency = $settings['currency'] ?? 'PKR';
+
         return view('invoices.create', compact('clients', 'items', 'taxRate', 'taxLabel', 'currency'));
     }
 
@@ -82,6 +86,7 @@ class InvoiceController extends Controller
         $invoice->items()->createMany($invoiceItems);
 
         toastr()->success('Invoice created successfully.');
+
         return redirect()->route('invoices.index');
     }
 
@@ -94,6 +99,7 @@ class InvoiceController extends Controller
         $taxRate = $settings['tax_rate'] ?? 0;
         $taxLabel = $settings['tax_label'] ?? 'GST';
         $currency = $settings['currency'] ?? 'PKR';
+
         return view('invoices.edit', compact('invoice', 'clients', 'items', 'taxRate', 'taxLabel', 'currency'));
     }
 
@@ -145,6 +151,7 @@ class InvoiceController extends Controller
         $invoice->items()->saveMany($invoiceItems);
 
         toastr()->success('Invoice updated successfully.');
+
         return redirect()->route('invoices.index');
     }
 
@@ -152,6 +159,7 @@ class InvoiceController extends Controller
     {
         if (in_array($quotation->status, ['rejected', 'invoiced'])) {
             toastr()->error('This quotation cannot be converted.');
+
             return back();
         }
 
@@ -190,14 +198,15 @@ class InvoiceController extends Controller
 
         if ($invoice->client->email) {
             try {
-                \App\Mail\MailSettings::apply();
-                \Illuminate\Support\Facades\Mail::to($invoice->client->email)->send(new \App\Mail\InvoiceMail($invoice));
+                MailSettings::apply();
+                Mail::to($invoice->client->email)->send(new InvoiceMail($invoice));
             } catch (\Exception $e) {
                 // Email failure shouldn't block the conversion
             }
         }
 
         toastr()->success('Invoice created from quotation.');
+
         return redirect()->route('invoices.show', $invoice);
     }
 
@@ -205,6 +214,7 @@ class InvoiceController extends Controller
     {
         $invoice->load('client', 'quotation', 'items', 'payments');
         $settings = Setting::pluck('value', 'key')->toArray();
+
         return view('invoices.show', compact('invoice', 'settings'));
     }
 
@@ -213,7 +223,8 @@ class InvoiceController extends Controller
         $invoice->load('client', 'items');
         $settings = Setting::pluck('value', 'key')->toArray();
         $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'settings'));
-        return $pdf->download('invoice-' . $invoice->invoice_number . '.pdf');
+
+        return $pdf->download('invoice-'.$invoice->invoice_number.'.pdf');
     }
 
     public function addPayment(Request $request, Invoice $invoice)
@@ -221,7 +232,7 @@ class InvoiceController extends Controller
         $remaining = $invoice->total - $invoice->paid_amount;
 
         $request->validate([
-            'amount' => 'required|numeric|min:0.01|max:' . $remaining,
+            'amount' => 'required|numeric|min:0.01|max:'.$remaining,
             'method' => 'nullable|string|max:50',
             'reference' => 'nullable|string|max:255',
             'paid_date' => 'required|date',
@@ -243,6 +254,7 @@ class InvoiceController extends Controller
         ]);
 
         toastr()->success('Payment recorded successfully.');
+
         return back();
     }
 
@@ -250,6 +262,7 @@ class InvoiceController extends Controller
     {
         $invoice->delete();
         toastr()->success('Invoice deleted successfully.');
+
         return redirect()->route('invoices.index');
     }
 
@@ -258,6 +271,7 @@ class InvoiceController extends Controller
         $prefix = 'INV-';
         $last = Invoice::latest()->first();
         $number = $last ? intval(substr($last->invoice_number, 4)) + 1 : 1;
-        return $prefix . str_pad($number, 5, '0', STR_PAD_LEFT);
+
+        return $prefix.str_pad($number, 5, '0', STR_PAD_LEFT);
     }
 }

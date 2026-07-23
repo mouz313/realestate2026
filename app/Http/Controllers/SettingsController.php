@@ -17,6 +17,7 @@ class SettingsController extends Controller
     public function index()
     {
         $settings = Setting::pluck('value', 'key')->toArray();
+
         return view('settings.index', compact('settings'));
     }
 
@@ -74,6 +75,7 @@ class SettingsController extends Controller
                 }
                 $path = $request->file('brand_logo')->store('brand', 'public');
                 Setting::updateOrCreate(['key' => 'brand_logo'], ['value' => $path]);
+
                 continue;
             }
 
@@ -84,6 +86,41 @@ class SettingsController extends Controller
                 }
                 $path = $request->file('brand_favicon')->store('brand', 'public');
                 Setting::updateOrCreate(['key' => 'brand_favicon'], ['value' => $path]);
+
+                continue;
+            }
+
+            if ($key === 'slider_images' && $request->hasFile('slider_images')) {
+                $existing = json_decode(Setting::where('key', 'slider_images')->value('value') ?? '[]', true);
+                $uploads = $request->file('slider_images');
+                $titles = $request->input('slider_titles', []);
+                $subtitles = $request->input('slider_subtitles', []);
+
+                foreach ($uploads as $i => $file) {
+                    $path = crop_and_save($file, 'sliders');
+                    $existing[] = [
+                        'image' => $path,
+                        'title' => $titles[$i] ?? '',
+                        'subtitle' => $subtitles[$i] ?? '',
+                    ];
+                }
+
+                Setting::updateOrCreate(['key' => 'slider_images'], ['value' => json_encode($existing)]);
+
+                continue;
+            }
+
+            if (str_starts_with($key, 'delete_slider_')) {
+                $idx = (int) str_replace('delete_slider_', '', $key);
+                $existing = json_decode(Setting::where('key', 'slider_images')->value('value') ?? '[]', true);
+                if (isset($existing[$idx])) {
+                    if (Storage::disk('public')->exists($existing[$idx]['image'])) {
+                        Storage::disk('public')->delete($existing[$idx]['image']);
+                    }
+                    array_splice($existing, $idx, 1);
+                }
+                Setting::updateOrCreate(['key' => 'slider_images'], ['value' => json_encode($existing)]);
+
                 continue;
             }
 
@@ -94,6 +131,7 @@ class SettingsController extends Controller
         }
 
         toastr()->success('Settings saved successfully.');
+
         return back();
     }
 }

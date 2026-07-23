@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\Invoice;
-use App\Models\Item;
 use App\Models\Payment;
 use App\Models\Quotation;
 use Illuminate\Http\Request;
@@ -15,7 +14,7 @@ class SearchController extends Controller
     {
         $q = $request->get('q');
 
-        if (!$q || strlen($q) < 2) {
+        if (! $q || strlen($q) < 2) {
             return response()->json([]);
         }
 
@@ -30,18 +29,6 @@ class SearchController extends Controller
                 'sub' => $c->email,
                 'url' => route('clients.show', $c),
                 'icon' => 'ti ti-users',
-            ]);
-
-        $items = Item::where('name', 'like', "%{$q}%")
-            ->orWhere('description', 'like', "%{$q}%")
-            ->limit(5)
-            ->get()
-            ->map(fn ($i) => [
-                'type' => 'Item',
-                'label' => $i->name,
-                'sub' => $i->unit_price ? number_format($i->unit_price, 2) : '',
-                'url' => route('items.edit', $i),
-                'icon' => 'ti ti-package',
             ]);
 
         $quotations = Quotation::with('client')
@@ -85,15 +72,14 @@ class SearchController extends Controller
             ->get()
             ->map(fn ($p) => [
                 'type' => 'Payment',
-                'label' => $p->reference ?: '#' . $p->id,
-                'sub' => $p->invoice?->invoice_number . ' — ' . number_format($p->amount, 2),
+                'label' => $p->reference ?: '#'.$p->id,
+                'sub' => $p->invoice?->invoice_number.' — '.number_format($p->amount, 2),
                 'url' => route('invoices.show', $p->invoice),
                 'icon' => 'ti ti-currency-dollar',
             ]);
 
         $results = collect()
             ->concat($clients)
-            ->concat($items)
             ->concat($quotations)
             ->concat($invoices)
             ->concat($payments);

@@ -16,6 +16,7 @@ class CityController extends Controller
     public function index()
     {
         $cities = City::latest()->paginate(20);
+
         return view('cities.index', compact('cities'));
     }
 
@@ -34,6 +35,7 @@ class CityController extends Controller
 
         City::create($request->all());
         toastr()->success('City added successfully.');
+
         return redirect()->route('cities.index');
     }
 
@@ -57,6 +59,7 @@ class CityController extends Controller
 
         $city->update($request->all());
         toastr()->success('City updated successfully.');
+
         return redirect()->route('cities.index');
     }
 
@@ -64,6 +67,7 @@ class CityController extends Controller
     {
         $city->delete();
         toastr()->success('City deleted successfully.');
+
         return redirect()->route('cities.index');
     }
 }

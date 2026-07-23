@@ -9,7 +9,7 @@ class Client extends Model
 {
     protected $fillable = [
         'name', 'company', 'email', 'phone', 'address', 'notes', 'password',
-        'client_type', 'cnic', 'cnic_verified'
+        'client_type', 'cnic', 'cnic_verified',
     ];
 
     protected function casts(): array

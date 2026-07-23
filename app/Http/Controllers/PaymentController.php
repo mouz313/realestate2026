@@ -12,12 +12,14 @@ class PaymentController extends Controller
     {
         $payments = Payment::with('invoice.client')->latest()->paginate(15);
         $settings = Setting::pluck('value', 'key')->toArray();
+
         return view('payments.index', compact('payments', 'settings'));
     }
 
     public function edit(Payment $payment)
     {
         $payment->load('invoice');
+
         return view('payments.edit', compact('payment'));
     }
 
@@ -48,6 +50,7 @@ class PaymentController extends Controller
         ]);
 
         toastr()->success('Payment updated successfully.');
+
         return redirect()->route('invoices.show', $invoice);
     }
 
@@ -64,6 +67,7 @@ class PaymentController extends Controller
         ]);
 
         toastr()->success('Payment deleted successfully.');
+
         return redirect()->route('invoices.show', $invoice);
     }
 }

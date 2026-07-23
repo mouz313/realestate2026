@@ -265,6 +265,64 @@ $imageUrls = $images->map(fn($m) => Storage::url($m->file_path))->values();
           <p class="detail-desc">{{ $property->description ?? 'No description provided.' }}</p>
         </div>
 
+        {{-- Owner Info --}}
+        @if($property->owner)
+        <div class="mb-4 p-4 rounded-4" style="background:var(--section-bg);" data-aos="fade-up">
+          <h5 class="fw-bold mb-3"><i class="ti ti-user me-1" style="color:var(--accent);"></i> Owner Information</h5>
+          <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center justify-content-center rounded-circle" style="width:56px;height:56px;background:var(--primary);color:#fff;font-weight:700;font-size:1.3rem;flex-shrink:0;">
+              {{ strtoupper(substr($property->owner->name, 0, 1)) }}
+            </div>
+            <div>
+              <h6 class="fw-bold mb-1">{{ $property->owner->name }}</h6>
+              @if($property->owner->email) <p class="mb-1 small"><i class="ti ti-mail me-1"></i> {{ $property->owner->email }}</p> @endif
+              @if($property->owner->phone) <p class="mb-0 small"><i class="ti ti-phone me-1"></i> {{ $property->owner->phone }}</p> @endif
+            </div>
+          </div>
+        </div>
+        @endif
+
+        {{-- Documents --}}
+        @if($property->documents->count())
+        <div class="mb-4" data-aos="fade-up">
+          <h5 class="fw-bold mb-3"><i class="ti ti-file-text me-1" style="color:var(--accent);"></i> Documents</h5>
+          <div class="row g-2">
+            @foreach($property->documents as $doc)
+            <div class="col-md-6">
+              <div class="d-flex align-items-center gap-2 p-3 rounded-3 border">
+                <i class="ti ti-file-description" style="font-size:1.5rem;color:var(--accent);"></i>
+                <div class="flex-grow-1 min-w-0">
+                  <div class="fw-semibold small text-truncate">{{ $doc->title ?? $doc->document_type }}</div>
+                  @if($doc->is_verified) <span class="badge bg-success" style="font-size:.6rem;">Verified</span> @endif
+                  @if($doc->expiry_date) <span class="small text-secondary ms-1">Exp: {{ $doc->expiry_date->format('d M Y') }}</span> @endif
+                </div>
+                <a href="{{ Storage::url($doc->file_path) }}" target="_blank" class="btn btn-sm btn-outline-accent rounded-pill" style="font-size:.7rem;padding:.2rem .8rem;">
+                  <i class="ti ti-download"></i>
+                </a>
+              </div>
+            </div>
+            @endforeach
+          </div>
+        </div>
+        @endif
+
+        {{-- Map --}}
+        @if($property->latitude && $property->longitude)
+        <div class="mb-4" data-aos="fade-up">
+          <h5 class="fw-bold mb-3"><i class="ti ti-map me-1" style="color:var(--accent);"></i> Location</h5>
+          <div class="rounded-4 overflow-hidden" style="border:2px solid #eef0f4;">
+            <iframe
+              src="https://www.openstreetmap.org/export/embed.html?bbox={{ $property->longitude - 0.01 }}%2C{{ $property->latitude - 0.01 }}%2C{{ $property->longitude + 0.01 }}%2C{{ $property->latitude + 0.01 }}&amp;layer=mapnik&amp;marker={{ $property->latitude }}%2C{{ $property->longitude }}"
+              width="100%" height="350" style="border:0;display:block;" loading="lazy"
+              title="Property location map"></iframe>
+          </div>
+          <a href="https://www.openstreetmap.org/?mlat={{ $property->latitude }}&amp;mlon={{ $property->longitude }}#map=15/{{ $property->latitude }}/{{ $property->longitude }}"
+             target="_blank" rel="noopener" class="btn btn-sm btn-outline-accent rounded-pill mt-2">
+            <i class="ti ti-external-link me-1"></i> Open in Maps
+          </a>
+        </div>
+        @endif
+
         {{-- Features --}}
         <div data-aos="fade-up">
           <h5 class="fw-bold mb-3"><i class="ti ti-list-check me-1" style="color:var(--accent);"></i> Features &amp; Amenities</h5>

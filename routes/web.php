@@ -1,33 +1,34 @@
 <?php
 
-use App\Http\Controllers\Auth\EmailVerificationController;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ClientController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\InvoiceController;
-
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\SearchController;
-use App\Http\Controllers\Portal\AuthController as PortalAuthController;
-use App\Http\Controllers\Portal\QuotationController as PortalQuotationController;
-use App\Http\Controllers\ForgotPasswordController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\QuotationController;
-use App\Http\Controllers\ResetPasswordController;
-use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\AgentController;
-use App\Http\Controllers\CityController;
-use App\Http\Controllers\PropertyController;
-use App\Http\Controllers\DealController;
-use App\Http\Controllers\TokenController;
-use App\Http\Controllers\InstallmentController;
-use App\Http\Controllers\RentAgreementController;
-use App\Http\Controllers\PropertyVisitController;
-use App\Http\Controllers\CommissionController;
 use App\Http\Controllers\AgentPayoutController;
 use App\Http\Controllers\AgreementPDFController;
+use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CityController;
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\CommissionController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DealController;
+use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\InstallmentController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Portal\AuthController as PortalAuthController;
+use App\Http\Controllers\Portal\QuotationController as PortalQuotationController;
+use App\Http\Controllers\Portal\VisitController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PropertyController;
+use App\Http\Controllers\PropertyVisitController;
+use App\Http\Controllers\QuotationController;
+use App\Http\Controllers\RentAgreementController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\TokenController;
 use App\Http\Controllers\WebsiteController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Public website routes (outside auth)
@@ -37,7 +38,6 @@ Route::get('/contact', [WebsiteController::class, 'contact'])->name('website.con
 Route::post('/contact', [WebsiteController::class, 'submitContact'])->name('website.contact.submit');
 Route::get('/listings', [WebsiteController::class, 'properties'])->name('website.properties');
 Route::get('/listings/{property}', [WebsiteController::class, 'property'])->name('website.property');
-
 
 Route::middleware(['guest', 'throttle:5,1'])->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -69,7 +69,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings', [SettingsController::class, 'update']);
 
     Route::resource('clients', ClientController::class);
-
 
     Route::resource('quotations', QuotationController::class);
     Route::get('/quotations/{quotation}/pdf', [QuotationController::class, 'pdf'])->name('quotations.pdf');
@@ -128,10 +127,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/pdf/commission-invoice/{commission}', [AgreementPDFController::class, 'commissionInvoice'])->name('pdf.commission-invoice');
     Route::get('/pdf/possession-letter/{deal}', [AgreementPDFController::class, 'possessionLetter'])->name('pdf.possession-letter');
 
-    Route::get('/payments/raast-redirect', function (\Illuminate\Http\Request $request) {
+    Route::get('/payments/raast-redirect', function (Request $request) {
         $amount = $request->amount;
         $reference = $request->reference;
         $iban = $request->iban;
+
         return view('payments.raast-redirect', compact('amount', 'reference', 'iban'));
     })->name('payments.raast.redirect');
 });
@@ -150,16 +150,16 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::post('/quotations/{quotation}/reject', [PortalQuotationController::class, 'reject'])->name('quotations.reject');
         Route::get('/quotations/{quotation}/pdf', [PortalQuotationController::class, 'pdf'])->name('quotations.pdf');
 
-        Route::get('/invoices', [\App\Http\Controllers\Portal\InvoiceController::class, 'index'])->name('invoices');
-        Route::get('/invoices/{invoice}', [\App\Http\Controllers\Portal\InvoiceController::class, 'show'])->name('invoices.show');
-        Route::get('/invoices/{invoice}/pdf', [\App\Http\Controllers\Portal\InvoiceController::class, 'pdf'])->name('invoices.pdf');
+        Route::get('/invoices', [App\Http\Controllers\Portal\InvoiceController::class, 'index'])->name('invoices');
+        Route::get('/invoices/{invoice}', [App\Http\Controllers\Portal\InvoiceController::class, 'show'])->name('invoices.show');
+        Route::get('/invoices/{invoice}/pdf', [App\Http\Controllers\Portal\InvoiceController::class, 'pdf'])->name('invoices.pdf');
 
-        Route::get('/properties', [\App\Http\Controllers\Portal\PropertyController::class, 'index'])->name('properties');
-        Route::get('/properties/{property}', [\App\Http\Controllers\Portal\PropertyController::class, 'show'])->name('properties.show');
-        Route::get('/visits', [\App\Http\Controllers\Portal\VisitController::class, 'index'])->name('visits');
-        Route::get('/visits/create', [\App\Http\Controllers\Portal\VisitController::class, 'create'])->name('visits.create');
-        Route::post('/visits', [\App\Http\Controllers\Portal\VisitController::class, 'store'])->name('visits.store');
-        Route::get('/deals', [\App\Http\Controllers\Portal\DealController::class, 'index'])->name('deals');
-        Route::get('/deals/{deal}', [\App\Http\Controllers\Portal\DealController::class, 'show'])->name('deals.show');
+        Route::get('/properties', [App\Http\Controllers\Portal\PropertyController::class, 'index'])->name('properties');
+        Route::get('/properties/{property}', [App\Http\Controllers\Portal\PropertyController::class, 'show'])->name('properties.show');
+        Route::get('/visits', [VisitController::class, 'index'])->name('visits');
+        Route::get('/visits/create', [VisitController::class, 'create'])->name('visits.create');
+        Route::post('/visits', [VisitController::class, 'store'])->name('visits.store');
+        Route::get('/deals', [App\Http\Controllers\Portal\DealController::class, 'index'])->name('deals');
+        Route::get('/deals/{deal}', [App\Http\Controllers\Portal\DealController::class, 'show'])->name('deals.show');
     });
 });

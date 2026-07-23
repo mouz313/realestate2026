@@ -22,6 +22,7 @@ class ForgotPasswordController extends Controller
 
         if ($status === Password::RESET_LINK_SENT) {
             toastr()->success('Password reset link sent to your email.');
+
             return back();
         }
 

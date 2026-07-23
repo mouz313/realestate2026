@@ -13,8 +13,9 @@ class CommissionController extends Controller
     {
         $agentId = auth()->user()->isAgent() ? auth()->user()->agent_id : null;
         $commissions = Commission::with(['deal', 'agent'])
-            ->when($agentId, fn($q) => $q->where('agent_id', $agentId))
+            ->when($agentId, fn ($q) => $q->where('agent_id', $agentId))
             ->latest()->paginate(15);
+
         return view('commissions.index', compact('commissions'));
     }
 
@@ -23,6 +24,7 @@ class CommissionController extends Controller
         $deals = Deal::where('status', 'completed')->orderBy('deal_number')->get();
         $agents = Agent::orderBy('name')->get();
         $types = ['percentage', 'fixed'];
+
         return view('commissions.create', compact('deals', 'agents', 'types'));
     }
 
@@ -40,6 +42,7 @@ class CommissionController extends Controller
 
         Commission::create($request->all());
         toastr()->success('Commission added successfully.');
+
         return redirect()->route('commissions.index');
     }
 
@@ -48,6 +51,7 @@ class CommissionController extends Controller
         $deals = Deal::where('status', 'completed')->orderBy('deal_number')->get();
         $agents = Agent::orderBy('name')->get();
         $types = ['percentage', 'fixed'];
+
         return view('commissions.edit', compact('commission', 'deals', 'agents', 'types'));
     }
 
@@ -66,6 +70,7 @@ class CommissionController extends Controller
 
         $commission->update($request->all());
         toastr()->success('Commission updated successfully.');
+
         return redirect()->route('commissions.index');
     }
 
@@ -74,6 +79,7 @@ class CommissionController extends Controller
         $this->authorizeAgentAccess($commission);
         $commission->delete();
         toastr()->success('Commission deleted successfully.');
+
         return redirect()->route('commissions.index');
     }
 
@@ -85,6 +91,7 @@ class CommissionController extends Controller
             'paid_date' => now(),
         ]);
         toastr()->success('Commission marked as paid.');
+
         return redirect()->back();
     }
 }

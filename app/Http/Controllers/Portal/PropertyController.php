@@ -11,6 +11,7 @@ class PropertyController extends Controller
     public function index()
     {
         $properties = Property::with(['owner', 'primaryMedia'])->where('status', 'available')->latest()->paginate(12);
+
         return view('portal.properties.index', compact('properties'));
     }
 
@@ -18,6 +19,7 @@ class PropertyController extends Controller
     {
         $property = Property::with(['owner', 'media', 'documents', 'assignedAgent'])->findOrFail($id);
         $settings = Setting::pluck('value', 'key')->toArray();
+
         return view('portal.properties.show', compact('property', 'settings'));
     }
 }

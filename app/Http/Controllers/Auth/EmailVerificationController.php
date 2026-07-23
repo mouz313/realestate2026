@@ -17,6 +17,7 @@ class EmailVerificationController extends Controller
     {
         $request->fulfill();
         toastr()->success('Email verified successfully.');
+
         return redirect()->route('dashboard');
     }
 
@@ -24,6 +25,7 @@ class EmailVerificationController extends Controller
     {
         $request->user()->sendEmailVerificationNotification();
         toastr()->success('Verification link sent to your email.');
+
         return back();
     }
 }

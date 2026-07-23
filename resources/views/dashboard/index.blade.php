@@ -39,20 +39,6 @@
         </div>
     </div>
     <div class="col-6 col-md-4 col-xl-3">
-        <div class="card stat-card stat-card-items">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div class="min-w-0">
-                        <div class="stat-label">Items <span class="urdu">(آئٹمز)</span></div>
-                        <div class="stat-value">{{ $stats['total_items'] }}</div>
-                        <a href="{{ route('items.index') }}" class="stat-link">View <i class="ti ti-arrow-right"></i></a>
-                    </div>
-                    <div class="stat-icon-wrap flex-shrink-0"><i class="ti ti-package"></i></div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-4 col-xl-3">
         <div class="card stat-card stat-card-quotations">
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between">

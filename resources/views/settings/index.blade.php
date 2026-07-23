@@ -50,6 +50,11 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link" id="website-tab" data-bs-toggle="tab" data-bs-target="#website" type="button" role="tab">
+                <i class="ti ti-world"></i> Website <span class="urdu">(ویب سائٹ)</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link" id="sms-tab" data-bs-toggle="tab" data-bs-target="#sms" type="button" role="tab">
                 <i class="ti ti-message"></i> SMS <span class="urdu">(ایس ایم ایس)</span>
             </button>
@@ -293,6 +298,75 @@
             </div>
         </div>
 
+        {{-- Website Tab --}}
+        <div class="tab-pane fade" id="website" role="tabpanel">
+            <div class="card">
+                <div class="card-header d-flex flex-wrap gap-2">
+                    <h5 class="mb-0"><i class="ti ti-slideshow me-1"></i> Hero Slider <span class="urdu">(ہیرو سلائیڈر)</span></h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-secondary small mb-3">Images are auto-cropped to <strong>1920x800</strong> on upload. Add up to 5 slides.</p>
+
+                    @php $sliderImages = json_decode($settings['slider_images'] ?? '[]', true); @endphp
+
+                    {{-- Existing slides --}}
+                    @if(count($sliderImages))
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width:120px;">Image <span class="urdu">(تصویر)</span></th>
+                                    <th>Title <span class="urdu">(عنوان)</span></th>
+                                    <th>Subtitle <span class="urdu">(ذیلی عنوان)</span></th>
+                                    <th style="width:80px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($sliderImages as $i => $slide)
+                                <tr>
+                                    <td><img src="{{ Storage::url($slide['image']) }}" alt="" style="width:100px;height:60px;object-fit:cover;border-radius:6px;"></td>
+                                    <td>{{ $slide['title'] ?? '' }}</td>
+                                    <td>{{ $slide['subtitle'] ?? '' }}</td>
+                                    <td>
+                                        <button type="submit" name="delete_slider_{{ $i }}" value="1" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Delete this slide?')">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @endif
+
+                    {{-- Add new slides --}}
+                    <div id="sliderFields">
+                        <div class="slider-row border rounded p-3 mb-3" data-index="0">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small">Image <span class="text-danger">*</span> <span class="urdu">(تصویر)</span></label>
+                                    <input type="file" class="form-control form-control-sm" name="slider_images[]" accept="image/*">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">Title <span class="urdu">(عنوان)</span></label>
+                                    <input type="text" class="form-control form-control-sm" name="slider_titles[]" placeholder="e.g. Find Your Dream Home">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">Subtitle <span class="urdu">(ذیلی عنوان)</span></label>
+                                    <input type="text" class="form-control form-control-sm" name="slider_subtitles[]" placeholder="e.g. Explore thousands of properties">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-sm btn-outline-accent" onclick="addSliderRow()">
+                        <i class="ti ti-plus"></i> Add Another Slide
+                    </button>
+                </div>
+            </div>
+        </div>
+
         {{-- SMS Tab --}}
         <div class="tab-pane fade" id="sms" role="tabpanel">
             <div class="card">
@@ -336,3 +410,30 @@
     </div>
 </form>
 @endsection
+
+@push('scripts')
+<script>
+let sliderIdx = {{ max(count($sliderImages ?? []), 1) }};
+function addSliderRow() {
+    const html = `
+        <div class="slider-row border rounded p-3 mb-3" data-index="${sliderIdx}">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small">Image <span class="text-danger">*</span> <span class="urdu">(تصویر)</span></label>
+                    <input type="file" class="form-control form-control-sm" name="slider_images[]" accept="image/*">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small">Title <span class="urdu">(عنوان)</span></label>
+                    <input type="text" class="form-control form-control-sm" name="slider_titles[]" placeholder="e.g. Find Your Dream Home">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small">Subtitle <span class="urdu">(ذیلی عنوان)</span></label>
+                    <input type="text" class="form-control form-control-sm" name="slider_subtitles[]" placeholder="e.g. Explore thousands of properties">
+                </div>
+            </div>
+        </div>`;
+    document.getElementById('sliderFields').insertAdjacentHTML('beforeend', html);
+    sliderIdx++;
+}
+</script>
+@endpush

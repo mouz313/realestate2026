@@ -2,52 +2,118 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Agent;
+use App\Models\Client;
 use App\Models\Contact;
 use App\Models\Property;
-use App\Models\PropertyMedia;
+use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class WebsiteController extends Controller
 {
     public function home()
     {
-        $featuredProperties = Property::with(['primaryMedia', 'owner'])
+        $featuredProperties = Property::with(['primaryMedia', 'media'])
             ->whereIn('status', ['available', 'pending'])
             ->latest()
             ->take(6)
             ->get();
+
         $stats = [
             'properties' => Property::count(),
             'sold' => Property::where('status', 'sold')->count(),
-            'agents' => \App\Models\Agent::count(),
-            'clients' => \App\Models\Client::count(),
+            'agents' => Agent::count(),
+            'clients' => Client::count(),
         ];
+
         $cities = Property::whereIn('status', ['available', 'pending'])
             ->whereNotNull('city')
             ->select('city')
             ->distinct()
             ->take(8)
             ->pluck('city');
-        return view('public.home', compact('featuredProperties', 'stats', 'cities'));
+
+        $typeCounts = Property::whereIn('status', ['available', 'pending'])
+            ->select('type', DB::raw('count(*) as total'))
+            ->groupBy('type')
+            ->pluck('total', 'type');
+
+        $settings = Setting::pluck('value', 'key');
+        $sliderImages = json_decode($settings['slider_images'] ?? '[]', true);
+        $testimonials = json_decode($settings['testimonials'] ?? '[]', true);
+        $features = json_decode($settings['features'] ?? '[]', true);
+        $brands = json_decode($settings['brands'] ?? '[]', true);
+        $social = [
+            'facebook' => $settings['social_facebook'] ?? '#',
+            'instagram' => $settings['social_instagram'] ?? '#',
+            'whatsapp' => $settings['social_whatsapp'] ?? '#',
+            'youtube' => $settings['social_youtube'] ?? '#',
+        ];
+        $contactInfo = [
+            'address' => $settings['address'] ?? 'Islamabad, Pakistan',
+            'phone' => $settings['phone'] ?? '+92 300 1234567',
+            'email' => $settings['email'] ?? 'info@example.com',
+            'hours' => $settings['working_hours'] ?? 'Mon-Sat: 9AM - 7PM',
+        ];
+
+        return view('public.home', compact(
+            'featuredProperties', 'stats', 'cities',
+            'typeCounts', 'sliderImages', 'testimonials', 'features',
+            'brands', 'social', 'contactInfo'
+        ));
     }
 
     public function about()
     {
-        $team = \App\Models\Agent::get();
+        $team = Agent::get();
         if ($team->isEmpty()) {
             $team = collect([
-                (object)['name' => 'Ahmed Khan', 'role' => 'CEO & Founder', 'photo' => null, 'whatsapp' => null, 'email' => null, 'facebook' => null, 'linkedin' => null, 'instagram' => null, 'experience_years' => null, 'languages' => null, 'bio' => null, 'specializations' => null],
-                (object)['name' => 'Sara Ali', 'role' => 'Head of Operations', 'photo' => null, 'whatsapp' => null, 'email' => null, 'facebook' => null, 'linkedin' => null, 'instagram' => null, 'experience_years' => null, 'languages' => null, 'bio' => null, 'specializations' => null],
-                (object)['name' => 'Usman Malik', 'role' => 'Senior Agent', 'photo' => null, 'whatsapp' => null, 'email' => null, 'facebook' => null, 'linkedin' => null, 'instagram' => null, 'experience_years' => null, 'languages' => null, 'bio' => null, 'specializations' => null],
-                (object)['name' => 'Fatima Ahmed', 'role' => 'Legal Advisor', 'photo' => null, 'whatsapp' => null, 'email' => null, 'facebook' => null, 'linkedin' => null, 'instagram' => null, 'experience_years' => null, 'languages' => null, 'bio' => null, 'specializations' => null],
+                (object) ['name' => 'Ahmed Khan', 'role' => 'CEO & Founder', 'photo' => null, 'whatsapp' => null, 'email' => null, 'facebook' => null, 'linkedin' => null, 'instagram' => null, 'experience_years' => null, 'languages' => null, 'bio' => null, 'specializations' => null],
+                (object) ['name' => 'Sara Ali', 'role' => 'Head of Operations', 'photo' => null, 'whatsapp' => null, 'email' => null, 'facebook' => null, 'linkedin' => null, 'instagram' => null, 'experience_years' => null, 'languages' => null, 'bio' => null, 'specializations' => null],
+                (object) ['name' => 'Usman Malik', 'role' => 'Senior Agent', 'photo' => null, 'whatsapp' => null, 'email' => null, 'facebook' => null, 'linkedin' => null, 'instagram' => null, 'experience_years' => null, 'languages' => null, 'bio' => null, 'specializations' => null],
+                (object) ['name' => 'Fatima Ahmed', 'role' => 'Legal Advisor', 'photo' => null, 'whatsapp' => null, 'email' => null, 'facebook' => null, 'linkedin' => null, 'instagram' => null, 'experience_years' => null, 'languages' => null, 'bio' => null, 'specializations' => null],
             ]);
         }
-        return view('public.about', compact('team'));
+        $settings = Setting::pluck('value', 'key');
+        $milestones = json_decode($settings['milestones'] ?? '[]', true);
+        $social = [
+            'facebook' => $settings['social_facebook'] ?? '#',
+            'instagram' => $settings['social_instagram'] ?? '#',
+            'whatsapp' => $settings['social_whatsapp'] ?? '#',
+            'youtube' => $settings['social_youtube'] ?? '#',
+        ];
+        $contactInfo = [
+            'address' => $settings['address'] ?? 'Islamabad, Pakistan',
+            'phone' => $settings['phone'] ?? '+92 300 1234567',
+            'email' => $settings['email'] ?? 'info@example.com',
+            'hours' => $settings['working_hours'] ?? 'Mon-Sat: 9AM - 7PM',
+        ];
+
+        $totalSold = Property::where('status', 'sold')->count();
+
+        return view('public.about', compact('team', 'milestones', 'social', 'contactInfo', 'totalSold'));
     }
 
     public function contact()
     {
-        return view('public.contact');
+        $settings = Setting::pluck('value', 'key');
+        $social = [
+            'facebook' => $settings['social_facebook'] ?? '#',
+            'instagram' => $settings['social_instagram'] ?? '#',
+            'whatsapp' => $settings['social_whatsapp'] ?? '#',
+            'youtube' => $settings['social_youtube'] ?? '#',
+        ];
+        $contactInfo = [
+            'address' => $settings['address'] ?? 'Islamabad, Pakistan',
+            'phone' => $settings['phone'] ?? '+92 300 1234567',
+            'email' => $settings['email'] ?? 'info@example.com',
+            'hours' => $settings['working_hours'] ?? 'Mon-Sat: 9AM - 7PM',
+            'map_lat' => $settings['map_lat'] ?? '33.6844',
+            'map_lng' => $settings['map_lng'] ?? '73.0479',
+        ];
+
+        return view('public.contact', compact('settings', 'social', 'contactInfo'));
     }
 
     public function submitContact(Request $request)
@@ -65,10 +131,11 @@ class WebsiteController extends Controller
         \Mail::raw(
             "Name: {$request->name}\nEmail: {$request->email}\nPhone: {$request->phone}\nSubject: {$request->subject}\n\nMessage:\n{$request->message}",
             fn ($msg) => $msg->to(config('app.admin_email', 'admin@example.com'))
-                ->subject('New Contact Inquiry - ' . config('app.name'))
+                ->subject('New Contact Inquiry - '.config('app.name'))
         );
 
         toastr()->success('Thank you! We will get back to you soon.');
+
         return back();
     }
 
@@ -98,9 +165,9 @@ class WebsiteController extends Controller
             $s = $request->search;
             $query->where(function ($q) use ($s) {
                 $q->where('title', 'like', "%{$s}%")
-                  ->orWhere('city', 'like', "%{$s}%")
-                  ->orWhere('location_address', 'like', "%{$s}%")
-                  ->orWhere('sector_town', 'like', "%{$s}%");
+                    ->orWhere('city', 'like', "%{$s}%")
+                    ->orWhere('location_address', 'like', "%{$s}%")
+                    ->orWhere('sector_town', 'like', "%{$s}%");
             });
         }
 
@@ -111,12 +178,29 @@ class WebsiteController extends Controller
             ->pluck('city');
         $types = ['house', 'flat', 'plot', 'commercial', 'farmhouse', 'penthouse'];
 
-        return view('public.properties', compact('properties', 'cities', 'types'));
+        $settings = Setting::pluck('value', 'key');
+        $social = [
+            'facebook' => $settings['social_facebook'] ?? '#',
+            'instagram' => $settings['social_instagram'] ?? '#',
+            'whatsapp' => $settings['social_whatsapp'] ?? '#',
+            'youtube' => $settings['social_youtube'] ?? '#',
+        ];
+        $contactInfo = [
+            'address' => $settings['address'] ?? 'Islamabad, Pakistan',
+            'phone' => $settings['phone'] ?? '+92 300 1234567',
+            'email' => $settings['email'] ?? 'info@example.com',
+            'hours' => $settings['working_hours'] ?? 'Mon-Sat: 9AM - 7PM',
+        ];
+
+        return view('public.properties', compact(
+            'properties', 'cities', 'types',
+            'social', 'contactInfo'
+        ));
     }
 
     public function property(Property $property)
     {
-        if (!in_array($property->status, ['available', 'pending'])) {
+        if (! in_array($property->status, ['available', 'pending'])) {
             abort(404);
         }
         $property->load(['owner', 'assignedAgent', 'media', 'documents']);
@@ -124,11 +208,26 @@ class WebsiteController extends Controller
             ->where('id', '!=', $property->id)
             ->where(function ($q) use ($property) {
                 $q->where('city', $property->city)
-                  ->orWhere('type', $property->type);
+                    ->orWhere('type', $property->type);
             })
             ->whereIn('status', ['available', 'pending'])
             ->take(4)
             ->get();
-        return view('public.property', compact('property', 'related'));
+
+        $settings = Setting::pluck('value', 'key');
+        $social = [
+            'facebook' => $settings['social_facebook'] ?? '#',
+            'instagram' => $settings['social_instagram'] ?? '#',
+            'whatsapp' => $settings['social_whatsapp'] ?? '#',
+            'youtube' => $settings['social_youtube'] ?? '#',
+        ];
+        $contactInfo = [
+            'address' => $settings['address'] ?? 'Islamabad, Pakistan',
+            'phone' => $settings['phone'] ?? '+92 300 1234567',
+            'email' => $settings['email'] ?? 'info@example.com',
+            'hours' => $settings['working_hours'] ?? 'Mon-Sat: 9AM - 7PM',
+        ];
+
+        return view('public.property', compact('property', 'related', 'social', 'contactInfo'));
     }
 }

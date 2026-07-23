@@ -11,6 +11,7 @@ class ClientController extends Controller
     public function index()
     {
         $clients = Client::latest()->paginate(15);
+
         return view('clients.index', compact('clients'));
     }
 
@@ -38,12 +39,14 @@ class ClientController extends Controller
 
         Client::create($data);
         toastr()->success('Client added successfully.');
+
         return redirect()->route('clients.index');
     }
 
     public function show(Client $client)
     {
         $client->load(['quotations' => fn ($q) => $q->latest()->limit(10), 'invoices' => fn ($i) => $i->latest()->limit(10)]);
+
         return view('clients.show', compact('client'));
     }
 
@@ -71,6 +74,7 @@ class ClientController extends Controller
 
         $client->update($data);
         toastr()->success('Client updated successfully.');
+
         return redirect()->route('clients.index');
     }
 
@@ -78,6 +82,7 @@ class ClientController extends Controller
     {
         $client->delete();
         toastr()->success('Client deleted successfully.');
+
         return redirect()->route('clients.index');
     }
 }

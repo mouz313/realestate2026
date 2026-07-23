@@ -14,8 +14,9 @@ class PropertyVisitController extends Controller
     {
         $agentId = auth()->user()->isAgent() ? auth()->user()->agent_id : null;
         $propertyVisits = PropertyVisit::with(['property', 'client', 'agent'])
-            ->when($agentId, fn($q) => $q->where('agent_id', $agentId))
+            ->when($agentId, fn ($q) => $q->where('agent_id', $agentId))
             ->latest()->paginate(15);
+
         return view('property_visits.index', compact('propertyVisits'));
     }
 
@@ -24,6 +25,7 @@ class PropertyVisitController extends Controller
         $properties = Property::orderBy('title')->get();
         $clients = Client::orderBy('name')->get();
         $agents = Agent::orderBy('name')->get();
+
         return view('property_visits.create', compact('properties', 'clients', 'agents'));
     }
 
@@ -40,6 +42,7 @@ class PropertyVisitController extends Controller
 
         PropertyVisit::create($request->all());
         toastr()->success('Property visit added successfully.');
+
         return redirect()->route('property-visits.index');
     }
 
@@ -47,6 +50,7 @@ class PropertyVisitController extends Controller
     {
         $this->authorizeAgentAccess($propertyVisit);
         $propertyVisit->load(['property', 'client', 'agent']);
+
         return view('property_visits.show', compact('propertyVisit'));
     }
 
@@ -55,6 +59,7 @@ class PropertyVisitController extends Controller
         $properties = Property::orderBy('title')->get();
         $clients = Client::orderBy('name')->get();
         $agents = Agent::orderBy('name')->get();
+
         return view('property_visits.edit', compact('propertyVisit', 'properties', 'clients', 'agents'));
     }
 
@@ -72,6 +77,7 @@ class PropertyVisitController extends Controller
 
         $propertyVisit->update($request->all());
         toastr()->success('Property visit updated successfully.');
+
         return redirect()->route('property-visits.index');
     }
 
@@ -80,6 +86,7 @@ class PropertyVisitController extends Controller
         $this->authorizeAgentAccess($propertyVisit);
         $propertyVisit->delete();
         toastr()->success('Property visit deleted successfully.');
+
         return redirect()->route('property-visits.index');
     }
 }

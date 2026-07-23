@@ -12,16 +12,18 @@ class TokenController extends Controller
     {
         $agentId = auth()->user()->isAgent() ? auth()->user()->agent_id : null;
         $tokens = Token::with('deal')
-            ->when($agentId, fn($q) => $q->whereHas('deal', fn($dq) => $dq->where('agent_id', $agentId)))
+            ->when($agentId, fn ($q) => $q->whereHas('deal', fn ($dq) => $dq->where('agent_id', $agentId)))
             ->latest()->paginate(15);
+
         return view('tokens.index', compact('tokens'));
     }
 
     public function create()
     {
         $agentId = auth()->user()->isAgent() ? auth()->user()->agent_id : null;
-        $deals = Deal::when($agentId, fn($q) => $q->where('agent_id', $agentId))
+        $deals = Deal::when($agentId, fn ($q) => $q->where('agent_id', $agentId))
             ->orderBy('deal_number')->get();
+
         return view('tokens.create', compact('deals'));
     }
 
@@ -37,6 +39,7 @@ class TokenController extends Controller
 
         Token::create($request->all());
         toastr()->success('Token added successfully.');
+
         return redirect()->route('tokens.index');
     }
 
@@ -44,6 +47,7 @@ class TokenController extends Controller
     {
         $this->authorizeViaDeal($token);
         $token->load('deal');
+
         return view('tokens.show', compact('token'));
     }
 
@@ -51,6 +55,7 @@ class TokenController extends Controller
     {
         $this->authorizeViaDeal($token);
         $deals = Deal::orderBy('deal_number')->get();
+
         return view('tokens.edit', compact('token', 'deals'));
     }
 
@@ -67,6 +72,7 @@ class TokenController extends Controller
 
         $token->update($request->all());
         toastr()->success('Token updated successfully.');
+
         return redirect()->route('tokens.index');
     }
 
@@ -75,6 +81,7 @@ class TokenController extends Controller
         $this->authorizeViaDeal($token);
         $token->delete();
         toastr()->success('Token deleted successfully.');
+
         return redirect()->route('tokens.index');
     }
 }

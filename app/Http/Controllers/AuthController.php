@@ -24,6 +24,7 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             toastr()->success('Welcome back!');
+
             return redirect()->intended(route('dashboard'));
         }
 
@@ -55,6 +56,7 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
         toastr()->success('Account created successfully!');
+
         return redirect()->route('dashboard');
     }
 
@@ -63,6 +65,7 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect('/');
     }
 }

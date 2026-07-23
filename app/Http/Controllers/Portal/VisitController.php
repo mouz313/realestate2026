@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
-use App\Models\PropertyVisit;
+use App\Models\Client;
 use App\Models\Property;
+use App\Models\PropertyVisit;
 use Illuminate\Http\Request;
 
 class VisitController extends Controller
@@ -16,6 +17,7 @@ class VisitController extends Controller
             ->where('client_id', $client->id)
             ->latest()
             ->paginate(12);
+
         return view('portal.visits.index', compact('visits'));
     }
 
@@ -24,6 +26,7 @@ class VisitController extends Controller
         $client = $this->getClient();
         $properties = Property::where('status', 'available')->orderBy('title')->get();
         $selectedProperty = $request->property_id ? Property::find($request->property_id) : null;
+
         return view('portal.visits.create', compact('properties', 'selectedProperty'));
     }
 
@@ -52,8 +55,9 @@ class VisitController extends Controller
 
     private function getClient()
     {
-        $client = \App\Models\Client::find(session('client_id'));
-        abort_if(!$client, 401);
+        $client = Client::find(session('client_id'));
+        abort_if(! $client, 401);
+
         return $client;
     }
 }

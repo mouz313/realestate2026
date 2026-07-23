@@ -14,8 +14,9 @@ class RentAgreementController extends Controller
     {
         $agentId = auth()->user()->isAgent() ? auth()->user()->agent_id : null;
         $rentAgreements = RentAgreement::with(['tenant', 'property', 'owner'])
-            ->when($agentId, fn($q) => $q->whereHas('property', fn($pq) => $pq->where('assigned_agent_id', $agentId)))
+            ->when($agentId, fn ($q) => $q->whereHas('property', fn ($pq) => $pq->where('assigned_agent_id', $agentId)))
             ->latest()->paginate(15);
+
         return view('rent_agreements.index', compact('rentAgreements'));
     }
 
@@ -24,6 +25,7 @@ class RentAgreementController extends Controller
         $properties = Property::where('transaction_type', 'rent')->orderBy('title')->get();
         $clients = Client::orderBy('name')->get();
         $deals = Deal::orderBy('deal_number')->get();
+
         return view('rent_agreements.create', compact('properties', 'clients', 'deals'));
     }
 
@@ -52,6 +54,7 @@ class RentAgreementController extends Controller
 
         RentAgreement::create($request->only((new RentAgreement)->getFillable()));
         toastr()->success('Rent agreement added successfully.');
+
         return redirect()->route('rent-agreements.index');
     }
 
@@ -59,6 +62,7 @@ class RentAgreementController extends Controller
     {
         $this->authorizeAgentAccess($rentAgreement, 'property');
         $rentAgreement->load(['tenant', 'property', 'owner', 'deal']);
+
         return view('rent_agreements.show', compact('rentAgreement'));
     }
 
@@ -68,6 +72,7 @@ class RentAgreementController extends Controller
         $properties = Property::where('transaction_type', 'rent')->orderBy('title')->get();
         $clients = Client::orderBy('name')->get();
         $deals = Deal::orderBy('deal_number')->get();
+
         return view('rent_agreements.edit', compact('rentAgreement', 'properties', 'clients', 'deals'));
     }
 
@@ -97,6 +102,7 @@ class RentAgreementController extends Controller
 
         $rentAgreement->update($request->only((new RentAgreement)->getFillable()));
         toastr()->success('Rent agreement updated successfully.');
+
         return redirect()->route('rent-agreements.index');
     }
 
@@ -105,6 +111,7 @@ class RentAgreementController extends Controller
         $this->authorizeAgentAccess($rentAgreement, 'property');
         $rentAgreement->delete();
         toastr()->success('Rent agreement deleted successfully.');
+
         return redirect()->route('rent-agreements.index');
     }
 }

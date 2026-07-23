@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Client;
 use App\Models\PortalAction;
 use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -13,6 +14,7 @@ class QuotationController extends Controller
     {
         $client = $this->getClient();
         $quotations = $client->quotations()->latest()->paginate(12);
+
         return view('portal.quotations.index', compact('quotations'));
     }
 
@@ -22,6 +24,7 @@ class QuotationController extends Controller
         $quotation = $client->quotations()->with('items')->findOrFail($id);
         $settings = Setting::pluck('value', 'key')->toArray();
         $action = $quotation->portalActions()->latest()->first();
+
         return view('portal.quotations.show', compact('quotation', 'settings', 'action'));
     }
 
@@ -35,6 +38,7 @@ class QuotationController extends Controller
             'client_id' => $client->id,
             'action' => 'approved',
         ]);
+
         return redirect()->route('portal.quotations.show', $quotation)->with('success', 'Quotation approved.');
     }
 
@@ -48,6 +52,7 @@ class QuotationController extends Controller
             'client_id' => $client->id,
             'action' => 'rejected',
         ]);
+
         return redirect()->route('portal.quotations.show', $quotation)->with('success', 'Quotation rejected.');
     }
 
@@ -57,13 +62,15 @@ class QuotationController extends Controller
         $quotation = $client->quotations()->with('items')->findOrFail($id);
         $settings = Setting::pluck('value', 'key')->toArray();
         $pdf = Pdf::loadView('quotations.pdf', compact('quotation', 'settings'));
-        return $pdf->download('quotation-' . $quotation->quote_number . '.pdf');
+
+        return $pdf->download('quotation-'.$quotation->quote_number.'.pdf');
     }
 
     private function getClient()
     {
-        $client = \App\Models\Client::find(session('client_id'));
-        abort_if(!$client, 401);
+        $client = Client::find(session('client_id'));
+        abort_if(! $client, 401);
+
         return $client;
     }
 }

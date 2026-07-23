@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\MailSettings;
+use App\Mail\QuotationMail;
 use App\Models\Client;
 use App\Models\Item;
 use App\Models\Quotation;
@@ -9,12 +11,14 @@ use App\Models\QuotationItem;
 use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class QuotationController extends Controller
 {
     public function index()
     {
         $quotations = Quotation::with('client')->latest()->paginate(15);
+
         return view('quotations.index', compact('quotations'));
     }
 
@@ -26,6 +30,7 @@ class QuotationController extends Controller
         $taxRate = $settings['tax_rate'] ?? 0;
         $taxLabel = $settings['tax_label'] ?? 'GST';
         $currency = $settings['currency'] ?? 'PKR';
+
         return view('quotations.create', compact('clients', 'items', 'taxRate', 'taxLabel', 'currency'));
     }
 
@@ -78,6 +83,7 @@ class QuotationController extends Controller
         $quotation->items()->createMany($quotationItems);
 
         toastr()->success('Quotation created successfully.');
+
         return redirect()->route('quotations.index');
     }
 
@@ -85,6 +91,7 @@ class QuotationController extends Controller
     {
         $quotation->load('client', 'items');
         $settings = Setting::pluck('value', 'key')->toArray();
+
         return view('quotations.show', compact('quotation', 'settings'));
     }
 
@@ -97,6 +104,7 @@ class QuotationController extends Controller
         $taxRate = $settings['tax_rate'] ?? 0;
         $taxLabel = $settings['tax_label'] ?? 'GST';
         $currency = $settings['currency'] ?? 'PKR';
+
         return view('quotations.edit', compact('quotation', 'clients', 'items', 'taxRate', 'taxLabel', 'currency'));
     }
 
@@ -148,6 +156,7 @@ class QuotationController extends Controller
         $quotation->items()->saveMany($quotationItems);
 
         toastr()->success('Quotation updated successfully.');
+
         return redirect()->route('quotations.index');
     }
 
@@ -155,6 +164,7 @@ class QuotationController extends Controller
     {
         $quotation->delete();
         toastr()->success('Quotation deleted successfully.');
+
         return redirect()->route('quotations.index');
     }
 
@@ -164,21 +174,23 @@ class QuotationController extends Controller
         $settings = Setting::pluck('value', 'key')->toArray();
 
         $pdf = Pdf::loadView('quotations.pdf', compact('quotation', 'settings'));
-        return $pdf->download('quotation-' . $quotation->quote_number . '.pdf');
+
+        return $pdf->download('quotation-'.$quotation->quote_number.'.pdf');
     }
 
     public function markSent(Quotation $quotation)
     {
         if ($quotation->status !== 'draft') {
             toastr()->error('Only draft quotations can be marked as sent.');
+
             return back();
         }
         $quotation->update(['status' => 'sent']);
 
         if ($quotation->client->email) {
             try {
-                \App\Mail\MailSettings::apply();
-                \Illuminate\Support\Facades\Mail::to($quotation->client->email)->send(new \App\Mail\QuotationMail($quotation));
+                MailSettings::apply();
+                Mail::to($quotation->client->email)->send(new QuotationMail($quotation));
                 toastr()->success('Quotation sent via email.');
             } catch (\Exception $e) {
                 toastr()->warning('Quotation marked sent but email could not be delivered.');
@@ -186,6 +198,7 @@ class QuotationController extends Controller
         }
 
         toastr()->success('Quotation marked as sent.');
+
         return back();
     }
 
@@ -194,6 +207,7 @@ class QuotationController extends Controller
         $prefix = 'Q-';
         $last = Quotation::latest()->first();
         $number = $last ? intval(substr($last->quote_number, 2)) + 1 : 1;
-        return $prefix . str_pad($number, 5, '0', STR_PAD_LEFT);
+
+        return $prefix.str_pad($number, 5, '0', STR_PAD_LEFT);
     }
 }

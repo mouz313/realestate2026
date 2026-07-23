@@ -12,6 +12,7 @@ class ProfileController extends Controller
     public function index()
     {
         $user = Auth::user();
+
         return view('profile.index', compact('user'));
     }
 
@@ -25,6 +26,7 @@ class ProfileController extends Controller
             }
             $user->update(['avatar' => null]);
             toastr()->success('Avatar removed.');
+
             return back();
         }
 
@@ -32,9 +34,9 @@ class ProfileController extends Controller
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ];
 
-        if (!$request->hasFile('avatar')) {
+        if (! $request->hasFile('avatar')) {
             $rules['name'] = 'required|string|max:255';
-            $rules['email'] = 'required|email|unique:users,email,' . $user->id;
+            $rules['email'] = 'required|email|unique:users,email,'.$user->id;
         }
 
         $request->validate($rules);
@@ -50,6 +52,7 @@ class ProfileController extends Controller
 
         $user->update($data);
         toastr()->success('Profile updated successfully.');
+
         return back();
     }
 
@@ -64,6 +67,7 @@ class ProfileController extends Controller
             'password' => Hash::make($request->password),
         ]);
         toastr()->success('Password changed successfully.');
+
         return back();
     }
 }

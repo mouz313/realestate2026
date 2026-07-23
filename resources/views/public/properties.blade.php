@@ -156,6 +156,14 @@
               <option value="lease" {{ request('transaction_type') == 'lease' ? 'selected' : '' }}>Lease</option>
             </select>
           </div>
+          <div class="col-lg-1 col-md-4">
+            <div class="filter-label"><i class="ti ti-currency-dollar me-1"></i>Min Price</div>
+            <input type="number" class="form-control" name="min_price" value="{{ request('min_price') }}" placeholder="Min" min="0">
+          </div>
+          <div class="col-lg-1 col-md-4">
+            <div class="filter-label"><i class="ti ti-currency-dollar me-1"></i>Max Price</div>
+            <input type="number" class="form-control" name="max_price" value="{{ request('max_price') }}" placeholder="Max" min="0">
+          </div>
           <div class="col-lg-2 col-md-4">
             <div class="filter-label"><i class="ti ti-bed me-1"></i>Bedrooms</div>
             <select class="form-select" name="bedrooms">
@@ -165,7 +173,7 @@
               @endfor
             </select>
           </div>
-          <div class="col-lg-1 col-md-4 d-flex gap-2">
+          <div class="col-lg-2 col-md-4 d-flex gap-2">
             <button type="submit" class="btn btn-filter w-100"><i class="ti ti-filter me-1"></i></button>
             <a href="{{ route('website.properties') }}" class="btn btn-reset"><i class="ti ti-x"></i></a>
           </div>

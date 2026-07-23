@@ -7,7 +7,6 @@ use App\Models\City;
 use App\Models\Client;
 use App\Models\Property;
 use App\Models\PropertyMedia;
-use App\Models\PropertyDocument;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -18,8 +17,9 @@ class PropertyController extends Controller
     {
         $agentId = auth()->user()->isAgent() ? auth()->user()->agent_id : null;
         $properties = Property::with(['owner', 'assignedAgent'])
-            ->when($agentId, fn($q) => $q->where('assigned_agent_id', $agentId))
+            ->when($agentId, fn ($q) => $q->where('assigned_agent_id', $agentId))
             ->latest()->paginate(15);
+
         return view('properties.index', compact('properties'));
     }
 
@@ -33,7 +33,8 @@ class PropertyController extends Controller
         $statuses = ['available', 'under_offer', 'sold', 'rented', 'under_construction', 'off_market'];
         $lastProperty = Property::withTrashed()->orderBy('id', 'desc')->first();
         $nextId = $lastProperty ? $lastProperty->id + 1 : 1;
-        $autoCode = 'PR-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
+        $autoCode = 'PR-'.str_pad($nextId, 5, '0', STR_PAD_LEFT);
+
         return view('properties.create', compact('clients', 'agents', 'cities', 'types', 'transactionTypes', 'statuses', 'autoCode'));
     }
 
@@ -106,12 +107,14 @@ class PropertyController extends Controller
         $data['property_code'] = DB::transaction(function () {
             $last = Property::withTrashed()->lockForUpdate()->orderBy('id', 'desc')->first();
             $nextId = $last ? $last->id + 1 : 1;
-            return 'PR-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
+
+            return 'PR-'.str_pad($nextId, 5, '0', STR_PAD_LEFT);
         });
 
         $property = Property::create($data);
         $this->handleMediaUploads($request, $property);
         toastr()->success('Property added successfully.');
+
         return redirect()->route('properties.index');
     }
 
@@ -119,6 +122,7 @@ class PropertyController extends Controller
     {
         $this->authorizePropertyAccess($property);
         $property->load(['owner', 'assignedAgent', 'media', 'documents']);
+
         return view('properties.show', compact('property'));
     }
 
@@ -132,6 +136,7 @@ class PropertyController extends Controller
         $types = ['house', 'flat', 'plot', 'commercial', 'farmhouse', 'penthouse'];
         $transactionTypes = ['sale', 'rent', 'lease'];
         $statuses = ['available', 'under_offer', 'sold', 'rented', 'under_construction', 'off_market'];
+
         return view('properties.edit', compact('property', 'clients', 'agents', 'cities', 'types', 'transactionTypes', 'statuses'));
     }
 
@@ -205,6 +210,7 @@ class PropertyController extends Controller
         $property->update($data);
         $this->handleMediaUploads($request, $property);
         toastr()->success('Property updated successfully.');
+
         return redirect()->route('properties.index');
     }
 
@@ -217,6 +223,7 @@ class PropertyController extends Controller
         }
         $property->delete();
         toastr()->success('Property deleted successfully.');
+
         return redirect()->route('properties.index');
     }
 
@@ -226,6 +233,7 @@ class PropertyController extends Controller
         $property->media()->where('type', 'image')->update(['is_primary' => false]);
         $media->update(['is_primary' => true]);
         toastr()->success('Primary image updated.');
+
         return back();
     }
 
@@ -234,6 +242,7 @@ class PropertyController extends Controller
         Storage::disk('public')->delete($media->file_path);
         $media->delete();
         toastr()->success('Media deleted.');
+
         return back();
     }
 
@@ -250,7 +259,7 @@ class PropertyController extends Controller
                     'property_id' => $property->id,
                     'type' => 'image',
                     'file_path' => $path,
-                    'is_primary' => !$hasPrimary && $sortOrder === 1,
+                    'is_primary' => ! $hasPrimary && $sortOrder === 1,
                     'sort_order' => $sortOrder,
                 ]);
             }
@@ -258,7 +267,7 @@ class PropertyController extends Controller
 
         if ($request->hasFile('video')) {
             $hasVideo = $property->media()->where('type', 'video')->exists();
-            if (!$hasVideo) {
+            if (! $hasVideo) {
                 $path = $request->file('video')->store('property-media', 'public');
                 $sortOrder = $property->media()->max('sort_order') ?? 0;
                 PropertyMedia::create([

@@ -10,6 +10,7 @@ class Toastr
             'type' => 'success',
             'message' => $message,
         ]);
+
         return $this;
     }
 
@@ -19,6 +20,7 @@ class Toastr
             'type' => 'error',
             'message' => $message,
         ]);
+
         return $this;
     }
 
@@ -28,6 +30,7 @@ class Toastr
             'type' => 'warning',
             'message' => $message,
         ]);
+
         return $this;
     }
 
@@ -37,6 +40,7 @@ class Toastr
             'type' => 'info',
             'message' => $message,
         ]);
+
         return $this;
     }
 }

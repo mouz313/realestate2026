@@ -3,8 +3,11 @@
 namespace App\Mail;
 
 use App\Models\Quotation;
+use App\Models\Setting;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -23,7 +26,7 @@ class QuotationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Quotation ' . $this->quotation->quote_number,
+            subject: 'Quotation '.$this->quotation->quote_number,
         );
     }
 
@@ -36,13 +39,13 @@ class QuotationMail extends Mailable
 
     public function attachments(): array
     {
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('quotations.pdf', [
+        $pdf = Pdf::loadView('quotations.pdf', [
             'quotation' => $this->quotation->load('client', 'items'),
-            'settings' => \App\Models\Setting::pluck('value', 'key')->toArray(),
+            'settings' => Setting::pluck('value', 'key')->toArray(),
         ]);
-        
+
         return [
-            \Illuminate\Mail\Mailables\Attachment::fromData(fn () => $pdf->output(), 'quotation-' . $this->quotation->quote_number . '.pdf')
+            Attachment::fromData(fn () => $pdf->output(), 'quotation-'.$this->quotation->quote_number.'.pdf')
                 ->withMime('application/pdf'),
         ];
     }

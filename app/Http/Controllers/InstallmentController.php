@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Deal;
 use App\Models\Installment;
 use App\Models\InstallmentPlan;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class InstallmentController extends Controller
 {
@@ -14,17 +14,19 @@ class InstallmentController extends Controller
     {
         $agentId = auth()->user()->isAgent() ? auth()->user()->agent_id : null;
         $installments = Installment::with('plan.deal')
-            ->when($agentId, fn($q) => $q->whereHas('plan.deal', fn($dq) => $dq->where('agent_id', $agentId)))
+            ->when($agentId, fn ($q) => $q->whereHas('plan.deal', fn ($dq) => $dq->where('agent_id', $agentId)))
             ->latest()->paginate(15);
+
         return view('installments.index', compact('installments'));
     }
 
     public function create()
     {
         $agentId = auth()->user()->isAgent() ? auth()->user()->agent_id : null;
-        $deals = Deal::when($agentId, fn($q) => $q->where('agent_id', $agentId))
+        $deals = Deal::when($agentId, fn ($q) => $q->where('agent_id', $agentId))
             ->orderBy('deal_number')->get();
         $frequencies = ['monthly', 'quarterly', 'semi_annually', 'annually'];
+
         return view('installments.create', compact('deals', 'frequencies'));
     }
 
@@ -32,6 +34,7 @@ class InstallmentController extends Controller
     {
         $installment->update(['status' => 'paid', 'paid_at' => now()]);
         toastr()->success('Installment marked as paid.');
+
         return back();
     }
 
@@ -93,6 +96,7 @@ class InstallmentController extends Controller
         }
 
         toastr()->success('Installment plan created successfully.');
+
         return redirect()->route('installments.index');
     }
 
@@ -101,6 +105,7 @@ class InstallmentController extends Controller
         $this->authorizeAgentAccess($installmentPlan->deal);
         $deals = Deal::orderBy('deal_number')->get();
         $frequencies = ['monthly', 'quarterly', 'semi_annually', 'annually'];
+
         return view('installments.edit', compact('installmentPlan', 'deals', 'frequencies'));
     }
 
@@ -118,6 +123,7 @@ class InstallmentController extends Controller
 
         $installmentPlan->update($request->all());
         toastr()->success('Installment plan updated successfully.');
+
         return redirect()->route('installments.index');
     }
 
@@ -127,6 +133,7 @@ class InstallmentController extends Controller
         $installmentPlan->installments()->delete();
         $installmentPlan->delete();
         toastr()->success('Installment plan deleted successfully.');
+
         return redirect()->route('installments.index');
     }
 }

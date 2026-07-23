@@ -9,7 +9,9 @@ trait SmsNotifiable
 {
     public function notifyClient(Client $client, string $template, ...$params): void
     {
-        if (!$client->phone) return;
+        if (! $client->phone) {
+            return;
+        }
 
         $message = match ($template) {
             'visit_reminder' => Sms::visitReminder($params[0]),
