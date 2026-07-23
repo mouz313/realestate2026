@@ -20,7 +20,7 @@
     </div>
     <div class="action-btns">
         <a href="{{ route('pdf.rent-agreement', $rentAgreement) }}" class="btn btn-dark me-2">
-            <i class="ti ti-file-download"></i> PDF
+            <i class="ti ti-file-download"></i> PDF <span class="urdu">(پی ڈی ایف)</span>
         </a>
         <a href="{{ route('rent-agreements.edit', $rentAgreement) }}" class="btn btn-dark">
             <i class="ti ti-edit"></i> Edit Agreement <span class="urdu">(کرایہ نامہ میں ترمیم)</span>

@@ -25,6 +25,7 @@ class Agent extends Model
         return [
             'commission_rate' => 'decimal:2',
             'join_date' => 'date',
+            'specializations' => 'json',
         ];
     }
 

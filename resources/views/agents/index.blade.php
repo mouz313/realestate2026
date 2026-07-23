@@ -83,7 +83,7 @@
     </div>
     @if($agents->hasPages())
     <div class="p-3 border-top">
-        {{ $agents->links() }}
+        {{ $agents->withQueryString()->links() }}
     </div>
     @endif
 </div>

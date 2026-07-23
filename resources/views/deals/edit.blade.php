@@ -63,8 +63,8 @@
                         @error('seller_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Agent <span class="urdu">(ایجنٹ)</span> <span class="text-danger">*</span></label>
-                        <select class="form-select @error('agent_id') is-invalid @enderror" name="agent_id" required>
+                        <label class="form-label">Agent <span class="urdu">(ایجنٹ)</span></label>
+                        <select class="form-select @error('agent_id') is-invalid @enderror" name="agent_id">
                             <option value=""><span class="urdu">(ایجنٹ منتخب کریں)</span></option>
                             @foreach($agents ?? [] as $agent)
                                 <option value="{{ $agent->id }}" {{ old('agent_id', $deal->agent_id) == $agent->id ? 'selected' : '' }}>{{ $agent->name }}</option>
@@ -85,6 +85,16 @@
                 </div>
                 <div class="col-md-6">
                     <div class="mb-3">
+                        <label class="form-label">Status <span class="urdu">(حالت)</span> <span class="text-danger">*</span></label>
+                        <select class="form-select @error('status') is-invalid @enderror" name="status" required>
+                            <option value=""><span class="urdu">(حالت منتخب کریں)</span></option>
+                            @foreach(['inquiry', 'visit_scheduled', 'offer_made', 'token_received', 'agreement_signed', 'in_progress', 'completed', 'cancelled'] as $s)
+                            <option value="{{ $s }}" {{ old('status', $deal->status ?? '') == $s ? 'selected' : '' }}>{{ ucfirst(str_replace('_', ' ', $s)) }}</option>
+                            @endforeach
+                        </select>
+                        @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Sale Price <span class="urdu">(فروخت قیمت)</span> <span class="text-danger">*</span></label>
                         <input type="number" step="0.01" class="form-control @error('sale_price') is-invalid @enderror" name="sale_price" value="{{ old('sale_price', $deal->sale_price) }}" required>
                         @error('sale_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -93,6 +103,16 @@
                         <label class="form-label">Commission Percentage <span class="urdu">(کمیشن فیصد)</span> (%)</label>
                         <input type="number" step="0.01" min="0" max="100" class="form-control @error('commission_percentage') is-invalid @enderror" name="commission_percentage" value="{{ old('commission_percentage', $deal->commission_percentage) }}">
                         @error('commission_percentage') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Agent Commission <span class="urdu">(ایجنٹ کمیشن)</span></label>
+                        <input type="number" step="0.01" min="0" class="form-control @error('agent_commission') is-invalid @enderror" name="agent_commission" value="{{ old('agent_commission', $deal->agent_commission) }}">
+                        @error('agent_commission') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Agency Share <span class="urdu">(ایجنسی کا حصہ)</span></label>
+                        <input type="number" step="0.01" min="0" class="form-control @error('agency_share') is-invalid @enderror" name="agency_share" value="{{ old('agency_share', $deal->agency_share) }}">
+                        @error('agency_share') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Token Amount <span class="urdu">(ٹوکن رقم)</span></label>

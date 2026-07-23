@@ -73,7 +73,7 @@
     </div>
     @if($agentPayouts->hasPages())
     <div class="p-3 border-top">
-        {{ $agentPayouts->links() }}
+        {{ $agentPayouts->withQueryString()->links() }}
     </div>
     @endif
 </div>

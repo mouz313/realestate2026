@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <title>@yield('title', 'Login') - {{ config('app.name') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ asset('assets/tabler-icons.min.css') }}" rel="stylesheet">
@@ -23,13 +24,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
         @if (session()->has('toastr'))
-            toastr.{{ session('toastr')['type'] }}('{{ session('toastr')['message'] }}');
+            @php $t = session('toastr'); @endphp
+            toastr.{{ $t['type'] }}(@json($t['message']));
         @endif
         @if($errors->any())
             @foreach($errors->all() as $message)
-                toastr.error('{{ $message }}');
+                toastr.error(@json($message));
             @endforeach
         @endif
     </script>
+    @stack('scripts')
 </body>
 </html>

@@ -1,6 +1,8 @@
 @extends('public.layouts.app')
 
-@section('title', 'Properties')
+@section('title', 'Browse Properties')
+@section('meta_description', 'Browse our curated selection of properties for sale and rent across Pakistan. Filter by type, city, price, and more to find your perfect property.')
+@section('meta_keywords', 'properties for sale, properties for rent, houses, flats, plots, commercial property, Pakistan')
 
 @push('styles')
 <style>
@@ -233,7 +235,7 @@
     {{-- ═══════════════════ PAGINATION ═══════════════════ --}}
     @if($properties->hasPages())
     <div class="d-flex justify-content-center mt-5" data-aos="fade-up">
-      {{ $properties->onEachSide(1)->links() }}
+      {{ $properties->onEachSide(1)->withQueryString()->links() }}
     </div>
     @endif
   </div>

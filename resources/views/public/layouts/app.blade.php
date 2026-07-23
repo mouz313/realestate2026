@@ -4,7 +4,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <title>@yield('title', config('app.name')) — {{ config('app.name') }}</title>
+    <meta name="description" content="@yield('meta_description', config('app.name', 'Real Estate Agency') . ' - Find your dream property in Pakistan')">
+    <meta name="keywords" content="@yield('meta_keywords', 'real estate, property, house, plot, Pakistan, Islamabad, Lahore, Karachi, buy, sell, rent')">
+    <meta name="author" content="{{ config('app.name') }}">
+    <link rel="canonical" href="{{ url()->current() }}">
+    <meta property="og:title" content="@yield('og_title', @yield('title'))">
+    <meta property="og:description" content="@yield('og_description', @yield('meta_description'))">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:site_name" content="{{ config('app.name') }}">
+    <meta name="twitter:card" content="summary_large_image">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ asset('assets/tabler-icons.min.css') }}" rel="stylesheet">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
@@ -137,12 +148,13 @@
                         <li class="mb-2"><a href="{{ route('website.properties', ['type' => 'commercial']) }}">Commercial</a></li>
                     </ul>
                 </div>
+                @php $contactSettings = \App\Models\Setting::whereIn('key', ['address', 'phone', 'email'])->pluck('value', 'key'); @endphp
                 <div class="col-lg-3 col-md-4">
                     <h6>Contact Info</h6>
                     <ul class="list-unstyled small">
-                        <li class="mb-2"><i class="ti ti-map-pin me-1"></i> Islamabad, Pakistan</li>
-                        <li class="mb-2"><i class="ti ti-phone me-1"></i> +92 300 1234567</li>
-                        <li class="mb-2"><i class="ti ti-mail me-1"></i> info@example.com</li>
+                        <li class="mb-2"><i class="ti ti-map-pin me-1"></i> {{ $contactSettings['address'] ?? 'Islamabad, Pakistan' }}</li>
+                        <li class="mb-2"><i class="ti ti-phone me-1"></i> {{ $contactSettings['phone'] ?? '+92 300 1234567' }}</li>
+                        <li class="mb-2"><i class="ti ti-mail me-1"></i> {{ $contactSettings['email'] ?? 'info@example.com' }}</li>
                     </ul>
                 </div>
             </div>
@@ -158,11 +170,12 @@
     <script>AOS.init({ duration: 800, once: true });</script>
     <script>
         @if (session()->has('toastr'))
-            toastr.{{ session('toastr')['type'] }}('{{ session('toastr')['message'] }}');
+            @php $t = session('toastr'); @endphp
+            toastr.{{ $t['type'] }}(@json($t['message']));
         @endif
         @if($errors->any())
             @foreach($errors->all() as $message)
-                toastr.error('{{ $message }}');
+                toastr.error(@json($message));
             @endforeach
         @endif
     </script>

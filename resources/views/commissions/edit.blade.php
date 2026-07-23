@@ -45,8 +45,8 @@
                     <div class="mb-3">
                         <label class="form-label">Type <span class="urdu">(قسم)</span></label>
                         <select class="form-select @error('type') is-invalid @enderror" name="type">
-                            <option value="percentage" {{ old('type', $commission->type) == 'percentage' ? 'selected' : '' }}>Percentage</option>
-                            <option value="fixed" {{ old('type', $commission->type) == 'fixed' ? 'selected' : '' }}>Fixed</option>
+                            <option value="percentage" {{ old('type', $commission->type) == 'percentage' ? 'selected' : '' }}>Percentage <span class="urdu">(فیصد)</span></option>
+                            <option value="fixed" {{ old('type', $commission->type) == 'fixed' ? 'selected' : '' }}>Fixed <span class="urdu">(مقررہ)</span></option>
                         </select>
                         @error('type') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
@@ -65,10 +65,10 @@
                     <div class="mb-3">
                         <label class="form-label">Status <span class="urdu">(کیفیت)</span></label>
                         <select class="form-select @error('status') is-invalid @enderror" name="status">
-                            <option value="pending" {{ old('status', $commission->status) == 'pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="approved" {{ old('status', $commission->status) == 'approved' ? 'selected' : '' }}>Approved</option>
-                            <option value="paid" {{ old('status', $commission->status) == 'paid' ? 'selected' : '' }}>Paid</option>
-                            <option value="cancelled" {{ old('status', $commission->status) == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                            <option value="pending" {{ old('status', $commission->status) == 'pending' ? 'selected' : '' }}>Pending <span class="urdu">(زیر التواء)</span></option>
+                            <option value="approved" {{ old('status', $commission->status) == 'approved' ? 'selected' : '' }}>Approved <span class="urdu">(منظور شدہ)</span></option>
+                            <option value="paid" {{ old('status', $commission->status) == 'paid' ? 'selected' : '' }}>Paid <span class="urdu">(ادا شدہ)</span></option>
+                            <option value="cancelled" {{ old('status', $commission->status) == 'cancelled' ? 'selected' : '' }}>Cancelled <span class="urdu">(منسوخ)</span></option>
                         </select>
                         @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>

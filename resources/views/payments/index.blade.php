@@ -66,7 +66,7 @@
         </table>
     </div>
     @if($payments->hasPages())
-    <div class="p-3 border-top">{{ $payments->links() }}</div>
+    <div class="p-3 border-top">{{ $payments->withQueryString()->links() }}</div>
     @endif
 </div>
 @endsection

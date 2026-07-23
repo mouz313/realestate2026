@@ -52,7 +52,7 @@
     </div>
 </div>
 @if($visits->hasPages())
-<div class="mt-3">{{ $visits->links() }}</div>
+<div class="mt-3">{{ $visits->withQueryString()->links() }}</div>
 @endif
 @endif
 @endsection

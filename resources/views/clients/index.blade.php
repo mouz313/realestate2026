@@ -74,7 +74,7 @@
     </div>
     @if($clients->hasPages())
     <div class="p-3 border-top">
-        {{ $clients->links() }}
+        {{ $clients->withQueryString()->links() }}
     </div>
     @endif
 </div>

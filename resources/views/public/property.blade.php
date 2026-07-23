@@ -1,6 +1,11 @@
 @extends('public.layouts.app')
 
 @section('title', $property->title)
+@section('meta_description', Str::limit($property->description ?? 'Details about ' . $property->title, 160))
+@section('og_title', $property->title)
+@php $firstImage = $property->media->where('type','image')->first(); @endphp
+@section('og_image', $firstImage ? Storage::url($firstImage->file_path) : '')
+@section('meta_keywords', $property->type . ', ' . $property->city . ', real estate, property for ' . $property->transaction_type)
 
 @push('styles')
 <style>
@@ -264,6 +269,10 @@ $imageUrls = $images->map(fn($m) => Storage::url($m->file_path))->values();
         <div data-aos="fade-up">
           <h5 class="fw-bold mb-3"><i class="ti ti-list-check me-1" style="color:var(--accent);"></i> Features &amp; Amenities</h5>
           <div class="row">
+            @if($property->features)
+            <div class="col-md-6 feature-group"><div class="fg-title"><i class="ti ti-star"></i> Features</div>
+              @foreach($property->features as $f) <span class="feature-badge"><i class="ti ti-check"></i>{{ $f }}</span> @endforeach</div>
+            @endif
             @if($property->additional_rooms)
             <div class="col-md-6 feature-group"><div class="fg-title"><i class="ti ti-door"></i> Additional Rooms</div>
               @foreach($property->additional_rooms as $r) <span class="feature-badge"><i class="ti ti-door"></i>{{ $r }}</span> @endforeach</div>

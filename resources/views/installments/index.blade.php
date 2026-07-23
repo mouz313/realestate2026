@@ -86,7 +86,7 @@
     </div>
     @if($installments->hasPages())
     <div class="p-3 border-top">
-        {{ $installments->links() }}
+        {{ $installments->withQueryString()->links() }}
     </div>
     @endif
 </div>

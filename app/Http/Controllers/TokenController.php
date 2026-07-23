@@ -42,18 +42,21 @@ class TokenController extends Controller
 
     public function show(Token $token)
     {
+        $this->authorizeViaDeal($token);
         $token->load('deal');
         return view('tokens.show', compact('token'));
     }
 
     public function edit(Token $token)
     {
+        $this->authorizeViaDeal($token);
         $deals = Deal::orderBy('deal_number')->get();
         return view('tokens.edit', compact('token', 'deals'));
     }
 
     public function update(Request $request, Token $token)
     {
+        $this->authorizeViaDeal($token);
         $request->validate([
             'deal_id' => 'required|exists:deals,id',
             'amount' => 'required|numeric|min:0',
@@ -69,6 +72,7 @@ class TokenController extends Controller
 
     public function destroy(Token $token)
     {
+        $this->authorizeViaDeal($token);
         $token->delete();
         toastr()->success('Token deleted successfully.');
         return redirect()->route('tokens.index');

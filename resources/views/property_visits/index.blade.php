@@ -78,7 +78,7 @@
     </div>
     @if($propertyVisits->hasPages())
     <div class="p-3 border-top">
-        {{ $propertyVisits->links() }}
+        {{ $propertyVisits->withQueryString()->links() }}
     </div>
     @endif
 </div>

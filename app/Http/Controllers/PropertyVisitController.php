@@ -45,6 +45,7 @@ class PropertyVisitController extends Controller
 
     public function show(PropertyVisit $propertyVisit)
     {
+        $this->authorizeAgentAccess($propertyVisit);
         $propertyVisit->load(['property', 'client', 'agent']);
         return view('property_visits.show', compact('propertyVisit'));
     }
@@ -59,6 +60,7 @@ class PropertyVisitController extends Controller
 
     public function update(Request $request, PropertyVisit $propertyVisit)
     {
+        $this->authorizeAgentAccess($propertyVisit);
         $request->validate([
             'property_id' => 'required|exists:properties,id',
             'client_id' => 'required|exists:clients,id',
@@ -75,6 +77,7 @@ class PropertyVisitController extends Controller
 
     public function destroy(PropertyVisit $propertyVisit)
     {
+        $this->authorizeAgentAccess($propertyVisit);
         $propertyVisit->delete();
         toastr()->success('Property visit deleted successfully.');
         return redirect()->route('property-visits.index');

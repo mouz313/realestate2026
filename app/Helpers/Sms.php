@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use App\Models\Setting;
+use Illuminate\Support\Facades\Http;
 
 class Sms
 {
@@ -31,12 +32,23 @@ class Sms
         $sender = $settings['sms_sender'] ?? 'Agency';
 
         $to = ltrim($to, '+');
-        $url = "https://connectix.com.pk/api/sms.php?username={$username}&password={$password}&sender={$sender}&mobile={$to}&message=" . urlencode($message);
 
         try {
-            $response = @file_get_contents($url);
-            \Illuminate\Support\Facades\Log::info('SMS via Connectix', ['response' => $response]);
-            return true;
+            $response = Http::post('https://connectix.com.pk/api/sms.php', [
+                'username' => $username,
+                'password' => $password,
+                'sender' => $sender,
+                'mobile' => $to,
+                'message' => $message,
+            ]);
+
+            if ($response->successful()) {
+                \Illuminate\Support\Facades\Log::info('SMS via Connectix', ['response' => $response->body()]);
+                return true;
+            }
+
+            \Illuminate\Support\Facades\Log::error('SMS failed via Connectix', ['response' => $response->body()]);
+            return false;
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('SMS failed', ['error' => $e->getMessage()]);
             return false;

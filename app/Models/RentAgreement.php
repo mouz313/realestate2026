@@ -13,7 +13,7 @@ class RentAgreement extends Model
         'deal_id', 'property_id', 'tenant_id', 'owner_id', 'start_date', 'end_date',
         'rent_amount', 'security_deposit', 'deposit_received', 'deposit_returned',
         'notice_period_days', 'late_fee_per_day', 'rent_increase_percent',
-        'rent_increase_frequency', 'agreement_doc', 'status', 'notes',
+        'rent_increase_frequency', 'payment_frequency', 'agreement_doc', 'status', 'notes', 'terms',
     ];
 
     protected function casts(): array

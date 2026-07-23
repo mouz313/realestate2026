@@ -97,7 +97,7 @@
     </div>
     @if($commissions->hasPages())
     <div class="p-3 border-top">
-        {{ $commissions->links() }}
+        {{ $commissions->withQueryString()->links() }}
     </div>
     @endif
 </div>

@@ -52,7 +52,7 @@
     @endforeach
 </div>
 @if($properties->hasPages())
-<div class="mt-3">{{ $properties->links() }}</div>
+<div class="mt-3">{{ $properties->withQueryString()->links() }}</div>
 @endif
 @endif
 @endsection

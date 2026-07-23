@@ -1,6 +1,8 @@
 @extends('public.layouts.app')
 
 @section('title', 'About Us')
+@section('meta_description', 'Learn about ' . config('app.name') . ' — our journey, mission, and the team behind Pakistan\'s most trusted real estate platform.')
+@section('meta_keywords', 'about, real estate company, Pakistan property, our team, mission')
 
 @push('styles')
 <style>

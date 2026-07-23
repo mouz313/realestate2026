@@ -14,7 +14,7 @@ class Property extends Model
     protected $fillable = [
         'property_code', 'title', 'type', 'transaction_type', 'status',
         'possession_status', 'possession_year',
-        'price', 'price_per_sqft', 'currency', 'location_address', 'city',
+        'price', 'price_per_sqft', 'currency', 'location_address', 'city', 'city_id',
         'sector_town', 'block', 'plot_size', 'plot_size_unit', 'land_area',
         'covered_area', 'covered_area_unit',
         'bedrooms', 'bathrooms', 'kitchens', 'floors', 'floor_number', 'total_floors', 'furnished',
@@ -81,5 +81,10 @@ class Property extends Model
     public function primaryMedia()
     {
         return $this->hasOne(PropertyMedia::class)->where('is_primary', true);
+    }
+
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
     }
 }

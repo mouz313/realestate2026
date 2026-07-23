@@ -28,6 +28,13 @@ class InstallmentController extends Controller
         return view('installments.create', compact('deals', 'frequencies'));
     }
 
+    public function markPaid(Installment $installment)
+    {
+        $installment->update(['status' => 'paid', 'paid_at' => now()]);
+        toastr()->success('Installment marked as paid.');
+        return back();
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -89,14 +96,9 @@ class InstallmentController extends Controller
         return redirect()->route('installments.index');
     }
 
-    public function show(InstallmentPlan $installmentPlan)
-    {
-        $installmentPlan->load(['deal', 'installments']);
-        return view('installments.show', compact('installmentPlan'));
-    }
-
     public function edit(InstallmentPlan $installmentPlan)
     {
+        $this->authorizeAgentAccess($installmentPlan->deal);
         $deals = Deal::orderBy('deal_number')->get();
         $frequencies = ['monthly', 'quarterly', 'semi_annually', 'annually'];
         return view('installments.edit', compact('installmentPlan', 'deals', 'frequencies'));
@@ -104,6 +106,7 @@ class InstallmentController extends Controller
 
     public function update(Request $request, InstallmentPlan $installmentPlan)
     {
+        $this->authorizeAgentAccess($installmentPlan->deal);
         $request->validate([
             'deal_id' => 'required|exists:deals,id',
             'total_installments' => 'required|integer|min:1',
@@ -120,6 +123,7 @@ class InstallmentController extends Controller
 
     public function destroy(InstallmentPlan $installmentPlan)
     {
+        $this->authorizeAgentAccess($installmentPlan->deal);
         $installmentPlan->installments()->delete();
         $installmentPlan->delete();
         toastr()->success('Installment plan deleted successfully.');

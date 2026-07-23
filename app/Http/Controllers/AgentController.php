@@ -52,7 +52,7 @@ class AgentController extends Controller
         $data = $request->except('photo');
         $data['commission_rate'] = $request->filled('commission_rate') ? $request->commission_rate : 2.50;
         $data['type'] = $request->filled('type') ? $request->type : 'in_house';
-        $data['specializations'] = $request->filled('specializations') ? json_encode($request->specializations) : null;
+        $data['specializations'] = $request->filled('specializations') ? $request->specializations : null;
 
         if ($request->hasFile('photo')) {
             $data['photo'] = $request->file('photo')->store('agents', 'public');
@@ -102,7 +102,7 @@ class AgentController extends Controller
         $data = $request->except('photo');
         $data['commission_rate'] = $request->filled('commission_rate') ? $request->commission_rate : 2.50;
         $data['type'] = $request->filled('type') ? $request->type : 'in_house';
-        $data['specializations'] = $request->filled('specializations') ? json_encode($request->specializations) : null;
+        $data['specializations'] = $request->filled('specializations') ? $request->specializations : null;
 
         if ($request->hasFile('photo')) {
             if ($agent->photo) {

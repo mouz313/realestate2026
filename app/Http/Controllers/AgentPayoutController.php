@@ -45,12 +45,41 @@ class AgentPayoutController extends Controller
 
     public function show(AgentPayout $agentPayout)
     {
+        $this->authorizeAgentAccess($agentPayout);
         $agentPayout->load('agent');
         return view('agent_payouts.show', compact('agentPayout'));
     }
 
+    public function edit(AgentPayout $agentPayout)
+    {
+        $this->authorizeAgentAccess($agentPayout);
+        $agents = Agent::orderBy('name')->get();
+        return view('agent_payouts.edit', compact('agentPayout', 'agents'));
+    }
+
+    public function update(Request $request, AgentPayout $agentPayout)
+    {
+        $this->authorizeAgentAccess($agentPayout);
+        $request->validate([
+            'agent_id' => 'required|exists:agents,id',
+            'amount' => 'required|numeric|min:0',
+            'payout_date' => 'required|date',
+            'method' => 'nullable|string|max:50',
+            'commission_ids' => 'nullable|array',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $data = $request->all();
+        $data['commission_ids'] = $request->has('commission_ids') ? json_encode($request->commission_ids) : null;
+
+        $agentPayout->update($data);
+        toastr()->success('Agent payout updated successfully.');
+        return redirect()->route('agent-payouts.index');
+    }
+
     public function destroy(AgentPayout $agentPayout)
     {
+        $this->authorizeAgentAccess($agentPayout);
         $agentPayout->delete();
         toastr()->success('Agent payout deleted successfully.');
         return redirect()->route('agent-payouts.index');

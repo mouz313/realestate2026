@@ -87,7 +87,7 @@
     </div>
     @if($deals->hasPages())
     <div class="p-3 border-top">
-        {{ $deals->links() }}
+        {{ $deals->withQueryString()->links() }}
     </div>
     @endif
 </div>

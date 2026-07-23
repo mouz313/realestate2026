@@ -41,7 +41,7 @@
     @endforeach
 </div>
 @if($invoices->hasPages())
-<div class="mt-3">{{ $invoices->links() }}</div>
+<div class="mt-3">{{ $invoices->withQueryString()->links() }}</div>
 @endif
 @endif
 @endsection

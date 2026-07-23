@@ -49,9 +49,9 @@
                         <label class="form-label">Transaction Type <span class="urdu">(لین دین کی قسم)</span></label>
                         <select class="form-select @error('transaction_type') is-invalid @enderror" name="transaction_type">
                             <option value="">Select</option>
-                            <option value="sale" {{ old('transaction_type', $property->transaction_type) == 'sale' ? 'selected' : '' }}>Sale</option>
-                            <option value="rent" {{ old('transaction_type', $property->transaction_type) == 'rent' ? 'selected' : '' }}>Rent</option>
-                            <option value="lease" {{ old('transaction_type', $property->transaction_type) == 'lease' ? 'selected' : '' }}>Lease</option>
+                            <option value="sale" {{ old('transaction_type', $property->transaction_type) == 'sale' ? 'selected' : '' }}>Sale <span class="urdu">(فروخت)</span></option>
+                            <option value="rent" {{ old('transaction_type', $property->transaction_type) == 'rent' ? 'selected' : '' }}>Rent <span class="urdu">(کرایہ)</span></option>
+                            <option value="lease" {{ old('transaction_type', $property->transaction_type) == 'lease' ? 'selected' : '' }}>Lease <span class="urdu">(لیز)</span></option>
                         </select>
                         @error('transaction_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>

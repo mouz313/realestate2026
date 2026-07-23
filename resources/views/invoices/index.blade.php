@@ -80,7 +80,7 @@
         </table>
     </div>
     @if($invoices->hasPages())
-    <div class="p-3 border-top">{{ $invoices->links() }}</div>
+    <div class="p-3 border-top">{{ $invoices->withQueryString()->links() }}</div>
     @endif
 </div>
 @endsection

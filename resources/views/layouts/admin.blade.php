@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <title>@yield('title', config('app.name')) - {{ config('app.name') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ asset('assets/tabler-icons.min.css') }}" rel="stylesheet">
@@ -38,12 +39,6 @@
                     Clients
                 </a>
             </li>
-                <li>
-                    <a href="{{ route('items.index') }}" class="nav-link {{ request()->routeIs('items.*') ? 'active' : '' }}">
-                        <i class="ti ti-package"></i>
-                        Item Catalog
-                    </a>
-                </li>
                 <li>
                     <a href="{{ route('quotations.index') }}" class="nav-link {{ request()->routeIs('quotations.*') ? 'active' : '' }}">
                         <i class="ti ti-file-description"></i>
@@ -260,17 +255,20 @@
                             results.classList.add('show');
                             return;
                         }
-                        let html = '';
+                        results.innerHTML = '';
                         data.forEach(item => {
-                            html += '<a href="' + item.url + '" class="search-dropdown-item">' +
-                                '<i class="' + item.icon + '"></i>' +
+                            const el = document.createElement('a');
+                            el.href = item.url;
+                            el.className = 'search-dropdown-item';
+                            el.innerHTML = '<i class="' + item.icon + '"></i>' +
                                 '<div class="search-dropdown-text">' +
-                                    '<div class="search-dropdown-label">' + item.label + '</div>' +
-                                    '<div class="search-dropdown-sub">' + item.type + (item.sub ? ' &middot; ' + item.sub : '') + '</div>' +
-                                '</div>' +
-                            '</a>';
+                                    '<div class="search-dropdown-label"></div>' +
+                                    '<div class="search-dropdown-sub"></div>' +
+                                '</div>';
+                            el.querySelector('.search-dropdown-label').textContent = item.label;
+                            el.querySelector('.search-dropdown-sub').textContent = item.type + (item.sub ? ' · ' + item.sub : '');
+                            results.appendChild(el);
                         });
-                        results.innerHTML = html;
                         results.classList.add('show');
                     })
                     .catch((err) => console.error('Search error:', err));
@@ -304,11 +302,12 @@
     </script>
     <script>
         @if (session()->has('toastr'))
-            toastr.{{ session('toastr')['type'] }}('{{ session('toastr')['message'] }}');
+            @php $t = session('toastr'); @endphp
+            toastr.{{ $t['type'] }}(@json($t['message']));
         @endif
         @if($errors->any())
             @foreach($errors->all() as $message)
-                toastr.error('{{ $message }}');
+                toastr.error(@json($message));
             @endforeach
         @endif
     </script>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Contact;
 use App\Models\Property;
 use App\Models\PropertyMedia;
 use Illuminate\Http\Request;
@@ -51,15 +52,18 @@ class WebsiteController extends Controller
 
     public function submitContact(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:20',
+            'subject' => 'nullable|string|max:100',
             'message' => 'required|string|max:5000',
         ]);
 
+        Contact::create($validated);
+
         \Mail::raw(
-            "Name: {$request->name}\nEmail: {$request->email}\nPhone: {$request->phone}\n\nMessage:\n{$request->message}",
+            "Name: {$request->name}\nEmail: {$request->email}\nPhone: {$request->phone}\nSubject: {$request->subject}\n\nMessage:\n{$request->message}",
             fn ($msg) => $msg->to(config('app.admin_email', 'admin@example.com'))
                 ->subject('New Contact Inquiry - ' . config('app.name'))
         );

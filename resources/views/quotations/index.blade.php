@@ -81,7 +81,7 @@
     </div>
     @if($quotations->hasPages())
     <div class="p-3 border-top">
-        {{ $quotations->links() }}
+        {{ $quotations->withQueryString()->links() }}
     </div>
     @endif
 </div>

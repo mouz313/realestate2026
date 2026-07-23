@@ -1,6 +1,8 @@
 @extends('public.layouts.app')
 
 @section('title', 'Contact Us')
+@section('meta_description', 'Get in touch with ' . config('app.name') . '. Call, email, or visit our office in Islamabad. Our team is ready to assist you with all your real estate needs.')
+@section('meta_keywords', 'contact, real estate inquiry, Islamabad office, property consultation')
 
 @push('styles')
 <style>

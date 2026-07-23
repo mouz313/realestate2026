@@ -27,7 +27,7 @@ class DealController extends Controller
         $properties = Property::where('status', 'available')->orderBy('title')->get();
         $clients = Client::orderBy('name')->get();
         $agents = Agent::orderBy('name')->get();
-        $statuses = ['pending', 'in_progress', 'completed', 'cancelled'];
+        $statuses = ['inquiry', 'visit_scheduled', 'offer_made', 'token_received', 'agreement_signed', 'in_progress', 'completed', 'cancelled'];
         return view('deals.create', compact('properties', 'clients', 'agents', 'statuses'));
     }
 
@@ -43,9 +43,9 @@ class DealController extends Controller
             'commission_amount' => 'nullable|numeric|min:0',
             'agent_commission' => 'nullable|numeric|min:0',
             'agency_share' => 'nullable|numeric|min:0',
-            'status' => 'required|string|in:pending,in_progress,completed,cancelled',
-            'deal_date' => 'nullable|date',
-            'closing_date' => 'nullable|date',
+            'status' => 'required|string|in:inquiry,visit_scheduled,offer_made,token_received,agreement_signed,in_progress,completed,cancelled',
+            'agreement_date' => 'nullable|date',
+            'possession_date' => 'nullable|date',
             'notes' => 'nullable|string|max:1000',
         ]);
 
@@ -66,21 +66,24 @@ class DealController extends Controller
 
     public function show(Deal $deal)
     {
+        $this->authorizeAgentAccess($deal);
         $deal->load(['property', 'buyer', 'seller', 'agent', 'tokens', 'invoices', 'commissions', 'installmentPlan']);
         return view('deals.show', compact('deal'));
     }
 
     public function edit(Deal $deal)
     {
+        $this->authorizeAgentAccess($deal);
         $properties = Property::orderBy('title')->get();
         $clients = Client::orderBy('name')->get();
         $agents = Agent::orderBy('name')->get();
-        $statuses = ['pending', 'in_progress', 'completed', 'cancelled'];
+        $statuses = ['inquiry', 'visit_scheduled', 'offer_made', 'token_received', 'agreement_signed', 'in_progress', 'completed', 'cancelled'];
         return view('deals.edit', compact('deal', 'properties', 'clients', 'agents', 'statuses'));
     }
 
     public function update(Request $request, Deal $deal)
     {
+        $this->authorizeAgentAccess($deal);
         $request->validate([
             'property_id' => 'required|exists:properties,id',
             'buyer_id' => 'required|exists:clients,id',
@@ -91,9 +94,9 @@ class DealController extends Controller
             'commission_amount' => 'nullable|numeric|min:0',
             'agent_commission' => 'nullable|numeric|min:0',
             'agency_share' => 'nullable|numeric|min:0',
-            'status' => 'required|string|in:pending,in_progress,completed,cancelled',
-            'deal_date' => 'nullable|date',
-            'closing_date' => 'nullable|date',
+            'status' => 'required|string|in:inquiry,visit_scheduled,offer_made,token_received,agreement_signed,in_progress,completed,cancelled',
+            'agreement_date' => 'nullable|date',
+            'possession_date' => 'nullable|date',
             'notes' => 'nullable|string|max:1000',
         ]);
 
@@ -110,6 +113,7 @@ class DealController extends Controller
 
     public function destroy(Deal $deal)
     {
+        $this->authorizeAgentAccess($deal);
         $deal->delete();
         toastr()->success('Deal deleted successfully.');
         return redirect()->route('deals.index');

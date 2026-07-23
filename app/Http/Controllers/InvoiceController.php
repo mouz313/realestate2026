@@ -163,6 +163,7 @@ class InvoiceController extends Controller
             'quotation_id' => $quotation->id,
             'client_id' => $quotation->client_id,
             'invoice_number' => $this->generateInvoiceNumber(),
+            'invoice_type' => 'sale',
             'status' => 'unpaid',
             'due_date' => now()->addDays($paymentTerms),
             'subtotal' => $quotation->subtotal,

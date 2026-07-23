@@ -9,6 +9,7 @@ use App\Models\Property;
 use App\Models\PropertyMedia;
 use App\Models\PropertyDocument;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class PropertyController extends Controller
@@ -30,7 +31,10 @@ class PropertyController extends Controller
         $types = ['house', 'flat', 'plot', 'commercial', 'farmhouse', 'penthouse'];
         $transactionTypes = ['sale', 'rent', 'lease'];
         $statuses = ['available', 'under_offer', 'sold', 'rented', 'under_construction', 'off_market'];
-        return view('properties.create', compact('clients', 'agents', 'cities', 'types', 'transactionTypes', 'statuses'));
+        $lastProperty = Property::withTrashed()->orderBy('id', 'desc')->first();
+        $nextId = $lastProperty ? $lastProperty->id + 1 : 1;
+        $autoCode = 'PR-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
+        return view('properties.create', compact('clients', 'agents', 'cities', 'types', 'transactionTypes', 'statuses', 'autoCode'));
     }
 
     public function store(Request $request)
@@ -62,7 +66,7 @@ class PropertyController extends Controller
             'total_floors' => 'nullable|integer|min:0',
             'furnished' => 'nullable|boolean',
             'parking_spaces' => 'nullable|integer|min:0',
-            'features' => 'nullable|array',
+            'features' => 'nullable|string',
             'additional_rooms' => 'nullable|array',
             'additional_rooms.*' => 'string',
             'building_features' => 'nullable|array',
@@ -90,17 +94,20 @@ class PropertyController extends Controller
         ]);
 
         $data = $request->except(['images', 'video']);
-        $data['features'] = $request->has('features') ? $request->features : null;
+        $data['features'] = $request->has('features') ? array_map('trim', explode(',', $request->features)) : null;
         $data['additional_rooms'] = $request->has('additional_rooms') ? $request->additional_rooms : null;
         $data['building_features'] = $request->has('building_features') ? $request->building_features : null;
         $data['community_amenities'] = $request->has('community_amenities') ? $request->community_amenities : null;
         $data['communication_features'] = $request->has('communication_features') ? $request->communication_features : null;
         $data['nearby_places'] = $request->has('nearby_places') ? $request->nearby_places : null;
         $data['utilities'] = $request->has('utilities') ? $request->utilities : null;
+        $data['city_id'] = $request->city ? City::where('name', $request->city)->value('id') : null;
 
-        $lastProperty = Property::withTrashed()->orderBy('id', 'desc')->first();
-        $nextId = $lastProperty ? $lastProperty->id + 1 : 1;
-        $data['property_code'] = 'PR-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
+        $data['property_code'] = DB::transaction(function () {
+            $last = Property::withTrashed()->lockForUpdate()->orderBy('id', 'desc')->first();
+            $nextId = $last ? $last->id + 1 : 1;
+            return 'PR-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
+        });
 
         $property = Property::create($data);
         $this->handleMediaUploads($request, $property);
@@ -110,12 +117,14 @@ class PropertyController extends Controller
 
     public function show(Property $property)
     {
+        $this->authorizePropertyAccess($property);
         $property->load(['owner', 'assignedAgent', 'media', 'documents']);
         return view('properties.show', compact('property'));
     }
 
     public function edit(Property $property)
     {
+        $this->authorizePropertyAccess($property);
         $property->load('media');
         $clients = Client::orderBy('name')->get();
         $agents = Agent::orderBy('name')->get();
@@ -128,6 +137,7 @@ class PropertyController extends Controller
 
     public function update(Request $request, Property $property)
     {
+        $this->authorizePropertyAccess($property);
         $request->validate([
             'title' => 'required|string|max:255',
             'type' => 'required|string|in:house,flat,plot,commercial,farmhouse,penthouse',
@@ -155,7 +165,7 @@ class PropertyController extends Controller
             'total_floors' => 'nullable|integer|min:0',
             'furnished' => 'nullable|boolean',
             'parking_spaces' => 'nullable|integer|min:0',
-            'features' => 'nullable|array',
+            'features' => 'nullable|string',
             'additional_rooms' => 'nullable|array',
             'additional_rooms.*' => 'string',
             'building_features' => 'nullable|array',
@@ -183,13 +193,14 @@ class PropertyController extends Controller
         ]);
 
         $data = $request->except(['images', 'video']);
-        $data['features'] = $request->has('features') ? $request->features : null;
+        $data['features'] = $request->has('features') ? array_map('trim', explode(',', $request->features)) : null;
         $data['additional_rooms'] = $request->has('additional_rooms') ? $request->additional_rooms : null;
         $data['building_features'] = $request->has('building_features') ? $request->building_features : null;
         $data['community_amenities'] = $request->has('community_amenities') ? $request->community_amenities : null;
         $data['communication_features'] = $request->has('communication_features') ? $request->communication_features : null;
         $data['nearby_places'] = $request->has('nearby_places') ? $request->nearby_places : null;
         $data['utilities'] = $request->has('utilities') ? $request->utilities : null;
+        $data['city_id'] = $request->city ? City::where('name', $request->city)->value('id') : null;
 
         $property->update($data);
         $this->handleMediaUploads($request, $property);
@@ -199,6 +210,7 @@ class PropertyController extends Controller
 
     public function destroy(Property $property)
     {
+        $this->authorizePropertyAccess($property);
         foreach ($property->media as $media) {
             Storage::disk('public')->delete($media->file_path);
             $media->delete();

@@ -53,6 +53,7 @@ class CommissionController extends Controller
 
     public function update(Request $request, Commission $commission)
     {
+        $this->authorizeAgentAccess($commission);
         $request->validate([
             'deal_id' => 'required|exists:deals,id',
             'agent_id' => 'required|exists:agents,id',
@@ -70,6 +71,7 @@ class CommissionController extends Controller
 
     public function destroy(Commission $commission)
     {
+        $this->authorizeAgentAccess($commission);
         $commission->delete();
         toastr()->success('Commission deleted successfully.');
         return redirect()->route('commissions.index');
@@ -77,6 +79,7 @@ class CommissionController extends Controller
 
     public function markPaid(Commission $commission)
     {
+        $this->authorizeAgentAccess($commission);
         $commission->update([
             'status' => 'paid',
             'paid_date' => now(),

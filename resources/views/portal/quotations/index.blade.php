@@ -36,7 +36,7 @@
     @endforeach
 </div>
 @if($quotations->hasPages())
-<div class="mt-3">{{ $quotations->links() }}</div>
+<div class="mt-3">{{ $quotations->withQueryString()->links() }}</div>
 @endif
 @endif
 @endsection

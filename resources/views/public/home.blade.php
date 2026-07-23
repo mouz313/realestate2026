@@ -1,6 +1,8 @@
 @extends('public.layouts.app')
 
 @section('title', 'Home')
+@section('meta_description', config('app.name') . ' - Pakistan\'s premier real estate platform. Find houses, flats, plots, and commercial properties for sale and rent across all major cities.')
+@section('meta_keywords', 'real estate Pakistan, buy property, sell property, rent house, Islamabad real estate, Lahore property, Karachi property')
 
 @push('styles')
 <style>

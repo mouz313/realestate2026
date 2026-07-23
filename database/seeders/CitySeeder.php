@@ -130,7 +130,7 @@ class CitySeeder extends Seeder
         ];
 
         foreach ($cities as $city) {
-            City::create($city);
+            City::updateOrCreate(['name' => $city['name']], $city);
         }
     }
 }

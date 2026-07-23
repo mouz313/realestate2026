@@ -80,7 +80,7 @@
     </div>
     @if($tokens->hasPages())
     <div class="p-3 border-top">
-        {{ $tokens->links() }}
+        {{ $tokens->withQueryString()->links() }}
     </div>
     @endif
 </div>

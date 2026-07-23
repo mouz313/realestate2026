@@ -75,7 +75,7 @@
     </div>
     @if($cities->hasPages())
     <div class="p-3 border-top">
-        {{ $cities->links() }}
+        {{ $cities->withQueryString()->links() }}
     </div>
     @endif
 </div>
