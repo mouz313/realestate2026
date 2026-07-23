@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Sale Agreement {{ $deal->deal_number }}</title>
+    <style>
+        body { font-family: 'DejaVu Sans', sans-serif; font-size: 12px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { font-size: 18px; font-weight: bold; }
+        .header h2 { font-size: 14px; }
+        .section { margin-bottom: 15px; }
+        .section-title { font-weight: bold; font-size: 14px; margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 3px; }
+        table { width: 100%; border-collapse: collapse; }
+        td, th { padding: 6px 8px; text-align: left; }
+        .signatures { margin-top: 40px; }
+        .signatures table td { width: 33%; text-align: center; padding-top: 40px; }
+        .footer { position: fixed; bottom: 10px; text-align: center; font-size: 10px; color: #666; width: 100%; }
+        .amount-words { font-style: italic; }
+        .terms { margin-top: 15px; }
+        .terms ol { padding-left: 20px; }
+        .terms li { margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ $settings['business_name'] ?? config('app.name') }}</h1>
+        <h2>{{ $settings['business_address'] ?? '' }}</h2>
+        <p>{{ $settings['business_phone'] ?? '' }} | {{ $settings['business_email'] ?? '' }}</p>
+        <hr>
+        <h1 style="font-size: 22px;">SALE AGREEMENT (Iqarnama)</h1>
+        <p>Date: {{ now()->format('d M Y') }} | Agreement No: {{ $deal->deal_number }}</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Parties</div>
+        <p>THIS AGREEMENT is made on {{ now()->format('d M Y') }} between:</p>
+        <p><strong>SELLER:</strong> {{ $deal->seller->name ?? 'N/A' }}<br>
+           CNIC: {{ $deal->seller->cnic ?? 'N/A' }}<br>
+           Address: {{ $deal->seller->address ?? 'N/A' }}</p>
+        <p><strong>BUYER:</strong> {{ $deal->buyer->name ?? 'N/A' }}<br>
+           CNIC: {{ $deal->buyer->cnic ?? 'N/A' }}<br>
+           Address: {{ $deal->buyer->address ?? 'N/A' }}</p>
+        <p>WHEREAS the Seller is the lawful owner of the property described below and agrees to sell it to the Buyer on the following terms and conditions.</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Property Details</div>
+        <table>
+            <tr><th style="width: 140px;">Title</th><td>{{ $deal->property->title ?? 'N/A' }}</td></tr>
+            <tr><th>Type</th><td>{{ ucfirst($deal->property->type ?? 'N/A') }}</td></tr>
+            <tr><th>Location</th><td>{{ $deal->property->location_address ?? 'N/A' }}</td></tr>
+            <tr><th>Plot Size</th><td>{{ $deal->property->plot_size ?? 'N/A' }} {{ $deal->property->plot_size_unit ?? '' }}</td></tr>
+            <tr><th>City</th><td>{{ $deal->property->city ?? 'N/A' }}</td></tr>
+            <tr><th>Sector / Block</th><td>{{ $deal->property->sector ?? '' }} {{ $deal->property->block ?? '' }}</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Sale Consideration</div>
+        <p><strong>Sale Price:</strong> Rs. {{ number_format($deal->sale_price, 2) }}</p>
+        <p class="amount-words">(Amount: Rs. {{ number_format($deal->sale_price, 2) }} only)</p>
+        <p><strong>Token / Advance Amount Received:</strong> Rs. {{ number_format($deal->token_amount ?? 0, 2) }}</p>
+    </div>
+
+    <div class="section terms">
+        <div class="section-title">Terms and Conditions</div>
+        <ol>
+            <li>The total sale consideration is Rs. {{ number_format($deal->sale_price, 2) }}.</li>
+            <li>The Buyer has paid a token amount of Rs. {{ number_format($deal->token_amount ?? 0, 2) }} as advance.</li>
+            <li>The remaining amount shall be paid on or before {{ $deal->possession_date ? $deal->possession_date->format('d M Y') : 'the agreed date' }}.</li>
+            <li>Possession shall be handed over on {{ $deal->possession_date ? $deal->possession_date->format('d M Y') : 'the agreed date' }}.</li>
+            <li>The Seller guarantees clear title and no encumbrances on the property.</li>
+            <li>Any taxes or registration fees shall be borne by the Buyer.</li>
+        </ol>
+    </div>
+
+    <div class="signatures">
+        <div class="section-title">Signatures</div>
+        <table>
+            <tr>
+                <td><strong>Seller</strong><br>_________________________</td>
+                <td><strong>Buyer</strong><br>_________________________</td>
+                <td><strong>Agent</strong><br>_________________________</td>
+            </tr>
+            <tr>
+                <td><strong>Witness 1</strong><br>_________________________</td>
+                <td><strong>Witness 2</strong><br>_________________________</td>
+                <td></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="footer">
+        This agreement is computer-generated and does not require a physical signature.<br>
+        Generated by {{ config('app.name') }}
+    </div>
+</body>
+</html>
