@@ -158,7 +158,13 @@
                 </div>
             </div>
             <hr class="my-4" style="border-color:rgba(255,255,255,0.1);">
-            <div class="text-center small">&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</div>
+            <div class="d-flex flex-wrap justify-content-between align-items-center">
+                <div class="small">&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</div>
+                <div class="d-flex gap-3 small">
+                    <a href="{{ route('website.privacy') }}" class="text-white-50 text-decoration-none">Privacy Policy</a>
+                    <a href="{{ route('website.terms') }}" class="text-white-50 text-decoration-none">Terms of Service</a>
+                </div>
+            </div>
         </div>
     </footer>
 

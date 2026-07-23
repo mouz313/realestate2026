@@ -1,2 +1,10 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /login
+Disallow: /register
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /profile
+Disallow: /portal
+Disallow: /forgot-password
+Disallow: /reset-password

@@ -16,9 +16,19 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'portal.auth' => ClientPortalAuth::class,
         ]);
+
+        $middleware->trustProxies(at: '*');
+
+        $middleware->redirectGuestsTo(fn () => route('login'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
-    })->create();
+    })
+    ->withSchedule(function ($schedule): void {
+        $schedule->command('queue:work --stop-when-empty --max-time=180')
+            ->everyMinute()
+            ->withoutOverlapping();
+    })
+    ->create();

@@ -139,6 +139,58 @@ class WebsiteController extends Controller
         return back();
     }
 
+    public function privacy()
+    {
+        $settings = Setting::pluck('value', 'key');
+        $social = [
+            'facebook' => $settings['social_facebook'] ?? '#',
+            'instagram' => $settings['social_instagram'] ?? '#',
+            'whatsapp' => $settings['social_whatsapp'] ?? '#',
+            'youtube' => $settings['social_youtube'] ?? '#',
+        ];
+        $contactInfo = [
+            'address' => $settings['address'] ?? 'Islamabad, Pakistan',
+            'phone' => $settings['phone'] ?? '+92 300 1234567',
+            'email' => $settings['email'] ?? 'info@example.com',
+            'hours' => $settings['working_hours'] ?? 'Mon-Sat: 9AM - 7PM',
+        ];
+
+        return view('public.privacy', compact('social', 'contactInfo'));
+    }
+
+    public function terms()
+    {
+        $settings = Setting::pluck('value', 'key');
+        $social = [
+            'facebook' => $settings['social_facebook'] ?? '#',
+            'instagram' => $settings['social_instagram'] ?? '#',
+            'whatsapp' => $settings['social_whatsapp'] ?? '#',
+            'youtube' => $settings['social_youtube'] ?? '#',
+        ];
+        $contactInfo = [
+            'address' => $settings['address'] ?? 'Islamabad, Pakistan',
+            'phone' => $settings['phone'] ?? '+92 300 1234567',
+            'email' => $settings['email'] ?? 'info@example.com',
+            'hours' => $settings['working_hours'] ?? 'Mon-Sat: 9AM - 7PM',
+        ];
+
+        return view('public.terms', compact('social', 'contactInfo'));
+    }
+
+    public function sitemap()
+    {
+        $urls = [
+            ['loc' => url('/'), 'freq' => 'daily', 'priority' => '1.0'],
+            ['loc' => url('/listings'), 'freq' => 'daily', 'priority' => '0.9'],
+            ['loc' => url('/about'), 'freq' => 'monthly', 'priority' => '0.7'],
+            ['loc' => url('/contact'), 'freq' => 'monthly', 'priority' => '0.6'],
+            ['loc' => url('/privacy'), 'freq' => 'yearly', 'priority' => '0.3'],
+            ['loc' => url('/terms'), 'freq' => 'yearly', 'priority' => '0.3'],
+        ];
+
+        return response()->view('public.sitemap', compact('urls'))->header('Content-Type', 'application/xml');
+    }
+
     public function properties(Request $request)
     {
         $query = Property::with(['primaryMedia', 'owner'])->whereIn('status', ['available', 'pending']);

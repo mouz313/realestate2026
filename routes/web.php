@@ -35,9 +35,12 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [WebsiteController::class, 'home'])->name('home');
 Route::get('/about', [WebsiteController::class, 'about'])->name('website.about');
 Route::get('/contact', [WebsiteController::class, 'contact'])->name('website.contact');
-Route::post('/contact', [WebsiteController::class, 'submitContact'])->name('website.contact.submit');
+Route::post('/contact', [WebsiteController::class, 'submitContact'])->middleware('throttle:3,1')->name('website.contact.submit');
 Route::get('/listings', [WebsiteController::class, 'properties'])->name('website.properties');
 Route::get('/listings/{property}', [WebsiteController::class, 'property'])->name('website.property');
+Route::get('/privacy', [WebsiteController::class, 'privacy'])->name('website.privacy');
+Route::get('/terms', [WebsiteController::class, 'terms'])->name('website.terms');
+Route::get('/sitemap.xml', [WebsiteController::class, 'sitemap'])->name('website.sitemap');
 
 Route::middleware(['guest', 'throttle:5,1'])->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
