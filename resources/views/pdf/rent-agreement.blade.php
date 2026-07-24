@@ -4,96 +4,118 @@
     <meta charset="utf-8">
     <title>Rent Agreement #{{ $rentAgreement->id }}</title>
     <style>
-        body { font-family: 'DejaVu Sans', sans-serif; font-size: 12px; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { font-size: 18px; font-weight: bold; }
-        .header h2 { font-size: 14px; }
-        .section { margin-bottom: 15px; }
-        .section-title { font-weight: bold; font-size: 14px; margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 3px; }
-        table { width: 100%; border-collapse: collapse; }
-        td, th { padding: 6px 8px; text-align: left; }
-        .signatures { margin-top: 40px; }
-        .signatures table td { width: 33%; text-align: center; padding-top: 40px; }
-        .footer { position: fixed; bottom: 10px; text-align: center; font-size: 10px; color: #666; width: 100%; }
-        .amount-words { font-style: italic; }
-        .terms { margin-top: 15px; }
-        .terms ol { padding-left: 20px; }
-        .terms li { margin-bottom: 5px; }
+        @page { margin: 15px 25px; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 9px; color: #2d2d2d; line-height: 1.5; margin: 0; padding: 0; }
+
+        .top-bar {
+            background: #0f172a; color: #fff; padding: 18px 28px; border-radius: 6px 6px 0 0;
+        }
+        .top-bar .left { float: left; width: 55%; }
+        .top-bar .right { float: right; width: 45%; text-align: right; padding-top: 4px; }
+        .top-bar::after { content: ''; display: table; clear: both; }
+        .logo-img { max-height: 38px; max-width: 160px; display: inline-block; vertical-align: middle; }
+        .co-name { font-size: 16px; font-weight: 800; letter-spacing: .3px; display: inline-block; vertical-align: middle; margin-left: 8px; }
+        .doc-label { font-size: 20px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: #f97316; }
+        .doc-ref { font-size: 8px; color: rgba(255,255,255,.6); margin-top: 2px; letter-spacing: .3px; }
+
+        .body-wrap { padding: 18px 28px 0; }
+
+        .sec-title {
+            font-size: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;
+            color: #f97316; margin-bottom: 6px; padding-bottom: 3px; border-bottom: 1px solid #e2e8f0;
+        }
+        p { margin: 0 0 5px; font-size: 8.5px; }
+        table.info { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+        table.info td { padding: 3px 6px; font-size: 8.5px; }
+        table.info td:first-child { width: 170px; color: #64748b; font-weight: 600; }
+
+        .amount-words { font-style: italic; color: #64748b; font-size: 8px; }
+
+        ol { padding-left: 18px; margin: 4px 0 0; }
+        ol li { margin-bottom: 3px; font-size: 8.5px; }
+
+        .signatures { margin-top: 15px; }
+        .signatures table { width: 100%; border-collapse: collapse; }
+        .signatures td { width: 33%; text-align: center; padding-top: 28px; font-size: 8.5px; color: #64748b; }
+
+        .footer-note {
+            text-align: center; font-size: 6.5px; color: #94a3b8; border-top: 1px solid #e2e8f0;
+            padding: 8px 28px 0; margin: 0 -28px;
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>{{ $settings['business_name'] ?? config('app.name') }}</h1>
-        <h2>{{ $settings['business_address'] ?? '' }}</h2>
-        <p>{{ $settings['business_phone'] ?? '' }} | {{ $settings['business_email'] ?? '' }}</p>
-        <hr>
-        <h1 style="font-size: 22px;">RENT AGREEMENT (Kiranama)</h1>
-        <p>Date: {{ now()->format('d M Y') }} | Agreement No: {{ $rentAgreement->id }}</p>
-    </div>
 
-    <div class="section">
-        <div class="section-title">Parties</div>
-        <p>THIS RENT AGREEMENT is made on {{ $rentAgreement->start_date ? $rentAgreement->start_date->format('d M Y') : now()->format('d M Y') }} between:</p>
-        <p><strong>LANDLORD (Owner):</strong> {{ $rentAgreement->owner->name ?? 'N/A' }}<br>
-           CNIC: {{ $rentAgreement->owner->cnic ?? 'N/A' }}<br>
-           Address: {{ $rentAgreement->owner->address ?? 'N/A' }}</p>
-        <p><strong>TENANT:</strong> {{ $rentAgreement->tenant->name ?? 'N/A' }}<br>
-           CNIC: {{ $rentAgreement->tenant->cnic ?? 'N/A' }}<br>
-           Address: {{ $rentAgreement->tenant->address ?? 'N/A' }}</p>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Property Details</div>
-        <table>
-            <tr><th style="width: 140px;">Title</th><td>{{ $rentAgreement->property->title ?? 'N/A' }}</td></tr>
-            <tr><th>Type</th><td>{{ ucfirst($rentAgreement->property->type ?? 'N/A') }}</td></tr>
-            <tr><th>Location</th><td>{{ $rentAgreement->property->location_address ?? 'N/A' }}</td></tr>
-            <tr><th>City</th><td>{{ $rentAgreement->property->city ?? 'N/A' }}</td></tr>
-        </table>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Rent Details</div>
-        <table>
-            <tr><th style="width: 180px;">Monthly Rent</th><td>Rs. {{ number_format($rentAgreement->rent_amount, 2) }}</td></tr>
-            <tr><th>Security Deposit</th><td>Rs. {{ number_format($rentAgreement->security_deposit ?? 0, 2) }}</td></tr>
-            <tr><th>Agreement Period</th><td>{{ $rentAgreement->start_date ? $rentAgreement->start_date->format('d M Y') : 'N/A' }} to {{ $rentAgreement->end_date ? $rentAgreement->end_date->format('d M Y') : 'Open' }}</td></tr>
-        </table>
-    </div>
-
-    <div class="section terms">
-        <div class="section-title">Terms and Conditions</div>
-        <ol>
-            <li>Rent is payable monthly in advance.</li>
-            <li>Security deposit is refundable at the end of tenancy, subject to deductions for damages.</li>
-            <li>{{ $rentAgreement->notice_period_days ?? 30 }} days notice is required for termination by either party.</li>
-            <li>Late fee of Rs. {{ number_format($rentAgreement->late_fee_per_day ?? 0, 2) }} per day applies on delayed rent payments.</li>
-            <li>Rent increase of {{ $rentAgreement->rent_increase_percent ?? 0 }}% per year applies.</li>
-            @if($rentAgreement->security_deposit && $rentAgreement->security_deposit > 0)
-            <li>Security deposit of Rs. {{ number_format($rentAgreement->security_deposit, 2) }} has been received by the Landlord.</li>
+    <div class="top-bar">
+        <div class="left">
+            @if(!empty($settings['brand_logo']))
+            <img src="{{ storage_path('app/public/'.$settings['brand_logo']) }}" class="logo-img" alt="Logo">
             @endif
-        </ol>
+            <span class="co-name">{{ $settings['business_name'] ?? config('app.name') }}</span>
+        </div>
+        <div class="right">
+            <div class="doc-label">Rent Agreement</div>
+            <div class="doc-ref">#{{ $rentAgreement->id }} &nbsp;|&nbsp; {{ $rentAgreement->created_at->format('d M Y') }}</div>
+        </div>
     </div>
 
-    <div class="signatures">
-        <div class="section-title">Signatures</div>
-        <table>
-            <tr>
-                <td><strong>Landlord</strong><br>_________________________</td>
-                <td><strong>Tenant</strong><br>_________________________</td>
-                <td><strong>Agent</strong><br>_________________________</td>
-            </tr>
-            <tr>
-                <td><strong>Witness</strong><br>_________________________</td>
-                <td></td>
-                <td></td>
-            </tr>
+    <div class="body-wrap">
+
+        <div class="sec-title">Parties</div>
+        <p>THIS AGREEMENT is made on {{ $rentAgreement->created_at->format('d M Y') }} between:</p>
+        <p><strong>OWNER:</strong> {{ $rentAgreement->owner->name ?? 'N/A' }} &mdash; CNIC: {{ $rentAgreement->owner->cnic ?? 'N/A' }} &mdash; {{ $rentAgreement->owner->phone ?? '' }}</p>
+        <p><strong>TENANT:</strong> {{ $rentAgreement->tenant->name ?? 'N/A' }} &mdash; CNIC: {{ $rentAgreement->tenant->cnic ?? 'N/A' }} &mdash; {{ $rentAgreement->tenant->phone ?? '' }}</p>
+
+        <div class="sec-title">Property</div>
+        <table class="info">
+            <tr><td>Title</td><td>{{ $rentAgreement->property->title ?? 'N/A' }}</td></tr>
+            <tr><td>Location</td><td>{{ $rentAgreement->property->location_address ?? 'N/A' }}, {{ $rentAgreement->property->city ?? '' }}</td></tr>
+            <tr><td>Type</td><td>{{ ucfirst($rentAgreement->property->type ?? 'N/A') }}</td></tr>
         </table>
+
+        <div class="sec-title">Rent Terms</div>
+        <table class="info">
+            <tr><td>Monthly Rent</td><td>Rs. {{ number_format($rentAgreement->monthly_rent, 2) }}</td></tr>
+            <tr><td>Security Deposit</td><td>Rs. {{ number_format($rentAgreement->security_deposit ?? 0, 2) }}</td></tr>
+            @if($rentAgreement->rental_period_months)
+            <tr><td>Period</td><td>{{ $rentAgreement->rental_period_months }} months</td></tr>
+            @endif
+            <tr><td>Start / End</td><td>{{ $rentAgreement->start_date->format('d M Y') }} @if($rentAgreement->end_date) &rarr; {{ $rentAgreement->end_date->format('d M Y') }} @endif</td></tr>
+        </table>
+
+        <div class="sec-title">Terms</div>
+        <ol>
+            <li>Rent of Rs. {{ number_format($rentAgreement->monthly_rent, 2) }} payable by 10th each month.</li>
+            <li>Security deposit of Rs. {{ number_format($rentAgreement->security_deposit ?? 0, 2) }} refundable at end of tenancy (less damages).</li>
+            <li>Tenant shall not sublet without written consent.</li>
+            <li>Utility bills payable by Tenant.</li>
+            <li>30 days notice required from either party.</li>
+        </ol>
+
+        <div class="sec-title">Signatures</div>
+        <div class="signatures">
+            <table>
+                <tr>
+                    <td><strong>Owner</strong><br>_________________________</td>
+                    <td><strong>Tenant</strong><br>_________________________</td>
+                    <td><strong>Agent</strong><br>_________________________</td>
+                </tr>
+                <tr>
+                    <td><strong>Witness 1</strong><br>_________________________</td>
+                    <td><strong>Witness 2</strong><br>_________________________</td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="footer-note">
+            <strong>{{ $settings['business_name'] ?? config('app.name') }}</strong>
+            &mdash; {{ $settings['business_address'] ?? '' }}
+            &mdash; {{ $settings['business_phone'] ?? '' }}
+            &mdash; {{ $settings['business_email'] ?? '' }}
+        </div>
+
     </div>
 
-    <div class="footer">
-        This agreement is computer-generated and does not require a physical signature.<br>
-        Generated by {{ config('app.name') }}
-    </div>
 </body>
 </html>

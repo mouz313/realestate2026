@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\QrHelper;
 use App\Mail\InvoiceMail;
 use App\Mail\MailSettings;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
-use App\Models\Item;
 use App\Models\Quotation;
 use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -26,13 +26,12 @@ class InvoiceController extends Controller
     public function create()
     {
         $clients = Client::orderBy('name')->get();
-        $items = Item::orderBy('name')->get();
         $settings = Setting::pluck('value', 'key')->toArray();
         $taxRate = $settings['tax_rate'] ?? 0;
         $taxLabel = $settings['tax_label'] ?? 'GST';
         $currency = $settings['currency'] ?? 'PKR';
 
-        return view('invoices.create', compact('clients', 'items', 'taxRate', 'taxLabel', 'currency'));
+        return view('invoices.create', compact('clients', 'taxRate', 'taxLabel', 'currency'));
     }
 
     public function store(Request $request)
@@ -94,13 +93,12 @@ class InvoiceController extends Controller
     {
         $invoice->load('items');
         $clients = Client::orderBy('name')->get();
-        $items = Item::orderBy('name')->get();
         $settings = Setting::pluck('value', 'key')->toArray();
         $taxRate = $settings['tax_rate'] ?? 0;
         $taxLabel = $settings['tax_label'] ?? 'GST';
         $currency = $settings['currency'] ?? 'PKR';
 
-        return view('invoices.edit', compact('invoice', 'clients', 'items', 'taxRate', 'taxLabel', 'currency'));
+        return view('invoices.edit', compact('invoice', 'clients', 'taxRate', 'taxLabel', 'currency'));
     }
 
     public function update(Request $request, Invoice $invoice)
@@ -163,7 +161,7 @@ class InvoiceController extends Controller
             return back();
         }
 
-        $quotation->load('client', 'items');
+        $quotation->load('client', 'property', 'items');
         $settings = Setting::pluck('value', 'key')->toArray();
         $paymentTerms = (int) ($settings['payment_terms'] ?? 30);
 
@@ -222,7 +220,11 @@ class InvoiceController extends Controller
     {
         $invoice->load('client', 'items');
         $settings = Setting::pluck('value', 'key')->toArray();
-        $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'settings'));
+
+        $verifyUrl = route('invoices.show', $invoice);
+        $qrCode = QrHelper::pngDataUri($verifyUrl);
+
+        $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'settings', 'qrCode'));
 
         return $pdf->download('invoice-'.$invoice->invoice_number.'.pdf');
     }

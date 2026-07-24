@@ -12,6 +12,19 @@
 </nav>
 @endsection
 
+@push('styles')
+<style>
+.property-card {
+    background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 10px; padding: 12px 16px;
+    display: none; margin-bottom: 16px;
+}
+.property-card.active { display: block; }
+.property-card .pc-title { font-weight: 700; font-size: .95rem; }
+.property-card .pc-detail { font-size: .78rem; color: #64748b; }
+.property-card .pc-price { font-weight: 800; color: #0f172a; font-size: 1.1rem; }
+</style>
+@endpush
+
 @section('content')
 <form action="{{ route('quotations.store') }}" method="POST" id="quotationForm">
     @csrf
@@ -31,6 +44,34 @@
                             @endforeach
                         </select>
                         @error('client_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Property <span class="urdu">(پراپرٹی)</span></label>
+                        <select name="property_id" id="propertySelect" class="form-select @error('property_id') is-invalid @enderror">
+                            <option value="">-- None (manual items) --</option>
+                            @foreach($properties as $p)
+                                <option value="{{ $p->id }}"
+                                    data-title="{{ $p->title }}"
+                                    data-price="{{ $p->price }}"
+                                    data-location="{{ $p->location_address ?? '' }}, {{ $p->city ?? '' }}"
+                                    data-type="{{ ucfirst($p->type) }}"
+                                    data-size="{{ $p->plot_size ? $p->plot_size . ' ' . ($p->plot_size_unit ?? '') : '' }}"
+                                    {{ old('property_id') == $p->id ? 'selected' : '' }}>
+                                    {{ $p->title }} — {{ $p->city ?? '' }} (Rs. {{ number_format($p->price, 0) }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('property_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="property-card" id="propertyCard">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="pc-title" id="pcTitle"></div>
+                                <div class="pc-detail" id="pcDetail"></div>
+                                <div class="pc-detail" id="pcType"></div>
+                            </div>
+                            <div class="pc-price" id="pcPrice"></div>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Expiry Date <span class="urdu">(میعاد ختم)</span></label>
@@ -108,8 +149,37 @@
 
 @push('scripts')
 <script>
-const catalogItems = @json($items);
+const properties = @json($properties);
 let rowIndex = 0;
+
+{{-- Property selector --}}
+const propSelect = document.getElementById('propertySelect');
+const propCard = document.getElementById('propertyCard');
+
+propSelect.addEventListener('change', function() {
+    const val = this.value;
+    if (!val) { propCard.classList.remove('active'); return; }
+    const p = properties.find(x => x.id == val);
+    if (!p) return;
+    document.getElementById('pcTitle').textContent = p.title;
+    document.getElementById('pcDetail').textContent = (p.location_address || '') + (p.city ? ', ' + p.city : '');
+    document.getElementById('pcType').textContent = (p.type ? p.type.charAt(0).toUpperCase() + p.type.slice(1) : '') + (p.plot_size ? ' — ' + p.plot_size + ' ' + (p.plot_size_unit || '') : '');
+    document.getElementById('pcPrice').textContent = 'Rs. ' + Number(p.price).toLocaleString(undefined, {minimumFractionDigits: 0});
+    propCard.classList.add('active');
+
+    {{-- Auto-add property price row if not already added --}}
+    const existing = document.querySelectorAll('.item-name');
+    let found = false;
+    existing.forEach(el => { if (el.value === p.title) found = true; });
+    if (!found) {
+        addRow({
+            item_name: p.title,
+            quantity: 1,
+            unit: 'lot',
+            unit_price: Number(p.price),
+        });
+    }
+});
 
 function addRow(data = null) {
     document.getElementById('noItemsRow')?.remove();
@@ -118,45 +188,19 @@ function addRow(data = null) {
     const i = rowIndex++;
     tr.id = `row-${i}`;
 
-    const itemOpts = '<option value="">-- Select --</option>' + catalogItems.map(it =>
-        `<option value="${it.id}" data-price="${it.default_price}" data-unit="${it.unit || ''}">${it.name}</option>`
-    ).join('');
-
     tr.innerHTML = `
         <td>
-            <select name="items[${i}][item_id]" class="form-select form-select-sm item-select" data-index="${i}" onchange="onItemSelect(${i})">
-                ${itemOpts}
-            </select>
-            <input type="hidden" name="items[${i}][item_name]" class="item-name" value="">
+            <input type="text" name="items[${i}][item_name]" class="form-control form-control-sm item-name" value="${data?.item_name || ''}" placeholder="Item name" required>
+            <input type="hidden" name="items[${i}][description]" class="item-desc" value="${data?.description || ''}">
         </td>
         <td><input type="number" name="items[${i}][quantity]" class="form-control form-control-sm qty" value="${data?.quantity || 1}" min="1" oninput="calcRow(${i})"></td>
-        <td><input type="text" name="items[${i}][unit]" class="form-control form-control-sm unit" value="${data?.unit || ''}" readonly></td>
-        <td><input type="number" name="items[${i}][unit_price]" class="form-control form-control-sm price" step="0.01" min="0" value="${data?.unit_price || 0}" oninput="calcRow(${i})"></td>
-        <td class="text-end line-total pt-3" id="lineTotal-${i}">0.00</td>
+        <td><input type="text" name="items[${i}][unit]" class="form-control form-control-sm unit" value="${data?.unit || ''}" placeholder="unit"></td>
+        <td><input type="number" name="items[${i}][unit_price]" class="form-control form-control-sm price" step="any" min="0" value="${data?.unit_price || 0}" oninput="calcRow(${i})"></td>
+        <td class="text-end line-total pt-3" id="lineTotal-${i}">${((data?.quantity || 0) * (data?.unit_price || 0)).toFixed(2)}</td>
         <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(${i})"><i class="ti ti-x"></i></button></td>
     `;
 
-    if (data) {
-        tr.querySelector('.item-select').value = data.item_id || '';
-        tr.querySelector('.item-name').value = data.item_name || '';
-        tr.querySelector('.qty').value = data.quantity || 1;
-        tr.querySelector('.unit').value = data.unit || '';
-        tr.querySelector('.price').value = data.unit_price || 0;
-    }
-
     tbody.appendChild(tr);
-    calcRow(i);
-    calcTotal();
-}
-
-function onItemSelect(i) {
-    const sel = document.querySelector(`[name="items[${i}][item_id]"]`);
-    const item = catalogItems.find(it => it.id == sel.value);
-    const row = document.getElementById(`row-${i}`);
-    row.querySelector('.item-name').value = item ? item.name : '';
-    row.querySelector('.unit').value = item ? (item.unit || '') : '';
-    row.querySelector('.price').value = item ? item.default_price : 0;
-    calcRow(i);
     calcTotal();
 }
 
@@ -165,8 +209,7 @@ function calcRow(i) {
     if (!row) return;
     const qty = parseFloat(row.querySelector('.qty').value) || 0;
     const price = parseFloat(row.querySelector('.price').value) || 0;
-    const total = qty * price;
-    document.getElementById(`lineTotal-${i}`).textContent = total.toFixed(2);
+    document.getElementById(`lineTotal-${i}`).textContent = (qty * price).toFixed(2);
     calcTotal();
 }
 
@@ -177,10 +220,9 @@ function calcTotal() {
     });
     const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
     const tax = subtotal * (taxRate / 100);
-    const total = subtotal + tax;
     document.getElementById('displaySubtotal').textContent = subtotal.toFixed(2);
     document.getElementById('displayTax').textContent = tax.toFixed(2);
-    document.getElementById('displayTotal').textContent = total.toFixed(2);
+    document.getElementById('displayTotal').textContent = (subtotal + tax).toFixed(2);
 }
 
 function removeRow(i) {

@@ -4,95 +4,114 @@
     <meta charset="utf-8">
     <title>Sale Agreement {{ $deal->deal_number }}</title>
     <style>
-        body { font-family: 'DejaVu Sans', sans-serif; font-size: 12px; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { font-size: 18px; font-weight: bold; }
-        .header h2 { font-size: 14px; }
-        .section { margin-bottom: 15px; }
-        .section-title { font-weight: bold; font-size: 14px; margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 3px; }
-        table { width: 100%; border-collapse: collapse; }
-        td, th { padding: 6px 8px; text-align: left; }
-        .signatures { margin-top: 40px; }
-        .signatures table td { width: 33%; text-align: center; padding-top: 40px; }
-        .footer { position: fixed; bottom: 10px; text-align: center; font-size: 10px; color: #666; width: 100%; }
-        .amount-words { font-style: italic; }
-        .terms { margin-top: 15px; }
-        .terms ol { padding-left: 20px; }
-        .terms li { margin-bottom: 5px; }
+        @page { margin: 15px 25px; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 9px; color: #2d2d2d; line-height: 1.5; margin: 0; padding: 0; }
+
+        .top-bar {
+            background: #0f172a; color: #fff; padding: 18px 28px; border-radius: 6px 6px 0 0;
+        }
+        .top-bar .left { float: left; width: 55%; }
+        .top-bar .right { float: right; width: 45%; text-align: right; padding-top: 4px; }
+        .top-bar::after { content: ''; display: table; clear: both; }
+        .logo-img { max-height: 38px; max-width: 160px; display: inline-block; vertical-align: middle; }
+        .co-name { font-size: 16px; font-weight: 800; letter-spacing: .3px; display: inline-block; vertical-align: middle; margin-left: 8px; }
+        .doc-label { font-size: 20px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: #f97316; }
+        .doc-ref { font-size: 8px; color: rgba(255,255,255,.6); margin-top: 2px; letter-spacing: .3px; }
+
+        .body-wrap { padding: 18px 28px 0; }
+
+        .sec-title {
+            font-size: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;
+            color: #f97316; margin-bottom: 6px; padding-bottom: 3px; border-bottom: 1px solid #e2e8f0;
+        }
+        p { margin: 0 0 5px; font-size: 8.5px; }
+        table.info { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+        table.info td { padding: 3px 6px; font-size: 8.5px; }
+        table.info td:first-child { width: 130px; color: #64748b; font-weight: 600; }
+
+        .amount-words { font-style: italic; color: #64748b; font-size: 8px; }
+
+        ol { padding-left: 18px; margin: 4px 0 0; }
+        ol li { margin-bottom: 3px; font-size: 8.5px; }
+
+        .signatures { margin-top: 15px; }
+        .signatures table { width: 100%; border-collapse: collapse; }
+        .signatures td { width: 33%; text-align: center; padding-top: 28px; font-size: 8.5px; color: #64748b; }
+
+        .footer-note {
+            text-align: center; font-size: 6.5px; color: #94a3b8; border-top: 1px solid #e2e8f0;
+            padding: 8px 28px 0; margin: 0 -28px;
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>{{ $settings['business_name'] ?? config('app.name') }}</h1>
-        <h2>{{ $settings['business_address'] ?? '' }}</h2>
-        <p>{{ $settings['business_phone'] ?? '' }} | {{ $settings['business_email'] ?? '' }}</p>
-        <hr>
-        <h1 style="font-size: 22px;">SALE AGREEMENT (Iqarnama)</h1>
-        <p>Date: {{ now()->format('d M Y') }} | Agreement No: {{ $deal->deal_number }}</p>
+
+    <div class="top-bar">
+        <div class="left">
+            @if(!empty($settings['brand_logo']))
+            <img src="{{ storage_path('app/public/'.$settings['brand_logo']) }}" class="logo-img" alt="Logo">
+            @endif
+            <span class="co-name">{{ $settings['business_name'] ?? config('app.name') }}</span>
+        </div>
+        <div class="right">
+            <div class="doc-label">Sale Agreement</div>
+            <div class="doc-ref">#{{ $deal->deal_number }} &nbsp;|&nbsp; {{ now()->format('d M Y') }}</div>
+        </div>
     </div>
 
-    <div class="section">
-        <div class="section-title">Parties</div>
+    <div class="body-wrap">
+
+        <div class="sec-title">Parties</div>
         <p>THIS AGREEMENT is made on {{ now()->format('d M Y') }} between:</p>
-        <p><strong>SELLER:</strong> {{ $deal->seller->name ?? 'N/A' }}<br>
-           CNIC: {{ $deal->seller->cnic ?? 'N/A' }}<br>
-           Address: {{ $deal->seller->address ?? 'N/A' }}</p>
-        <p><strong>BUYER:</strong> {{ $deal->buyer->name ?? 'N/A' }}<br>
-           CNIC: {{ $deal->buyer->cnic ?? 'N/A' }}<br>
-           Address: {{ $deal->buyer->address ?? 'N/A' }}</p>
-        <p>WHEREAS the Seller is the lawful owner of the property described below and agrees to sell it to the Buyer on the following terms and conditions.</p>
-    </div>
+        <p><strong>SELLER:</strong> {{ $deal->seller->name ?? 'N/A' }} &mdash; CNIC: {{ $deal->seller->cnic ?? 'N/A' }}</p>
+        <p><strong>BUYER:</strong> {{ $deal->buyer->name ?? 'N/A' }} &mdash; CNIC: {{ $deal->buyer->cnic ?? 'N/A' }}</p>
+        <p>WHEREAS the Seller is the lawful owner of the property described below.</p>
 
-    <div class="section">
-        <div class="section-title">Property Details</div>
-        <table>
-            <tr><th style="width: 140px;">Title</th><td>{{ $deal->property->title ?? 'N/A' }}</td></tr>
-            <tr><th>Type</th><td>{{ ucfirst($deal->property->type ?? 'N/A') }}</td></tr>
-            <tr><th>Location</th><td>{{ $deal->property->location_address ?? 'N/A' }}</td></tr>
-            <tr><th>Plot Size</th><td>{{ $deal->property->plot_size ?? 'N/A' }} {{ $deal->property->plot_size_unit ?? '' }}</td></tr>
-            <tr><th>City</th><td>{{ $deal->property->city ?? 'N/A' }}</td></tr>
-            <tr><th>Sector / Block</th><td>{{ $deal->property->sector ?? '' }} {{ $deal->property->block ?? '' }}</td></tr>
+        <div class="sec-title">Property</div>
+        <table class="info">
+            <tr><td>Title</td><td>{{ $deal->property->title ?? 'N/A' }}</td></tr>
+            <tr><td>Location</td><td>{{ $deal->property->location_address ?? 'N/A' }}, {{ $deal->property->city ?? '' }}</td></tr>
+            <tr><td>Type / Size</td><td>{{ ucfirst($deal->property->type ?? 'N/A') }} &mdash; {{ $deal->property->plot_size ?? '' }} {{ $deal->property->plot_size_unit ?? '' }}</td></tr>
         </table>
-    </div>
 
-    <div class="section">
-        <div class="section-title">Sale Consideration</div>
-        <p><strong>Sale Price:</strong> Rs. {{ number_format($deal->sale_price, 2) }}</p>
-        <p class="amount-words">(Amount: Rs. {{ number_format($deal->sale_price, 2) }} only)</p>
-        <p><strong>Token / Advance Amount Received:</strong> Rs. {{ number_format($deal->token_amount ?? 0, 2) }}</p>
-    </div>
+        <div class="sec-title">Sale Consideration</div>
+        <p><strong>Sale Price:</strong> Rs. {{ number_format($deal->sale_price, 2) }}  <span class="amount-words">(Rs. {{ number_format($deal->sale_price, 2) }} only)</span></p>
+        <p><strong>Token Received:</strong> Rs. {{ number_format($deal->token_amount ?? 0, 2) }}</p>
+        @if($deal->possession_date)<p><strong>Possession:</strong> {{ $deal->possession_date->format('d M Y') }}</p>@endif
 
-    <div class="section terms">
-        <div class="section-title">Terms and Conditions</div>
+        <div class="sec-title">Terms</div>
         <ol>
-            <li>The total sale consideration is Rs. {{ number_format($deal->sale_price, 2) }}.</li>
-            <li>The Buyer has paid a token amount of Rs. {{ number_format($deal->token_amount ?? 0, 2) }} as advance.</li>
-            <li>The remaining amount shall be paid on or before {{ $deal->possession_date ? $deal->possession_date->format('d M Y') : 'the agreed date' }}.</li>
-            <li>Possession shall be handed over on {{ $deal->possession_date ? $deal->possession_date->format('d M Y') : 'the agreed date' }}.</li>
-            <li>The Seller guarantees clear title and no encumbrances on the property.</li>
-            <li>Any taxes or registration fees shall be borne by the Buyer.</li>
+            <li>Total consideration: Rs. {{ number_format($deal->sale_price, 2) }}.</li>
+            <li>Token advance of Rs. {{ number_format($deal->token_amount ?? 0, 2) }} received.</li>
+            <li>Balance due on possession: {{ $deal->possession_date ? $deal->possession_date->format('d M Y') : 'TBD' }}.</li>
+            <li>Seller guarantees clear title with no encumbrances.</li>
+            <li>Registration / taxes payable by Buyer.</li>
         </ol>
+
+        <div class="sec-title">Signatures</div>
+        <div class="signatures">
+            <table>
+                <tr>
+                    <td><strong>Seller</strong><br>_________________________</td>
+                    <td><strong>Buyer</strong><br>_________________________</td>
+                    <td><strong>Agent</strong><br>_________________________</td>
+                </tr>
+                <tr>
+                    <td><strong>Witness 1</strong><br>_________________________</td>
+                    <td><strong>Witness 2</strong><br>_________________________</td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="footer-note">
+            <strong>{{ $settings['business_name'] ?? config('app.name') }}</strong>
+            &mdash; {{ $settings['business_address'] ?? '' }}
+            &mdash; {{ $settings['business_phone'] ?? '' }}
+            &mdash; {{ $settings['business_email'] ?? '' }}
+        </div>
+
     </div>
 
-    <div class="signatures">
-        <div class="section-title">Signatures</div>
-        <table>
-            <tr>
-                <td><strong>Seller</strong><br>_________________________</td>
-                <td><strong>Buyer</strong><br>_________________________</td>
-                <td><strong>Agent</strong><br>_________________________</td>
-            </tr>
-            <tr>
-                <td><strong>Witness 1</strong><br>_________________________</td>
-                <td><strong>Witness 2</strong><br>_________________________</td>
-                <td></td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="footer">
-        This agreement is computer-generated and does not require a physical signature.<br>
-        Generated by {{ config('app.name') }}
-    </div>
 </body>
 </html>

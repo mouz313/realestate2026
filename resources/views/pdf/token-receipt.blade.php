@@ -4,70 +4,100 @@
     <meta charset="utf-8">
     <title>Token Receipt {{ $deal->deal_number }}</title>
     <style>
-        body { font-family: 'DejaVu Sans', sans-serif; font-size: 12px; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { font-size: 18px; font-weight: bold; }
-        .header h2 { font-size: 14px; }
-        .section { margin-bottom: 15px; }
-        .section-title { font-weight: bold; font-size: 14px; margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 3px; }
-        table { width: 100%; border-collapse: collapse; }
-        td, th { padding: 6px 8px; text-align: left; }
-        .signatures { margin-top: 40px; }
-        .signatures table td { width: 33%; text-align: center; padding-top: 40px; }
-        .footer { position: fixed; bottom: 10px; text-align: center; font-size: 10px; color: #666; width: 100%; }
-        .amount-words { font-style: italic; }
-        .terms { margin-top: 15px; }
-        .terms ol { padding-left: 20px; }
-        .terms li { margin-bottom: 5px; }
+        @page { margin: 15px 25px; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 9px; color: #2d2d2d; line-height: 1.5; margin: 0; padding: 0; }
+
+        .top-bar {
+            background: #0f172a; color: #fff; padding: 18px 28px; border-radius: 6px 6px 0 0;
+        }
+        .top-bar .left { float: left; width: 55%; }
+        .top-bar .right { float: right; width: 45%; text-align: right; padding-top: 4px; }
+        .top-bar::after { content: ''; display: table; clear: both; }
+        .logo-img { max-height: 38px; max-width: 160px; display: inline-block; vertical-align: middle; }
+        .co-name { font-size: 16px; font-weight: 800; letter-spacing: .3px; display: inline-block; vertical-align: middle; margin-left: 8px; }
+        .doc-label { font-size: 20px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: #f97316; }
+        .doc-ref { font-size: 8px; color: rgba(255,255,255,.6); margin-top: 2px; letter-spacing: .3px; }
+
+        .body-wrap { padding: 18px 28px 0; }
+
+        .sec-title {
+            font-size: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;
+            color: #f97316; margin-bottom: 6px; padding-bottom: 3px; border-bottom: 1px solid #e2e8f0;
+        }
+        table.info { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+        table.info td { padding: 3px 6px; font-size: 8.5px; }
+        table.info td:first-child { width: 150px; color: #64748b; font-weight: 600; }
+
+        .amount-words { font-style: italic; color: #64748b; font-size: 8px; }
+
+        ol { padding-left: 18px; margin: 4px 0 0; }
+        ol li { margin-bottom: 3px; font-size: 8.5px; }
+
+        .signatures { margin-top: 15px; }
+        .signatures table { width: 100%; border-collapse: collapse; }
+        .signatures td { width: 33%; text-align: center; padding-top: 28px; font-size: 8.5px; color: #64748b; }
+
+        .footer-note {
+            text-align: center; font-size: 6.5px; color: #94a3b8; border-top: 1px solid #e2e8f0;
+            padding: 8px 28px 0; margin: 0 -28px;
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>{{ $settings['business_name'] ?? config('app.name') }}</h1>
-        <h2>{{ $settings['business_address'] ?? '' }}</h2>
-        <p>{{ $settings['business_phone'] ?? '' }} | {{ $settings['business_email'] ?? '' }}</p>
-        <hr>
-        <h1 style="font-size: 22px;">TOKEN RECEIPT (Bayana)</h1>
-        <p>Receipt No: {{ $deal->deal_number }}-TKN | Date: {{ $token->received_date ? $token->received_date->format('d M Y') : now()->format('d M Y') }}</p>
+
+    <div class="top-bar">
+        <div class="left">
+            @if(!empty($settings['brand_logo']))
+            <img src="{{ storage_path('app/public/'.$settings['brand_logo']) }}" class="logo-img" alt="Logo">
+            @endif
+            <span class="co-name">{{ $settings['business_name'] ?? config('app.name') }}</span>
+        </div>
+        <div class="right">
+            <div class="doc-label">Token Receipt</div>
+            <div class="doc-ref">#{{ $deal->deal_number }}-TKN &nbsp;|&nbsp; {{ $token->received_date ? $token->received_date->format('d M Y') : now()->format('d M Y') }}</div>
+        </div>
     </div>
 
-    <div class="section">
-        <div class="section-title">Receipt Details</div>
-        <table>
-            <tr><th style="width: 160px;">Received From</th><td>{{ $deal->buyer->name ?? 'N/A' }}</td></tr>
-            <tr><th>Property</th><td>{{ $deal->property->title ?? 'N/A' }}, {{ $deal->property->location_address ?? '' }}</td></tr>
-            <tr><th>Sale Price</th><td>Rs. {{ number_format($deal->sale_price, 2) }}</td></tr>
-            <tr><th>Token Amount</th><td>Rs. {{ number_format($token->amount, 2) }}</td></tr>
-            <tr><th>Amount in Words</th><td class="amount-words">Rs. {{ number_format($token->amount, 2) }} only</td></tr>
-            <tr><th>Payment Method</th><td>{{ $token->payment_method ?? 'N/A' }}</td></tr>
-            <tr><th>Reference No</th><td>{{ $token->reference_no ?? 'N/A' }}</td></tr>
+    <div class="body-wrap">
+
+        <div class="sec-title">Receipt</div>
+        <table class="info">
+            <tr><td>Received From</td><td>{{ $deal->buyer->name ?? 'N/A' }}</td></tr>
+            <tr><td>Property</td><td>{{ $deal->property->title ?? 'N/A' }}, {{ $deal->property->location_address ?? '' }}</td></tr>
+            <tr><td>Sale Price</td><td>Rs. {{ number_format($deal->sale_price, 2) }}</td></tr>
+            <tr><td>Token Amount</td><td>Rs. {{ number_format($token->amount, 2) }}</td></tr>
+            <tr><td>In Words</td><td class="amount-words">Rs. {{ number_format($token->amount, 2) }} only</td></tr>
+            <tr><td>Payment Method</td><td>{{ $token->payment_method ?? 'N/A' }}</td></tr>
+            <tr><td>Reference</td><td>{{ $token->reference_no ?? 'N/A' }}</td></tr>
         </table>
-    </div>
 
-    <div class="section terms">
-        <div class="section-title">Terms</div>
+        <div class="sec-title">Terms</div>
         <ol>
-            <li>This token amount is part of the total sale consideration.</li>
-            <li>If the Buyer backs out, this amount may be forfeited.</li>
-            <li>If the Seller backs out, double the amount shall be refunded to the Buyer.</li>
-            <li>Balance payment shall be made as per agreement.</li>
+            <li>This token is part of the total sale consideration.</li>
+            <li>If Buyer backs out, this amount may be forfeited.</li>
+            <li>If Seller backs out, double shall be refunded to Buyer.</li>
+            <li>Balance payment as per agreement.</li>
         </ol>
+
+        <div class="sec-title">Signatures</div>
+        <div class="signatures">
+            <table>
+                <tr>
+                    <td><strong>Receiver</strong><br>_________________________</td>
+                    <td><strong>Payer</strong><br>_________________________</td>
+                    <td><strong>Witness</strong><br>_________________________</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="footer-note">
+            <strong>{{ $settings['business_name'] ?? config('app.name') }}</strong>
+            &mdash; {{ $settings['business_address'] ?? '' }}
+            &mdash; {{ $settings['business_phone'] ?? '' }}
+            &mdash; {{ $settings['business_email'] ?? '' }}
+        </div>
+
     </div>
 
-    <div class="signatures">
-        <div class="section-title">Signatures</div>
-        <table>
-            <tr>
-                <td><strong>Receiver (Seller/Agent)</strong><br>_________________________</td>
-                <td><strong>Payer (Buyer)</strong><br>_________________________</td>
-                <td><strong>Witness</strong><br>_________________________</td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="footer">
-        This receipt is computer-generated and does not require a physical signature.<br>
-        Generated by {{ config('app.name') }}
-    </div>
 </body>
 </html>

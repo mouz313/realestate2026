@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\QrHelper;
 use App\Mail\MailSettings;
 use App\Mail\QuotationMail;
 use App\Models\Client;
-use App\Models\Item;
+use App\Models\Property;
 use App\Models\Quotation;
 use App\Models\QuotationItem;
 use App\Models\Setting;
@@ -17,7 +18,7 @@ class QuotationController extends Controller
 {
     public function index()
     {
-        $quotations = Quotation::with('client')->latest()->paginate(15);
+        $quotations = Quotation::with('client', 'property')->latest()->paginate(15);
 
         return view('quotations.index', compact('quotations'));
     }
@@ -25,19 +26,20 @@ class QuotationController extends Controller
     public function create()
     {
         $clients = Client::orderBy('name')->get();
-        $items = Item::orderBy('name')->get();
+        $properties = Property::whereIn('status', ['available', 'pending'])->orderBy('title')->get();
         $settings = Setting::pluck('value', 'key')->toArray();
         $taxRate = $settings['tax_rate'] ?? 0;
         $taxLabel = $settings['tax_label'] ?? 'GST';
         $currency = $settings['currency'] ?? 'PKR';
 
-        return view('quotations.create', compact('clients', 'items', 'taxRate', 'taxLabel', 'currency'));
+        return view('quotations.create', compact('clients', 'properties', 'taxRate', 'taxLabel', 'currency'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'client_id' => 'required|exists:clients,id',
+            'property_id' => 'nullable|exists:properties,id',
             'expiry_date' => 'nullable|date',
             'notes' => 'nullable|string',
             'tax_rate' => 'required|numeric|min:0|max:100',
@@ -54,7 +56,6 @@ class QuotationController extends Controller
             $lineTotal = $line['quantity'] * $line['unit_price'];
             $subtotal += $lineTotal;
             $quotationItems[] = [
-                'item_id' => $line['item_id'] ?? null,
                 'item_name' => $line['item_name'],
                 'description' => $line['description'] ?? null,
                 'quantity' => $line['quantity'],
@@ -70,6 +71,7 @@ class QuotationController extends Controller
 
         $quotation = Quotation::create([
             'client_id' => $request->client_id,
+            'property_id' => $request->property_id,
             'quote_number' => $this->generateQuoteNumber(),
             'status' => 'draft',
             'expiry_date' => $request->expiry_date,
@@ -89,7 +91,7 @@ class QuotationController extends Controller
 
     public function show(Quotation $quotation)
     {
-        $quotation->load('client', 'items');
+        $quotation->load('client', 'property', 'items');
         $settings = Setting::pluck('value', 'key')->toArray();
 
         return view('quotations.show', compact('quotation', 'settings'));
@@ -99,19 +101,20 @@ class QuotationController extends Controller
     {
         $quotation->load('items');
         $clients = Client::orderBy('name')->get();
-        $items = Item::orderBy('name')->get();
+        $properties = Property::whereIn('status', ['available', 'pending'])->orderBy('title')->get();
         $settings = Setting::pluck('value', 'key')->toArray();
         $taxRate = $settings['tax_rate'] ?? 0;
         $taxLabel = $settings['tax_label'] ?? 'GST';
         $currency = $settings['currency'] ?? 'PKR';
 
-        return view('quotations.edit', compact('quotation', 'clients', 'items', 'taxRate', 'taxLabel', 'currency'));
+        return view('quotations.edit', compact('quotation', 'clients', 'properties', 'taxRate', 'taxLabel', 'currency'));
     }
 
     public function update(Request $request, Quotation $quotation)
     {
         $request->validate([
             'client_id' => 'required|exists:clients,id',
+            'property_id' => 'nullable|exists:properties,id',
             'expiry_date' => 'nullable|date',
             'notes' => 'nullable|string',
             'tax_rate' => 'required|numeric|min:0|max:100',
@@ -128,7 +131,6 @@ class QuotationController extends Controller
             $lineTotal = $line['quantity'] * $line['unit_price'];
             $subtotal += $lineTotal;
             $quotationItems[] = new QuotationItem([
-                'item_id' => $line['item_id'] ?? null,
                 'item_name' => $line['item_name'],
                 'description' => $line['description'] ?? null,
                 'quantity' => $line['quantity'],
@@ -144,6 +146,7 @@ class QuotationController extends Controller
 
         $quotation->update([
             'client_id' => $request->client_id,
+            'property_id' => $request->property_id,
             'expiry_date' => $request->expiry_date,
             'subtotal' => $subtotal,
             'tax_rate' => $taxRate,
@@ -170,10 +173,13 @@ class QuotationController extends Controller
 
     public function pdf(Quotation $quotation)
     {
-        $quotation->load('client', 'items');
+        $quotation->load('client', 'property', 'items');
         $settings = Setting::pluck('value', 'key')->toArray();
 
-        $pdf = Pdf::loadView('quotations.pdf', compact('quotation', 'settings'));
+        $verifyUrl = route('quotations.show', $quotation);
+        $qrCode = QrHelper::pngDataUri($verifyUrl);
+
+        $pdf = Pdf::loadView('quotations.pdf', compact('quotation', 'settings', 'qrCode'));
 
         return $pdf->download('quotation-'.$quotation->quote_number.'.pdf');
     }

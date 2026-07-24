@@ -67,6 +67,17 @@
                 <p class="mb-0 small text-secondary">{{ $quotation->client->email ?? '' }}</p>
                 <p class="mb-0 small text-secondary">{{ $quotation->client->phone ?? '' }}</p>
             </div>
+            @if($quotation->property)
+            <div class="col-6">
+                <h6 class="text-secondary mb-1">Property: <span class="urdu">(پراپرٹی)</span></h6>
+                <p class="mb-0 fw-semibold">{{ $quotation->property->title }}</p>
+                <p class="mb-0 small text-secondary">{{ $quotation->property->location_address ?? '' }}, {{ $quotation->property->city ?? '' }}</p>
+                @if($quotation->property->plot_size)
+                <p class="mb-0 small text-secondary">{{ ucfirst($quotation->property->type) }} — {{ $quotation->property->plot_size }} {{ $quotation->property->plot_size_unit ?? '' }}</p>
+                @endif
+                <p class="mb-0 small text-secondary">Price: Rs. {{ number_format($quotation->property->price, 0) }}</p>
+            </div>
+            @endif
         </div>
 
         <div class="table-responsive">

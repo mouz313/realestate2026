@@ -10,6 +10,7 @@ class Quotation extends Model
 {
     protected $fillable = [
         'client_id',
+        'property_id',
         'quote_number',
         'status',
         'expiry_date',
@@ -34,6 +35,11 @@ class Quotation extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function property(): BelongsTo
+    {
+        return $this->belongsTo(Property::class);
     }
 
     public function items(): HasMany

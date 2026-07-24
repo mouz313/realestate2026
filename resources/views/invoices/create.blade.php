@@ -49,8 +49,11 @@
         </div>
         <div class="col-md-8">
             <div class="card mb-3">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5><i class="ti ti-list me-1"></i> Items <span class="urdu">(آئٹمز)</span></h5>
+                    <button type="button" class="btn btn-sm btn-outline-dark" onclick="addRow()">
+                        <i class="ti ti-plus"></i> Add Item <span class="urdu">(آئٹم شامل)</span>
+                    </button>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -105,7 +108,6 @@
 
 @push('scripts')
 <script>
-const catalogItems = @json($items);
 let rowIndex = 0;
 
 function addRow(data = null) {
@@ -115,45 +117,19 @@ function addRow(data = null) {
     const i = rowIndex++;
     tr.id = `row-${i}`;
 
-    const itemOpts = '<option value="">-- Select --</option>' + catalogItems.map(it =>
-        `<option value="${it.id}" data-price="${it.default_price}" data-unit="${it.unit || ''}">${it.name}</option>`
-    ).join('');
-
     tr.innerHTML = `
         <td>
-            <select name="items[${i}][item_id]" class="form-select form-select-sm item-select" data-index="${i}" onchange="onItemSelect(${i})">
-                ${itemOpts}
-            </select>
-            <input type="hidden" name="items[${i}][item_name]" class="item-name" value="">
+            <input type="text" name="items[${i}][item_name]" class="form-control form-control-sm item-name" value="${data?.item_name || ''}" placeholder="Item name" required>
+            <input type="hidden" name="items[${i}][description]" class="item-desc" value="${data?.description || ''}">
         </td>
         <td><input type="number" name="items[${i}][quantity]" class="form-control form-control-sm qty" value="${data?.quantity || 1}" min="1" oninput="calcRow(${i})"></td>
-        <td><input type="text" name="items[${i}][unit]" class="form-control form-control-sm unit" value="${data?.unit || ''}" readonly></td>
-        <td><input type="number" name="items[${i}][unit_price]" class="form-control form-control-sm price" step="0.01" min="0" value="${data?.unit_price || 0}" oninput="calcRow(${i})"></td>
-        <td class="text-end line-total pt-3" id="lineTotal-${i}">0.00</td>
+        <td><input type="text" name="items[${i}][unit]" class="form-control form-control-sm unit" value="${data?.unit || ''}" placeholder="unit"></td>
+        <td><input type="number" name="items[${i}][unit_price]" class="form-control form-control-sm price" step="any" min="0" value="${data?.unit_price || 0}" oninput="calcRow(${i})"></td>
+        <td class="text-end line-total pt-3" id="lineTotal-${i}">${((data?.quantity || 0) * (data?.unit_price || 0)).toFixed(2)}</td>
         <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(${i})"><i class="ti ti-x"></i></button></td>
     `;
 
-    if (data) {
-        tr.querySelector('.item-select').value = data.item_id || '';
-        tr.querySelector('.item-name').value = data.item_name || '';
-        tr.querySelector('.qty').value = data.quantity || 1;
-        tr.querySelector('.unit').value = data.unit || '';
-        tr.querySelector('.price').value = data.unit_price || 0;
-    }
-
     tbody.appendChild(tr);
-    calcRow(i);
-    calcTotal();
-}
-
-function onItemSelect(i) {
-    const sel = document.querySelector(`[name="items[${i}][item_id]"]`);
-    const item = catalogItems.find(it => it.id == sel.value);
-    const row = document.getElementById(`row-${i}`);
-    row.querySelector('.item-name').value = item ? item.name : '';
-    row.querySelector('.unit').value = item ? (item.unit || '') : '';
-    row.querySelector('.price').value = item ? item.default_price : 0;
-    calcRow(i);
     calcTotal();
 }
 
@@ -162,8 +138,7 @@ function calcRow(i) {
     if (!row) return;
     const qty = parseFloat(row.querySelector('.qty').value) || 0;
     const price = parseFloat(row.querySelector('.price').value) || 0;
-    const total = qty * price;
-    document.getElementById(`lineTotal-${i}`).textContent = total.toFixed(2);
+    document.getElementById(`lineTotal-${i}`).textContent = (qty * price).toFixed(2);
     calcTotal();
 }
 
@@ -174,10 +149,9 @@ function calcTotal() {
     });
     const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
     const tax = subtotal * (taxRate / 100);
-    const total = subtotal + tax;
     document.getElementById('displaySubtotal').textContent = subtotal.toFixed(2);
     document.getElementById('displayTax').textContent = tax.toFixed(2);
-    document.getElementById('displayTotal').textContent = total.toFixed(2);
+    document.getElementById('displayTotal').textContent = (subtotal + tax).toFixed(2);
 }
 
 function removeRow(i) {
