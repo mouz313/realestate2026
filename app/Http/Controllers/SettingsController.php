@@ -4,16 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Setting;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(fn ($req, $next) => Gate::authorize('admin') ? $next($req) : abort(403));
-    }
-
     public function index()
     {
         $settings = Setting::pluck('value', 'key')->toArray();
@@ -121,6 +115,10 @@ class SettingsController extends Controller
                 }
                 Setting::updateOrCreate(['key' => 'slider_images'], ['value' => json_encode($existing)]);
 
+                continue;
+            }
+
+            if (in_array($key, ['slider_titles', 'slider_subtitles'])) {
                 continue;
             }
 

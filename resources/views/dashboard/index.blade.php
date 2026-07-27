@@ -109,6 +109,20 @@
         </div>
     </div>
     <div class="col-6 col-md-4 col-xl-3">
+        <div class="card stat-card" style="--accent-clients: #ef4444;">
+            <div class="card-body">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div class="min-w-0">
+                        <div class="stat-label">Expenses <span class="urdu">(اخراجات)</span></div>
+                        <div class="stat-value fs-5">{{ number_format($stats['total_expenses'], 0) }}</div>
+                        <a href="{{ route('expenses.index') }}" class="stat-link">View <i class="ti ti-arrow-right"></i></a>
+                    </div>
+                    <div class="stat-icon-wrap flex-shrink-0" style="background: rgba(239,68,68,0.1);color:#ef4444;"><i class="ti ti-receipt"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-3">
         <div class="card stat-card" style="--accent-clients: #8b5cf6;">
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between">
@@ -122,7 +136,35 @@
             </div>
         </div>
     </div>
+    <div class="col-6 col-md-4 col-xl-3">
+        <div class="card stat-card" style="--accent-clients: #f59e0b;">
+            <div class="card-body">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div class="min-w-0">
+                        <div class="stat-label">Avg Deal Size <span class="urdu">(اوسط ڈیل)</span></div>
+                        <div class="stat-value fs-5">{{ number_format($stats['avg_deal_size'], 0) }}</div>
+                        <span class="stat-link">Per Invoice <span class="urdu">(فی انوائس)</span></span>
+                    </div>
+                    <div class="stat-icon-wrap flex-shrink-0" style="background: rgba(245,158,11,0.1);color:#f59e0b;"><i class="ti ti-chart-bar"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+{{-- Monthly Trends --}}
+@if(isset($stats['monthly_quotations']) || isset($stats['monthly_invoices']))
+<div class="mt-3 mt-md-4">
+    <h5 class="mb-3 fw-semibold section-heading"><i class="ti ti-trending-up me-1"></i> Monthly Trends (6 Months) <span class="urdu">(ماہانہ رجحانات)</span></h5>
+    <div class="card">
+        <div class="card-body">
+            <div style="position:relative;height:250px;">
+                <canvas id="trendsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 {{-- Real Estate Stats --}}
 <div class="mt-3 mt-md-4">
@@ -327,25 +369,82 @@
 </div>
 
 <div class="row g-3 mt-3">
-    <div class="col-lg-6">
+    <div class="col-lg-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0"><i class="ti ti-report-money me-1"></i> Financial Summary <span class="urdu">(مالی خلاصہ)</span></h5>
             </div>
             <div class="card-body">
-                <div class="row g-0 text-center">
-                    <div class="col-6 border-end">
-                        <div class="fs-3 fw-bold" style="color: var(--accent-invoices);">{{ number_format($stats['total_revenue'], 2) }}</div>
-                        <div class="text-secondary small">Total Collected <span class="urdu">(کل وصول)</span></div>
-                    </div>
-                    <div class="col-6">
-                        <div class="fs-3 fw-bold" style="color: #ef4444;">{{ number_format($stats['outstanding'], 2) }}</div>
-                        <div class="text-secondary small">Outstanding <span class="urdu">(بقایا)</span></div>
-                    </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small">Total Revenue</span>
+                    <span class="fw-bold text-success">Rs. {{ number_format($stats['total_revenue'], 0) }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small">Total Expenses</span>
+                    <span class="fw-bold text-danger">Rs. {{ number_format($stats['total_expenses'], 0) }}</span>
+                </div>
+                <hr class="my-2">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small fw-semibold">Net Profit</span>
+                    <span class="fw-bold {{ $stats['net_profit'] >= 0 ? 'text-success' : 'text-danger' }}">Rs. {{ number_format($stats['net_profit'], 0) }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-secondary small">Outstanding</span>
+                    <span class="fw-bold text-warning">Rs. {{ number_format($stats['outstanding'], 0) }}</span>
                 </div>
             </div>
         </div>
     </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="ti ti-history me-1"></i> Recent Activity <span class="urdu">(حالیہ سرگرمی)</span></h5>
+            </div>
+            <div class="card-body p-0">
+                @forelse($recentActivities as $act)
+                <div class="d-flex align-items-start gap-2 px-3 py-2 border-bottom">
+                    <div class="mt-1">
+                        @if($act->event === 'created')
+                            <span class="badge bg-success" style="font-size:0.6rem;">+</span>
+                        @elseif($act->event === 'updated')
+                            <span class="badge bg-primary" style="font-size:0.6rem;">~</span>
+                        @elseif($act->event === 'deleted')
+                            <span class="badge bg-danger" style="font-size:0.6rem;">x</span>
+                        @endif
+                    </div>
+                    <div class="min-w-0 flex-grow-1">
+                        <div class="small fw-medium text-truncate">{{ $act->description ?? 'Activity' }}</div>
+                        <div class="text-muted" style="font-size:0.65rem;">{{ $act->causer?->name ?? 'System' }} &middot; {{ $act->created_at->diffForHumans() }}</div>
+                    </div>
+                </div>
+                @empty
+                <div class="text-center text-secondary py-4 small">No recent activity.</div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="ti ti-building me-1"></i> Properties by Status <span class="urdu">(حالت کے مطابق)</span></h5>
+            </div>
+            <div class="card-body">
+                @foreach($stats['properties_by_status'] as $status => $count)
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge status-{{ $status }} text-capitalize">{{ str_replace('_', ' ', $status) }}</span>
+                    <span class="fw-bold">{{ $count }}</span>
+                </div>
+                @endforeach
+                <div class="mt-2 pt-2 border-top">
+                    <a href="{{ route('properties.index') }}" class="stat-link">View all Properties <i class="ti ti-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Quick Links --}}
+<div class="row g-3 mt-3">
     <div class="col-lg-6">
         <div class="card">
             <div class="card-header">
@@ -365,9 +464,66 @@
                     <div class="col-6">
                         <a href="{{ route('quotations.create') }}" class="btn btn-outline-secondary w-100 justify-content-center text-start text-sm-center"><i class="ti ti-plus"></i> <span class="d-none d-sm-inline">New </span>Quote <span class="urdu d-none d-md-inline">(نئی)</span></a>
                     </div>
+                    <div class="col-6">
+                        <a href="{{ route('rent-payments.index') }}" class="btn btn-outline-secondary w-100 justify-content-center text-start text-sm-center"><i class="ti ti-cash"></i> <span class="d-none d-sm-inline">Rent </span>Overview <span class="urdu d-none d-md-inline">(کرایہ)</span></a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if(isset($stats['monthly_quotations']) || isset($stats['monthly_invoices']))
+<script src="{{ asset('assets/chart.umd.min.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const months = @json(array_keys($stats['monthly_quotations']->union($stats['monthly_invoices'])->toArray()));
+    const qData = months.map(m => {{ $stats['monthly_quotations']->get('m', 0) }});
+    const iData = months.map(m => {{ $stats['monthly_invoices']->get('m', 0) }});
+
+    new Chart(document.getElementById('trendsChart'), {
+        type: 'bar',
+        data: {
+            labels: months,
+            datasets: [
+                { label: 'Quotations', data: qData, backgroundColor: '#3b82f6', borderRadius: 4 },
+                { label: 'Invoices', data: iData, backgroundColor: '#10b981', borderRadius: 4 }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+
+    @if(isset($stats['monthly_revenue']) && $stats['monthly_revenue']->count())
+    const revMonths = @json($stats['monthly_revenue']->keys()->toArray());
+    const revData = @json($stats['monthly_revenue']->values()->toArray());
+    const expData = revMonths.map(m => {{ $stats['monthly_expenses'] ?? collect() }}.get(m, 0));
+    new Chart(document.getElementById('revenueChart'), {
+        type: 'line',
+        data: {
+            labels: revMonths,
+            datasets: [
+                { label: 'Revenue', data: revData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.3, borderRadius: 4 },
+                { label: 'Expenses', data: expData, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.3, borderRadius: 4 }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+    @endif
+});
+</script>
+@endif
+@endpush

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AgentPayoutController;
 use App\Http\Controllers\AgreementPDFController;
@@ -10,11 +11,14 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommissionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DealController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\InstallmentController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\ItemTemplateController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Portal\AuthController as PortalAuthController;
+use App\Http\Controllers\Portal\DocumentController as PortalDocumentController;
 use App\Http\Controllers\Portal\QuotationController as PortalQuotationController;
 use App\Http\Controllers\Portal\VisitController;
 use App\Http\Controllers\ProfileController;
@@ -22,6 +26,7 @@ use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\PropertyVisitController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\RentAgreementController;
+use App\Http\Controllers\RentPaymentController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\SearchController;
@@ -68,14 +73,18 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile', [ProfileController::class, 'update']);
     Route::post('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
 
-    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-    Route::post('/settings', [SettingsController::class, 'update']);
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index')->middleware('role:admin');
+    Route::post('/settings', [SettingsController::class, 'update'])->middleware('role:admin');
+
+    Route::resource('item-templates', ItemTemplateController::class)->except(['show', 'create'])->middleware('role:admin');
+    Route::get('/settings/items', [ItemTemplateController::class, 'index'])->name('settings.items')->middleware('role:admin');
 
     Route::resource('clients', ClientController::class);
 
     Route::resource('quotations', QuotationController::class);
     Route::get('/quotations/{quotation}/pdf', [QuotationController::class, 'pdf'])->name('quotations.pdf');
     Route::patch('/quotations/{quotation}/mark-sent', [QuotationController::class, 'markSent'])->name('quotations.mark-sent');
+    Route::get('/quotations/{quotation}/versions', [QuotationController::class, 'versions'])->name('quotations.versions');
 
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoices.create');
@@ -94,8 +103,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
     Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 
-    Route::resource('agents', AgentController::class);
-    Route::resource('cities', CityController::class);
+    Route::resource('agents', AgentController::class)->middleware('role:admin');
+    Route::resource('cities', CityController::class)->middleware('role:admin');
     Route::resource('properties', PropertyController::class);
     Route::post('/properties/media/{media}/primary', [PropertyController::class, 'setPrimary'])->name('properties.media.primary');
     Route::delete('/properties/media/{media}', [PropertyController::class, 'destroyMedia'])->name('properties.media.destroy');
@@ -110,10 +119,19 @@ Route::middleware('auth')->group(function () {
     Route::delete('/installments/{installmentPlan}', [InstallmentController::class, 'destroy'])->name('installments.destroy');
     Route::patch('/installments/{installment}/pay', [InstallmentController::class, 'markPaid'])->name('installments.pay');
     Route::resource('rent-agreements', RentAgreementController::class);
+    Route::post('/rent-agreements/{rent_agreement}/regenerate-schedule', [RentPaymentController::class, 'regenerateSchedule'])->name('rent-agreements.regenerate-schedule');
+    Route::resource('rent-payments', RentPaymentController::class)->except(['create', 'store']);
+    Route::patch('/rent-payments/{rentPayment}/pay', [RentPaymentController::class, 'updateStatus'])->name('rent-payments.pay');
+    Route::patch('/rent-payments/{rentPayment}/waive', [RentPaymentController::class, 'waive'])->name('rent-payments.waive');
+    Route::get('/rent-payments/{rentPayment}/receipt', [RentPaymentController::class, 'receipt'])->name('rent-payments.receipt');
     Route::resource('property-visits', PropertyVisitController::class);
     Route::resource('commissions', CommissionController::class);
     Route::patch('/commissions/{commission}/mark-paid', [CommissionController::class, 'markPaid'])->name('commissions.mark-paid');
     Route::resource('agent-payouts', AgentPayoutController::class);
+
+    Route::get('/admin/activity-log', [ActivityLogController::class, 'index'])->name('admin.activity-log')->middleware('role:admin');
+
+    Route::resource('expenses', ExpenseController::class)->except(['show'])->middleware('role:admin');
 
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
@@ -164,5 +182,6 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::post('/visits', [VisitController::class, 'store'])->name('visits.store');
         Route::get('/deals', [App\Http\Controllers\Portal\DealController::class, 'index'])->name('deals');
         Route::get('/deals/{deal}', [App\Http\Controllers\Portal\DealController::class, 'show'])->name('deals.show');
+        Route::resource('documents', PortalDocumentController::class)->only(['index', 'create', 'store', 'destroy']);
     });
 });

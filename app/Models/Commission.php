@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Commission extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'deal_id', 'agent_id', 'type', 'percentage', 'amount',
         'status', 'paid_date', 'notes',

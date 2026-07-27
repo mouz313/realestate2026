@@ -50,6 +50,11 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab">
+                <i class="ti ti-file-text"></i> Documents <span class="urdu">(دستاویزات)</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link" id="website-tab" data-bs-toggle="tab" data-bs-target="#website" type="button" role="tab">
                 <i class="ti ti-world"></i> Website <span class="urdu">(ویب سائٹ)</span>
             </button>
@@ -294,6 +299,38 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Documents Tab (Terms & Conditions + Item Templates) --}}
+        <div class="tab-pane fade" id="documents" role="tabpanel">
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0"><i class="ti ti-file-text me-1"></i> Terms & Conditions <span class="urdu">(شرائط و ضوابط)</span></h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Quotation Terms <span class="urdu">(کوٹیشن کی شرائط)</span></label>
+                        <textarea class="form-control" name="quotation_terms" rows="5">{{ $settings['quotation_terms'] ?? '' }}</textarea>
+                        <div class="form-text">Displayed on quotation PDF. <span class="urdu">(کوٹیشن پی ڈی ایف پر دکھایا جائے گا)</span></div>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label">Invoice Terms <span class="urdu">(انوائس کی شرائط)</span></label>
+                        <textarea class="form-control" name="invoice_terms" rows="5">{{ $settings['invoice_terms'] ?? '' }}</textarea>
+                        <div class="form-text">Displayed on invoice PDF. <span class="urdu">(انوائس پی ڈی ایف پر دکھایا جائے گا)</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0"><i class="ti ti-template me-1"></i> Item Templates <span class="urdu">(آئٹم ٹیمپلیٹس)</span></h5>
+                    <a href="{{ route('settings.items') }}" class="btn btn-sm btn-outline-dark">
+                        <i class="ti ti-edit"></i> Manage Templates <span class="urdu">(ٹیمپلیٹس مرتب)</span>
+                    </a>
+                </div>
+                <div class="card-body">
+                    <p class="text-secondary mb-0">Create reusable line item templates for faster quotation/invoice creation. <span class="urdu">(تیز کوٹیشن/انوائس بنانے کے لیے دوبارہ استعمال کے قابل آئٹم ٹیمپلیٹس بنائیں)</span></p>
                 </div>
             </div>
         </div>

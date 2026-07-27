@@ -17,7 +17,7 @@
     <div class="card-header flex-wrap gap-2">
         <h4><i class="ti ti-file-text"></i> Edit Rent Agreement <span class="urdu">(کرایہ نامہ میں ترمیم)</span></h4>
     </div>
-    <form action="{{ route('rent-agreements.update', $rentAgreement) }}" method="POST">
+    <form action="{{ route('rent-agreements.update', $rentAgreement) }}" method="POST" enctype="multipart/form-data">
         @csrf @method('PUT')
         <div class="card-body">
             <div class="row g-3">
@@ -119,6 +119,17 @@
                         <label class="form-label">Notes <span class="urdu">(نوٹس)</span></label>
                         <textarea class="form-control @error('notes') is-invalid @enderror" name="notes" rows="3">{{ old('notes', $rentAgreement->notes) }}</textarea>
                         @error('notes') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Agreement Document <span class="urdu">(کرایہ نامہ دستاویز)</span></label>
+                        @if($rentAgreement->agreement_doc)
+                        <div class="mb-1">
+                            <a href="{{ Storage::url($rentAgreement->agreement_doc) }}" target="_blank" class="text-decoration-none"><i class="ti ti-file-download"></i> Current document</a>
+                        </div>
+                        @endif
+                        <input type="file" name="agreement_doc" class="form-control @error('agreement_doc') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                        <div class="form-text">Leave empty to keep existing. Accepted: PDF, JPG, PNG, DOC. Max 20MB.</div>
+                        @error('agreement_doc') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
             </div>

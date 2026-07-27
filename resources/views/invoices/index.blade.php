@@ -20,6 +20,59 @@
     <a href="{{ route('invoices.create') }}" class="btn btn-dark"><i class="ti ti-plus"></i> Add Invoice <span class="urdu">(انوائس شامل)</span></a>
 </div>
 
+{{-- Filters --}}
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="GET" action="{{ route('invoices.index') }}" class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label small mb-0">Search <span class="urdu">(تلاش)</span></label>
+                <input type="text" name="search" class="form-control form-control-sm" placeholder="Invoice # or client..." value="{{ request('search') }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-0">Status <span class="urdu">(کیفیت)</span></label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    <option value="unpaid" {{ request('status') === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
+                    <option value="paid" {{ request('status') === 'paid' ? 'selected' : '' }}>Paid</option>
+                    <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-0">Payment <span class="urdu">(ادائیگی)</span></label>
+                <select name="payment_status" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    <option value="pending" {{ request('payment_status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="partial" {{ request('payment_status') === 'partial' ? 'selected' : '' }}>Partial</option>
+                    <option value="paid" {{ request('payment_status') === 'paid' ? 'selected' : '' }}>Paid</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-0">Client <span class="urdu">(گاہک)</span></label>
+                <select name="client_id" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    @foreach($clients as $c)
+                    <option value="{{ $c->id }}" {{ request('client_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-0">From <span class="urdu">(سے)</span></label>
+                <input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from') }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-0">To <span class="urdu">(تک)</span></label>
+                <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-dark btn-sm"><i class="ti ti-filter"></i> Filter</button>
+                @if(request()->anyFilled(['search', 'status', 'payment_status', 'client_id', 'date_from', 'date_to']))
+                <a href="{{ route('invoices.index') }}" class="small text-decoration-none ms-2">Clear filters <span class="urdu">(فلٹر صاف)</span></a>
+                @endif
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card table-card">
     <div class="table-responsive">
         <table class="table table-hover">

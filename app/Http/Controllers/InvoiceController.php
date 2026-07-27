@@ -8,6 +8,7 @@ use App\Mail\MailSettings;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\ItemTemplate;
 use App\Models\Quotation;
 use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -16,11 +17,37 @@ use Illuminate\Support\Facades\Mail;
 
 class InvoiceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $invoices = Invoice::with('client')->latest()->paginate(15);
+        $query = Invoice::with('client')->latest();
 
-        return view('invoices.index', compact('invoices'));
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->payment_status);
+        }
+        if ($request->filled('client_id')) {
+            $query->where('client_id', $request->client_id);
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('invoice_number', 'like', "%{$s}%")
+                    ->orWhereHas('client', fn ($cq) => $cq->where('name', 'like', "%{$s}%"));
+            });
+        }
+
+        $invoices = $query->paginate(15);
+        $clients = Client::orderBy('name')->get(['id', 'name']);
+
+        return view('invoices.index', compact('invoices', 'clients'));
     }
 
     public function create()
@@ -30,8 +57,9 @@ class InvoiceController extends Controller
         $taxRate = $settings['tax_rate'] ?? 0;
         $taxLabel = $settings['tax_label'] ?? 'GST';
         $currency = $settings['currency'] ?? 'PKR';
+        $templates = ItemTemplate::where('is_active', true)->orderBy('name')->get();
 
-        return view('invoices.create', compact('clients', 'taxRate', 'taxLabel', 'currency'));
+        return view('invoices.create', compact('clients', 'taxRate', 'taxLabel', 'currency', 'templates'));
     }
 
     public function store(Request $request)
@@ -41,6 +69,10 @@ class InvoiceController extends Controller
             'due_date' => 'nullable|date',
             'notes' => 'nullable|string',
             'tax_rate' => 'required|numeric|min:0|max:100',
+            'discount_type' => 'nullable|in:percentage,fixed',
+            'discount_value' => 'nullable|numeric|min:0',
+            'is_recurring' => 'boolean',
+            'recurring_frequency' => 'nullable|in:monthly,quarterly,yearly',
             'items' => 'required|array|min:1',
             'items.*.item_name' => 'required|string',
             'items.*.quantity' => 'required|integer|min:1',
@@ -54,7 +86,6 @@ class InvoiceController extends Controller
             $lineTotal = $line['quantity'] * $line['unit_price'];
             $subtotal += $lineTotal;
             $invoiceItems[] = [
-                'item_id' => $line['item_id'] ?? null,
                 'item_name' => $line['item_name'],
                 'description' => $line['description'] ?? null,
                 'quantity' => $line['quantity'],
@@ -64,24 +95,47 @@ class InvoiceController extends Controller
             ];
         }
 
-        $taxRate = $request->tax_rate;
-        $taxAmount = $subtotal * ($taxRate / 100);
-        $total = $subtotal + $taxAmount;
+        $discountType = $request->discount_type;
+        $discountValue = (float) ($request->discount_value ?? 0);
+        $discountAmount = $discountType === 'percentage'
+            ? $subtotal * ($discountValue / 100)
+            : $discountValue;
+        $discountAmount = min($discountAmount, $subtotal);
 
-        $invoice = Invoice::create([
+        $taxRate = $request->tax_rate;
+        $taxableAmount = $subtotal - $discountAmount;
+        $taxAmount = $taxableAmount * ($taxRate / 100);
+        $total = $taxableAmount + $taxAmount;
+
+        $data = [
             'client_id' => $request->client_id,
             'invoice_number' => $this->generateInvoiceNumber(),
             'status' => 'unpaid',
             'due_date' => $request->due_date,
             'subtotal' => $subtotal,
+            'discount_type' => $discountType,
+            'discount_value' => $discountValue,
+            'discount_amount' => $discountAmount,
             'tax_rate' => $taxRate,
             'tax_amount' => $taxAmount,
             'total' => $total,
             'paid_amount' => 0,
             'payment_status' => 'pending',
             'notes' => $request->notes,
-        ]);
+        ];
 
+        if ($request->boolean('is_recurring') && $request->recurring_frequency) {
+            $data['is_recurring'] = true;
+            $data['recurring_frequency'] = $request->recurring_frequency;
+            $data['recurring_next_date'] = match ($request->recurring_frequency) {
+                'monthly' => now()->addMonth()->format('Y-m-d'),
+                'quarterly' => now()->addMonths(3)->format('Y-m-d'),
+                'yearly' => now()->addYear()->format('Y-m-d'),
+                default => now()->addMonth()->format('Y-m-d'),
+            };
+        }
+
+        $invoice = Invoice::create($data);
         $invoice->items()->createMany($invoiceItems);
 
         toastr()->success('Invoice created successfully.');
@@ -97,8 +151,9 @@ class InvoiceController extends Controller
         $taxRate = $settings['tax_rate'] ?? 0;
         $taxLabel = $settings['tax_label'] ?? 'GST';
         $currency = $settings['currency'] ?? 'PKR';
+        $templates = ItemTemplate::where('is_active', true)->orderBy('name')->get();
 
-        return view('invoices.edit', compact('invoice', 'clients', 'taxRate', 'taxLabel', 'currency'));
+        return view('invoices.edit', compact('invoice', 'clients', 'taxRate', 'taxLabel', 'currency', 'templates'));
     }
 
     public function update(Request $request, Invoice $invoice)
@@ -108,6 +163,8 @@ class InvoiceController extends Controller
             'due_date' => 'nullable|date',
             'notes' => 'nullable|string',
             'tax_rate' => 'required|numeric|min:0|max:100',
+            'discount_type' => 'nullable|in:percentage,fixed',
+            'discount_value' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.item_name' => 'required|string',
             'items.*.quantity' => 'required|integer|min:1',
@@ -121,7 +178,6 @@ class InvoiceController extends Controller
             $lineTotal = $line['quantity'] * $line['unit_price'];
             $subtotal += $lineTotal;
             $invoiceItems[] = new InvoiceItem([
-                'item_id' => $line['item_id'] ?? null,
                 'item_name' => $line['item_name'],
                 'description' => $line['description'] ?? null,
                 'quantity' => $line['quantity'],
@@ -131,14 +187,25 @@ class InvoiceController extends Controller
             ]);
         }
 
+        $discountType = $request->discount_type;
+        $discountValue = (float) ($request->discount_value ?? 0);
+        $discountAmount = $discountType === 'percentage'
+            ? $subtotal * ($discountValue / 100)
+            : $discountValue;
+        $discountAmount = min($discountAmount, $subtotal);
+
         $taxRate = $request->tax_rate;
-        $taxAmount = $subtotal * ($taxRate / 100);
-        $total = $subtotal + $taxAmount;
+        $taxableAmount = $subtotal - $discountAmount;
+        $taxAmount = $taxableAmount * ($taxRate / 100);
+        $total = $taxableAmount + $taxAmount;
 
         $invoice->update([
             'client_id' => $request->client_id,
             'due_date' => $request->due_date,
             'subtotal' => $subtotal,
+            'discount_type' => $discountType,
+            'discount_value' => $discountValue,
+            'discount_amount' => $discountAmount,
             'tax_rate' => $taxRate,
             'tax_amount' => $taxAmount,
             'total' => $total,
@@ -173,6 +240,9 @@ class InvoiceController extends Controller
             'status' => 'unpaid',
             'due_date' => now()->addDays($paymentTerms),
             'subtotal' => $quotation->subtotal,
+            'discount_type' => $quotation->discount_type,
+            'discount_value' => $quotation->discount_value,
+            'discount_amount' => $quotation->discount_amount,
             'tax_rate' => $quotation->tax_rate,
             'tax_amount' => $quotation->tax_amount,
             'total' => $quotation->total,

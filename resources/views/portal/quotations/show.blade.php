@@ -58,6 +58,16 @@
                         <td class="text-end fw-semibold">Subtotal:</td>
                         <td class="text-end" style="width:120px">{{ number_format($quotation->subtotal, 2) }}</td>
                     </tr>
+                    @if($quotation->discount_amount > 0)
+                    <tr>
+                        <td class="text-end fw-semibold text-danger">Discount:</td>
+                        <td class="text-end text-danger">-{{ number_format($quotation->discount_amount, 2) }}
+                            @if($quotation->discount_type === 'percentage')
+                                <small>({{ $quotation->discount_value }}%)</small>
+                            @endif
+                        </td>
+                    </tr>
+                    @endif
                     @if($quotation->tax_rate > 0)
                     <tr>
                         <td class="text-end fw-semibold">{{ $settings['tax_label'] ?? 'GST' }} ({{ $quotation->tax_rate }}%):</td>
@@ -87,6 +97,12 @@
 <div class="alert alert-info">
     <i class="ti ti-history me-1"></i>
     You <strong>{{ $action->action }}</strong> this quotation on {{ $action->created_at->format('d M Y, h:i A') }}.
+    @if($action->signed_name)
+    <br><small>Signed by: <strong>{{ $action->signed_name }}</strong></small>
+    @endif
+    @if($action->ip_address)
+    <br><small>IP: {{ $action->ip_address }} | {{ $action->user_agent ?? '' }}</small>
+    @endif
 </div>
 @endif
 

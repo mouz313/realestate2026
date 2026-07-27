@@ -80,6 +80,16 @@
                         <th>Notes <span class="urdu">(نوٹس)</span></th>
                         <td>{{ $rentAgreement->notes ?? '-' }}</td>
                     </tr>
+                    <tr>
+                        <th>Agreement Doc <span class="urdu">(دستاویز)</span></th>
+                        <td>
+                            @if($rentAgreement->agreement_doc)
+                                <a href="{{ Storage::url($rentAgreement->agreement_doc) }}" target="_blank" class="text-decoration-none"><i class="ti ti-file-download"></i> View Document</a>
+                            @else
+                                <span class="text-secondary">No document uploaded</span>
+                            @endif
+                        </td>
+                    </tr>
                 </table>
             </div>
         </div>
@@ -159,6 +169,105 @@
                     <span>Document download placeholder <span class="urdu">(دستاویز ڈاؤن لوڈ کی جگہ)</span></span>
                     <small>Upload and link agreement documents here. <span class="urdu">(یہاں کرایہ نامے کی دستاویزات اپ لوڈ کریں)</span></small>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Payment Schedule --}}
+<div class="row g-4 mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 class="mb-0"><i class="ti ti-calendar-stats me-1"></i> Payment Schedule <span class="urdu">(ادائیگی کا شیڈول)</span></h5>
+                <form action="{{ route('rent-agreements.regenerate-schedule', $rentAgreement) }}" method="POST" onsubmit="return confirm('Regenerate schedule? Existing paid records will be kept.')">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-outline-dark"><i class="ti ti-refresh"></i> Regenerate</button>
+                </form>
+            </div>
+            <div class="card-body p-0">
+                @php
+                    $rentAgreement->load('rentPayments');
+                    $totalPaid = $rentAgreement->rentPayments->where('status', 'paid')->sum('amount');
+                    $totalPending = $rentAgreement->rentPayments->whereIn('status', ['pending', 'overdue'])->sum('total_due');
+                    $totalLateFee = $rentAgreement->rentPayments->sum('late_fee');
+                @endphp
+
+                @if($rentAgreement->rentPayments->count())
+                <div class="row g-0 text-center mb-3 px-3 pt-3">
+                    <div class="col-md-3">
+                        <div class="fs-5 fw-bold text-success">Rs. {{ number_format($totalPaid, 0) }}</div>
+                        <div class="text-secondary small">Total Paid</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="fs-5 fw-bold text-warning">Rs. {{ number_format($totalPending, 0) }}</div>
+                        <div class="text-secondary small">Total Pending</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="fs-5 fw-bold text-danger">Rs. {{ number_format($totalLateFee, 0) }}</div>
+                        <div class="text-secondary small">Total Late Fees</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="fs-5 fw-bold">{{ $rentAgreement->rentPayments->where('status', 'paid')->count() }} / {{ $rentAgreement->rentPayments->count() }}</div>
+                        <div class="text-secondary small">Months Paid</div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Due Date</th>
+                                <th class="text-end">Rent</th>
+                                <th class="text-end">Late Fee</th>
+                                <th class="text-end">Total</th>
+                                <th>Status</th>
+                                <th class="text-end">Paid Date</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($rentAgreement->rentPayments->sortBy('year')->sortBy('month') as $rp)
+                            @php
+                                $isOverdue = $rp->status === 'pending' && $rp->due_date->isPast();
+                            @endphp
+                            <tr class="{{ $isOverdue ? 'table-danger' : '' }}">
+                                <td class="fw-semibold">{{ date('M Y', mktime(0, 0, 0, $rp->month, 1, $rp->year)) }}</td>
+                                <td>{{ $rp->due_date->format('d M Y') }}</td>
+                                <td class="text-end">{{ number_format($rp->amount, 0) }}</td>
+                                <td class="text-end {{ $rp->late_fee > 0 ? 'text-danger fw-bold' : '' }}">{{ number_format($rp->late_fee, 0) }}</td>
+                                <td class="text-end fw-bold">{{ number_format($rp->total_due, 0) }}</td>
+                                <td>
+                                    @if($rp->status === 'paid')
+                                        <span class="badge bg-success">Paid</span>
+                                    @elseif($isOverdue)
+                                        <span class="badge bg-danger">Overdue</span>
+                                    @elseif($rp->status === 'waived')
+                                        <span class="badge bg-secondary">Waived</span>
+                                    @else
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    @endif
+                                </td>
+                                <td class="text-end text-secondary">{{ $rp->paid_date ? $rp->paid_date->format('d M Y') : '-' }}</td>
+                                <td class="text-end">
+                                    @if($rp->status === 'paid')
+                                    <a href="{{ route('rent-payments.receipt', $rp) }}" class="btn btn-sm btn-outline-dark" title="Receipt" target="_blank">
+                                        <i class="ti ti-receipt"></i>
+                                    </a>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <div class="text-center text-secondary py-4">
+                    <i class="ti ti-calendar-stats" style="font-size:2rem;display:block;margin-bottom:8px;"></i>
+                    No payment schedule. Click "Regenerate" to create one.
+                </div>
+                @endif
             </div>
         </div>
     </div>

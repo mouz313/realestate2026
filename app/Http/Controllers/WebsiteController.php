@@ -57,7 +57,7 @@ class WebsiteController extends Controller
             'hours' => $settings['working_hours'] ?? 'Mon-Sat: 9AM - 7PM',
         ];
 
-        return view('public.home', compact(
+        return view('website.home', compact(
             'featuredProperties', 'stats', 'cities',
             'typeCounts', 'sliderImages', 'testimonials', 'features',
             'brands', 'social', 'contactInfo'
@@ -92,7 +92,7 @@ class WebsiteController extends Controller
 
         $totalSold = Property::where('status', 'sold')->count();
 
-        return view('public.about', compact('team', 'milestones', 'social', 'contactInfo', 'totalSold'));
+        return view('website.about', compact('team', 'milestones', 'social', 'contactInfo', 'totalSold'));
     }
 
     public function contact()
@@ -113,7 +113,7 @@ class WebsiteController extends Controller
             'map_lng' => $settings['map_lng'] ?? '73.0479',
         ];
 
-        return view('public.contact', compact('settings', 'social', 'contactInfo'));
+        return view('website.contact', compact('settings', 'social', 'contactInfo'));
     }
 
     public function submitContact(Request $request)
@@ -155,7 +155,7 @@ class WebsiteController extends Controller
             'hours' => $settings['working_hours'] ?? 'Mon-Sat: 9AM - 7PM',
         ];
 
-        return view('public.privacy', compact('social', 'contactInfo'));
+        return view('website.privacy', compact('social', 'contactInfo'));
     }
 
     public function terms()
@@ -174,7 +174,7 @@ class WebsiteController extends Controller
             'hours' => $settings['working_hours'] ?? 'Mon-Sat: 9AM - 7PM',
         ];
 
-        return view('public.terms', compact('social', 'contactInfo'));
+        return view('website.terms', compact('social', 'contactInfo'));
     }
 
     public function sitemap()
@@ -188,7 +188,7 @@ class WebsiteController extends Controller
             ['loc' => url('/terms'), 'freq' => 'yearly', 'priority' => '0.3'],
         ];
 
-        return response()->view('public.sitemap', compact('urls'))->header('Content-Type', 'application/xml');
+        return response()->view('website.sitemap', compact('urls'))->header('Content-Type', 'application/xml');
     }
 
     public function properties(Request $request)
@@ -244,7 +244,7 @@ class WebsiteController extends Controller
             'hours' => $settings['working_hours'] ?? 'Mon-Sat: 9AM - 7PM',
         ];
 
-        return view('public.properties', compact(
+        return view('website.listings', compact(
             'properties', 'cities', 'types',
             'social', 'contactInfo'
         ));
@@ -280,6 +280,6 @@ class WebsiteController extends Controller
             'hours' => $settings['working_hours'] ?? 'Mon-Sat: 9AM - 7PM',
         ];
 
-        return view('public.property', compact('property', 'related', 'social', 'contactInfo'));
+        return view('website.property-show', compact('property', 'related', 'social', 'contactInfo'));
     }
 }

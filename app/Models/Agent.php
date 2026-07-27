@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Agent extends Model
@@ -52,5 +53,15 @@ class Agent extends Model
     public function visits(): HasMany
     {
         return $this->hasMany(PropertyVisit::class, 'agent_id');
+    }
+
+    public function rentAgreements(): HasManyThrough
+    {
+        return $this->hasManyThrough(RentAgreement::class, Property::class, 'assigned_agent_id', 'property_id');
+    }
+
+    public function assignedProperties(): HasMany
+    {
+        return $this->hasMany(Property::class, 'assigned_agent_id');
     }
 }

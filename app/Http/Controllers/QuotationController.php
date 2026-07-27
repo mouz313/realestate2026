@@ -6,6 +6,7 @@ use App\Helpers\QrHelper;
 use App\Mail\MailSettings;
 use App\Mail\QuotationMail;
 use App\Models\Client;
+use App\Models\ItemTemplate;
 use App\Models\Property;
 use App\Models\Quotation;
 use App\Models\QuotationItem;
@@ -16,11 +17,34 @@ use Illuminate\Support\Facades\Mail;
 
 class QuotationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $quotations = Quotation::with('client', 'property')->latest()->paginate(15);
+        $query = Quotation::with('client', 'property')->latest();
 
-        return view('quotations.index', compact('quotations'));
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('client_id')) {
+            $query->where('client_id', $request->client_id);
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('quote_number', 'like', "%{$s}%")
+                    ->orWhereHas('client', fn ($cq) => $cq->where('name', 'like', "%{$s}%"));
+            });
+        }
+
+        $quotations = $query->paginate(15);
+        $clients = Client::orderBy('name')->get(['id', 'name']);
+
+        return view('quotations.index', compact('quotations', 'clients'));
     }
 
     public function create()
@@ -31,8 +55,9 @@ class QuotationController extends Controller
         $taxRate = $settings['tax_rate'] ?? 0;
         $taxLabel = $settings['tax_label'] ?? 'GST';
         $currency = $settings['currency'] ?? 'PKR';
+        $templates = ItemTemplate::where('is_active', true)->orderBy('name')->get();
 
-        return view('quotations.create', compact('clients', 'properties', 'taxRate', 'taxLabel', 'currency'));
+        return view('quotations.create', compact('clients', 'properties', 'taxRate', 'taxLabel', 'currency', 'templates'));
     }
 
     public function store(Request $request)
@@ -43,6 +68,8 @@ class QuotationController extends Controller
             'expiry_date' => 'nullable|date',
             'notes' => 'nullable|string',
             'tax_rate' => 'required|numeric|min:0|max:100',
+            'discount_type' => 'nullable|in:percentage,fixed',
+            'discount_value' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.item_name' => 'required|string',
             'items.*.quantity' => 'required|integer|min:1',
@@ -65,9 +92,17 @@ class QuotationController extends Controller
             ];
         }
 
+        $discountType = $request->discount_type;
+        $discountValue = (float) ($request->discount_value ?? 0);
+        $discountAmount = $discountType === 'percentage'
+            ? $subtotal * ($discountValue / 100)
+            : $discountValue;
+        $discountAmount = min($discountAmount, $subtotal);
+
         $taxRate = $request->tax_rate;
-        $taxAmount = $subtotal * ($taxRate / 100);
-        $total = $subtotal + $taxAmount;
+        $taxableAmount = $subtotal - $discountAmount;
+        $taxAmount = $taxableAmount * ($taxRate / 100);
+        $total = $taxableAmount + $taxAmount;
 
         $quotation = Quotation::create([
             'client_id' => $request->client_id,
@@ -76,6 +111,9 @@ class QuotationController extends Controller
             'status' => 'draft',
             'expiry_date' => $request->expiry_date,
             'subtotal' => $subtotal,
+            'discount_type' => $discountType,
+            'discount_value' => $discountValue,
+            'discount_amount' => $discountAmount,
             'tax_rate' => $taxRate,
             'tax_amount' => $taxAmount,
             'total' => $total,
@@ -106,8 +144,9 @@ class QuotationController extends Controller
         $taxRate = $settings['tax_rate'] ?? 0;
         $taxLabel = $settings['tax_label'] ?? 'GST';
         $currency = $settings['currency'] ?? 'PKR';
+        $templates = ItemTemplate::where('is_active', true)->orderBy('name')->get();
 
-        return view('quotations.edit', compact('quotation', 'clients', 'properties', 'taxRate', 'taxLabel', 'currency'));
+        return view('quotations.edit', compact('quotation', 'clients', 'properties', 'taxRate', 'taxLabel', 'currency', 'templates'));
     }
 
     public function update(Request $request, Quotation $quotation)
@@ -118,6 +157,8 @@ class QuotationController extends Controller
             'expiry_date' => 'nullable|date',
             'notes' => 'nullable|string',
             'tax_rate' => 'required|numeric|min:0|max:100',
+            'discount_type' => 'nullable|in:percentage,fixed',
+            'discount_value' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.item_name' => 'required|string',
             'items.*.quantity' => 'required|integer|min:1',
@@ -140,15 +181,26 @@ class QuotationController extends Controller
             ]);
         }
 
+        $discountType = $request->discount_type;
+        $discountValue = (float) ($request->discount_value ?? 0);
+        $discountAmount = $discountType === 'percentage'
+            ? $subtotal * ($discountValue / 100)
+            : $discountValue;
+        $discountAmount = min($discountAmount, $subtotal);
+
         $taxRate = $request->tax_rate;
-        $taxAmount = $subtotal * ($taxRate / 100);
-        $total = $subtotal + $taxAmount;
+        $taxableAmount = $subtotal - $discountAmount;
+        $taxAmount = $taxableAmount * ($taxRate / 100);
+        $total = $taxableAmount + $taxAmount;
 
         $quotation->update([
             'client_id' => $request->client_id,
             'property_id' => $request->property_id,
             'expiry_date' => $request->expiry_date,
             'subtotal' => $subtotal,
+            'discount_type' => $discountType,
+            'discount_value' => $discountValue,
+            'discount_amount' => $discountAmount,
             'tax_rate' => $taxRate,
             'tax_amount' => $taxAmount,
             'total' => $total,
@@ -206,6 +258,13 @@ class QuotationController extends Controller
         toastr()->success('Quotation marked as sent.');
 
         return back();
+    }
+
+    public function versions(Quotation $quotation)
+    {
+        $quotation->load('versions');
+
+        return view('quotations.versions', compact('quotation'));
     }
 
     private function generateQuoteNumber(): string

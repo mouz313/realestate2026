@@ -87,4 +87,14 @@ class Property extends Model
     {
         return $this->belongsTo(City::class);
     }
+
+    public function rentAgreements(): HasMany
+    {
+        return $this->hasMany(RentAgreement::class);
+    }
+
+    public function quotations(): HasMany
+    {
+        return $this->hasMany(Quotation::class);
+    }
 }

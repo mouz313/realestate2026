@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Token extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'deal_id', 'amount', 'payment_method', 'reference_no', 'received_date',
         'status', 'refund_date', 'refund_reason', 'notes',

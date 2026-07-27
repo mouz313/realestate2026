@@ -7,7 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PortalAction extends Model
 {
-    protected $fillable = ['quotation_id', 'client_id', 'action', 'notes'];
+    protected $fillable = [
+        'quotation_id', 'client_id', 'action', 'notes',
+        'ip_address', 'user_agent', 'signed_name',
+    ];
 
     public function quotation(): BelongsTo
     {

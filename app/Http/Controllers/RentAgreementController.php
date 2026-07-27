@@ -7,6 +7,7 @@ use App\Models\Deal;
 use App\Models\Property;
 use App\Models\RentAgreement;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class RentAgreementController extends Controller
 {
@@ -50,9 +51,16 @@ class RentAgreementController extends Controller
             'rent_increase_frequency' => 'nullable|string|in:yearly,none,monthly,quarterly',
             'terms' => 'nullable|string|max:5000',
             'notes' => 'nullable|string|max:1000',
+            'agreement_doc' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:20480',
         ]);
 
-        RentAgreement::create($request->only((new RentAgreement)->getFillable()));
+        $data = $request->only((new RentAgreement)->getFillable());
+        if ($request->hasFile('agreement_doc')) {
+            $data['agreement_doc'] = $request->file('agreement_doc')->store('rent-agreements', 'public');
+        }
+
+        $rentAgreement = RentAgreement::create($data);
+        $rentAgreement->generateSchedule();
         toastr()->success('Rent agreement added successfully.');
 
         return redirect()->route('rent-agreements.index');
@@ -98,9 +106,20 @@ class RentAgreementController extends Controller
             'rent_increase_frequency' => 'nullable|string|in:yearly,none,monthly,quarterly',
             'terms' => 'nullable|string|max:5000',
             'notes' => 'nullable|string|max:1000',
+            'agreement_doc' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:20480',
         ]);
 
-        $rentAgreement->update($request->only((new RentAgreement)->getFillable()));
+        $data = $request->only((new RentAgreement)->getFillable());
+        if ($request->hasFile('agreement_doc')) {
+            if ($rentAgreement->agreement_doc && Storage::disk('public')->exists($rentAgreement->agreement_doc)) {
+                Storage::disk('public')->delete($rentAgreement->agreement_doc);
+            }
+            $data['agreement_doc'] = $request->file('agreement_doc')->store('rent-agreements', 'public');
+        } else {
+            unset($data['agreement_doc']);
+        }
+
+        $rentAgreement->update($data);
         toastr()->success('Rent agreement updated successfully.');
 
         return redirect()->route('rent-agreements.index');

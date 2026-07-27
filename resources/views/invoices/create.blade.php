@@ -40,6 +40,35 @@
                         <label class="form-label">Tax Rate (%) <span class="urdu">(ٹیکس کی شرح)</span></label>
                         <input type="number" name="tax_rate" id="taxRate" step="0.01" min="0" max="100" class="form-control" value="{{ old('tax_rate', $taxRate) }}">
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Discount <span class="urdu">(چھوٹ)</span></label>
+                        <div class="row g-2">
+                            <div class="col-5">
+                                <select name="discount_type" id="discountType" class="form-select">
+                                    <option value="">No Discount</option>
+                                    <option value="percentage" {{ old('discount_type') === 'percentage' ? 'selected' : '' }}>Percentage (%)</option>
+                                    <option value="fixed" {{ old('discount_type') === 'fixed' ? 'selected' : '' }}>Fixed Amount</option>
+                                </select>
+                            </div>
+                            <div class="col-7">
+                                <input type="number" name="discount_value" id="discountValue" step="0.01" min="0" class="form-control" value="{{ old('discount_value', 0) }}" placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" name="is_recurring" value="1" id="recurringCheck" {{ old('is_recurring') ? 'checked' : '' }}>
+                            <label class="form-check-label" for="recurringCheck">Recurring Invoice <span class="urdu">(مکرر انوائس)</span></label>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="recurringOptions" style="display: {{ old('is_recurring') ? 'block' : 'none' }};">
+                        <label class="form-label">Frequency <span class="urdu">(تکرار)</span></label>
+                        <select name="recurring_frequency" class="form-select">
+                            <option value="monthly" {{ old('recurring_frequency') === 'monthly' ? 'selected' : '' }}>Monthly <span class="urdu">(ماہانہ)</span></option>
+                            <option value="quarterly" {{ old('recurring_frequency') === 'quarterly' ? 'selected' : '' }}>Quarterly <span class="urdu">(سہ ماہی)</span></option>
+                            <option value="yearly" {{ old('recurring_frequency') === 'yearly' ? 'selected' : '' }}>Yearly <span class="urdu">(سالانہ)</span></option>
+                        </select>
+                    </div>
                     <div class="mb-0">
                         <label class="form-label">Notes <span class="urdu">(نوٹس)</span></label>
                         <textarea name="notes" class="form-control" rows="3">{{ old('notes') }}</textarea>
@@ -51,9 +80,23 @@
             <div class="card mb-3">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5><i class="ti ti-list me-1"></i> Items <span class="urdu">(آئٹمز)</span></h5>
-                    <button type="button" class="btn btn-sm btn-outline-dark" onclick="addRow()">
-                        <i class="ti ti-plus"></i> Add Item <span class="urdu">(آئٹم شامل)</span>
-                    </button>
+                    <div class="d-flex gap-2">
+                        @if(isset($templates) && $templates->count())
+                        <select id="templateSelect" class="form-select form-select-sm" style="width:auto;">
+                            <option value="">Insert template...</option>
+                            @foreach($templates as $tpl)
+                            <option value="{{ $tpl->id }}"
+                                data-name="{{ $tpl->name }}"
+                                data-price="{{ $tpl->default_price }}"
+                                data-unit="{{ $tpl->unit }}"
+                                data-desc="{{ $tpl->description }}">{{ $tpl->name }} ({{ number_format($tpl->default_price, 0) }})</option>
+                            @endforeach
+                        </select>
+                        @endif
+                        <button type="button" class="btn btn-sm btn-outline-dark" onclick="addRow()">
+                            <i class="ti ti-plus"></i> Add Item <span class="urdu">(آئٹم شامل)</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -84,6 +127,10 @@
                                     <td class="text-end fw-semibold">Subtotal: <span class="urdu">(ذیلی کل)</span></td>
                                     <td style="width: 120px;" class="text-end" id="displaySubtotal">0.00</td>
                                 </tr>
+                                <tr id="discountRow" style="display:none;">
+                                    <td class="text-end fw-semibold text-danger">Discount: <span class="urdu">(چھوٹ)</span></td>
+                                    <td class="text-end text-danger" id="displayDiscount">0.00</td>
+                                </tr>
                                 <tr>
                                     <td class="text-end fw-semibold">Tax <span class="urdu">(ٹیکس)</span> (<span id="displayTaxLabel">{{ $taxLabel }}</span>):</td>
                                     <td class="text-end" id="displayTax">0.00</td>
@@ -108,7 +155,22 @@
 
 @push('scripts')
 <script>
+const templates = @json($templates ?? []);
 let rowIndex = 0;
+
+document.getElementById('templateSelect')?.addEventListener('change', function() {
+    const val = this.value;
+    if (!val) return;
+    const tpl = templates.find(x => x.id == val);
+    if (!tpl) return;
+    addRow({
+        item_name: tpl.name,
+        unit: tpl.unit || '',
+        unit_price: Number(tpl.default_price),
+        description: tpl.description || '',
+    });
+    this.value = '';
+});
 
 function addRow(data = null) {
     document.getElementById('noItemsRow')?.remove();
@@ -147,11 +209,31 @@ function calcTotal() {
     document.querySelectorAll('.line-total').forEach(el => {
         subtotal += parseFloat(el.textContent) || 0;
     });
+
+    const discountType = document.getElementById('discountType').value;
+    const discountVal = parseFloat(document.getElementById('discountValue').value) || 0;
+    let discountAmount = 0;
+    if (discountType === 'percentage') {
+        discountAmount = subtotal * (discountVal / 100);
+    } else if (discountType === 'fixed') {
+        discountAmount = discountVal;
+    }
+    discountAmount = Math.min(discountAmount, subtotal);
+
     const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
-    const tax = subtotal * (taxRate / 100);
+    const taxable = subtotal - discountAmount;
+    const tax = taxable * (taxRate / 100);
+
     document.getElementById('displaySubtotal').textContent = subtotal.toFixed(2);
+    const discountRow = document.getElementById('discountRow');
+    if (discountAmount > 0) {
+        discountRow.style.display = '';
+        document.getElementById('displayDiscount').textContent = '-' + discountAmount.toFixed(2);
+    } else {
+        discountRow.style.display = 'none';
+    }
     document.getElementById('displayTax').textContent = tax.toFixed(2);
-    document.getElementById('displayTotal').textContent = (subtotal + tax).toFixed(2);
+    document.getElementById('displayTotal').textContent = (taxable + tax).toFixed(2);
 }
 
 function removeRow(i) {
@@ -164,5 +246,11 @@ function removeRow(i) {
 }
 
 document.getElementById('taxRate').addEventListener('input', calcTotal);
+document.getElementById('discountType').addEventListener('change', calcTotal);
+document.getElementById('discountValue').addEventListener('input', calcTotal);
+
+document.getElementById('recurringCheck').addEventListener('change', function() {
+    document.getElementById('recurringOptions').style.display = this.checked ? 'block' : 'none';
+});
 </script>
 @endpush

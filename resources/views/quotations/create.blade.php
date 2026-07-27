@@ -81,6 +81,21 @@
                         <label class="form-label">Tax Rate (%) <span class="urdu">(ٹیکس کی شرح)</span></label>
                         <input type="number" name="tax_rate" id="taxRate" step="0.01" min="0" max="100" class="form-control" value="{{ old('tax_rate', $taxRate) }}">
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Discount <span class="urdu">(چھوٹ)</span></label>
+                        <div class="row g-2">
+                            <div class="col-5">
+                                <select name="discount_type" id="discountType" class="form-select">
+                                    <option value="">No Discount</option>
+                                    <option value="percentage" {{ old('discount_type') === 'percentage' ? 'selected' : '' }}>Percentage (%)</option>
+                                    <option value="fixed" {{ old('discount_type') === 'fixed' ? 'selected' : '' }}>Fixed Amount</option>
+                                </select>
+                            </div>
+                            <div class="col-7">
+                                <input type="number" name="discount_value" id="discountValue" step="0.01" min="0" class="form-control" value="{{ old('discount_value', 0) }}" placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
                     <div class="mb-0">
                         <label class="form-label">Notes <span class="urdu">(نوٹس)</span></label>
                         <textarea name="notes" class="form-control" rows="3">{{ old('notes') }}</textarea>
@@ -92,9 +107,23 @@
             <div class="card mb-3">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5><i class="ti ti-list me-1"></i> Line Items <span class="urdu">(لائن آئٹمز)</span></h5>
-                    <button type="button" class="btn btn-sm btn-outline-dark" onclick="addRow()">
-                        <i class="ti ti-plus"></i> Add Item <span class="urdu">(آئٹم شامل)</span>
-                    </button>
+                    <div class="d-flex gap-2">
+                        @if(isset($templates) && $templates->count())
+                        <select id="templateSelect" class="form-select form-select-sm" style="width:auto;">
+                            <option value="">Insert template...</option>
+                            @foreach($templates as $tpl)
+                            <option value="{{ $tpl->id }}"
+                                data-name="{{ $tpl->name }}"
+                                data-price="{{ $tpl->default_price }}"
+                                data-unit="{{ $tpl->unit }}"
+                                data-desc="{{ $tpl->description }}">{{ $tpl->name }} ({{ number_format($tpl->default_price, 0) }})</option>
+                            @endforeach
+                        </select>
+                        @endif
+                        <button type="button" class="btn btn-sm btn-outline-dark" onclick="addRow()">
+                            <i class="ti ti-plus"></i> Add Item <span class="urdu">(آئٹم شامل)</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -125,6 +154,10 @@
                                     <td class="text-end fw-semibold">Subtotal: <span class="urdu">(ذیلی کل)</span></td>
                                     <td style="width: 120px;" class="text-end" id="displaySubtotal">0.00</td>
                                 </tr>
+                                <tr id="discountRow" style="display:none;">
+                                    <td class="text-end fw-semibold text-danger">Discount: <span class="urdu">(چھوٹ)</span></td>
+                                    <td class="text-end text-danger" id="displayDiscount">0.00</td>
+                                </tr>
                                 <tr>
                                     <td class="text-end fw-semibold">Tax <span class="urdu">(ٹیکس)</span> (<span id="displayTaxLabel">{{ $taxLabel }}</span>):</td>
                                     <td class="text-end" id="displayTax">0.00</td>
@@ -150,9 +183,9 @@
 @push('scripts')
 <script>
 const properties = @json($properties);
+const templates = @json($templates ?? []);
 let rowIndex = 0;
 
-{{-- Property selector --}}
 const propSelect = document.getElementById('propertySelect');
 const propCard = document.getElementById('propertyCard');
 
@@ -163,11 +196,10 @@ propSelect.addEventListener('change', function() {
     if (!p) return;
     document.getElementById('pcTitle').textContent = p.title;
     document.getElementById('pcDetail').textContent = (p.location_address || '') + (p.city ? ', ' + p.city : '');
-    document.getElementById('pcType').textContent = (p.type ? p.type.charAt(0).toUpperCase() + p.type.slice(1) : '') + (p.plot_size ? ' — ' + p.plot_size + ' ' + (p.plot_size_unit || '') : '');
+    document.getElementById('pcType').textContent = (p.type ? p.type.charAt(0).toUpperCase() + p.type.slice(1) : '') + (p.plot_size ? ' \u2014 ' + p.plot_size + ' ' + (p.plot_size_unit || '') : '');
     document.getElementById('pcPrice').textContent = 'Rs. ' + Number(p.price).toLocaleString(undefined, {minimumFractionDigits: 0});
     propCard.classList.add('active');
 
-    {{-- Auto-add property price row if not already added --}}
     const existing = document.querySelectorAll('.item-name');
     let found = false;
     existing.forEach(el => { if (el.value === p.title) found = true; });
@@ -179,6 +211,20 @@ propSelect.addEventListener('change', function() {
             unit_price: Number(p.price),
         });
     }
+});
+
+document.getElementById('templateSelect')?.addEventListener('change', function() {
+    const val = this.value;
+    if (!val) return;
+    const tpl = templates.find(x => x.id == val);
+    if (!tpl) return;
+    addRow({
+        item_name: tpl.name,
+        unit: tpl.unit || '',
+        unit_price: Number(tpl.default_price),
+        description: tpl.description || '',
+    });
+    this.value = '';
 });
 
 function addRow(data = null) {
@@ -218,11 +264,31 @@ function calcTotal() {
     document.querySelectorAll('.line-total').forEach(el => {
         subtotal += parseFloat(el.textContent) || 0;
     });
+
+    const discountType = document.getElementById('discountType').value;
+    const discountVal = parseFloat(document.getElementById('discountValue').value) || 0;
+    let discountAmount = 0;
+    if (discountType === 'percentage') {
+        discountAmount = subtotal * (discountVal / 100);
+    } else if (discountType === 'fixed') {
+        discountAmount = discountVal;
+    }
+    discountAmount = Math.min(discountAmount, subtotal);
+
     const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
-    const tax = subtotal * (taxRate / 100);
+    const taxable = subtotal - discountAmount;
+    const tax = taxable * (taxRate / 100);
+
     document.getElementById('displaySubtotal').textContent = subtotal.toFixed(2);
+    const discountRow = document.getElementById('discountRow');
+    if (discountAmount > 0) {
+        discountRow.style.display = '';
+        document.getElementById('displayDiscount').textContent = '-' + discountAmount.toFixed(2);
+    } else {
+        discountRow.style.display = 'none';
+    }
     document.getElementById('displayTax').textContent = tax.toFixed(2);
-    document.getElementById('displayTotal').textContent = (subtotal + tax).toFixed(2);
+    document.getElementById('displayTotal').textContent = (taxable + tax).toFixed(2);
 }
 
 function removeRow(i) {
@@ -235,5 +301,7 @@ function removeRow(i) {
 }
 
 document.getElementById('taxRate').addEventListener('input', calcTotal);
+document.getElementById('discountType').addEventListener('change', calcTotal);
+document.getElementById('discountValue').addEventListener('input', calcTotal);
 </script>
 @endpush

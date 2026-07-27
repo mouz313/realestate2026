@@ -6,9 +6,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <title>@yield('title', config('app.name')) - {{ config('app.name') }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ asset('assets/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/tabler-icons.min.css') }}" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <link href="{{ asset('assets/toastr.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/custom.css') }}" rel="stylesheet">
     <style>.urdu{font-size:0.75em;opacity:0.75;unicode-bidi:embed}.min-w-0{min-width:0}</style>
     @stack('styles')
@@ -105,6 +105,12 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ route('rent-payments.index') }}" class="nav-link {{ request()->routeIs('rent-payments.*') ? 'active' : '' }}">
+                        <i class="ti ti-cash"></i>
+                        Rent Payments
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('property-visits.index') }}" class="nav-link {{ request()->routeIs('property-visits.*') ? 'active' : '' }}">
                         <i class="ti ti-calendar-event"></i>
                         Visits
@@ -139,7 +145,25 @@
                 </li>
                 @can('admin')
                 <li>
-                    <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
+                    <a href="{{ route('expenses.index') }}" class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }}">
+                        <i class="ti ti-receipt"></i>
+                        Expenses
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('admin.activity-log') }}" class="nav-link {{ request()->routeIs('admin.activity-log') ? 'active' : '' }}">
+                        <i class="ti ti-history"></i>
+                        Activity Log
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('settings.items') }}" class="nav-link {{ request()->routeIs('item-templates.*') || request()->routeIs('settings.items') ? 'active' : '' }}">
+                        <i class="ti ti-template"></i>
+                        Item Templates
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') && !request()->routeIs('settings.items') ? 'active' : '' }}">
                         <i class="ti ti-settings"></i>
                         Settings
                     </a>
@@ -215,9 +239,9 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="{{ asset('assets/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('assets/jquery.min.js') }}"></script>
+    <script src="{{ asset('assets/toastr.min.js') }}"></script>
     <script>
         // Disable buttons on submit to prevent double-clicks
         document.addEventListener('submit', function(e) {

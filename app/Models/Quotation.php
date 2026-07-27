@@ -2,23 +2,19 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Quotation extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
-        'client_id',
-        'property_id',
-        'quote_number',
-        'status',
-        'expiry_date',
-        'subtotal',
-        'tax_rate',
-        'tax_amount',
-        'total',
-        'notes',
+        'client_id', 'property_id', 'deal_id', 'quote_number', 'status', 'expiry_date',
+        'subtotal', 'discount_type', 'discount_value', 'discount_amount',
+        'tax_rate', 'tax_amount', 'total', 'notes',
     ];
 
     protected function casts(): array
@@ -26,6 +22,8 @@ class Quotation extends Model
         return [
             'expiry_date' => 'date',
             'subtotal' => 'decimal:2',
+            'discount_value' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
             'tax_rate' => 'decimal:2',
             'tax_amount' => 'decimal:2',
             'total' => 'decimal:2',
@@ -42,6 +40,11 @@ class Quotation extends Model
         return $this->belongsTo(Property::class);
     }
 
+    public function deal(): BelongsTo
+    {
+        return $this->belongsTo(Deal::class);
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(QuotationItem::class);
@@ -55,5 +58,10 @@ class Quotation extends Model
     public function portalActions(): HasMany
     {
         return $this->hasMany(PortalAction::class);
+    }
+
+    public function versions(): HasMany
+    {
+        return $this->hasMany(QuotationVersion::class);
     }
 }
