@@ -11,3 +11,4 @@ Artisan::command('inspire', function () {
 Schedule::command('rent:sync-overdue')->daily();
 Schedule::command('rent:expire-agreements')->daily();
 Schedule::command('rent:send-notifications')->daily();
+Schedule::command('invoices:generate-recurring')->daily();

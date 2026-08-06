@@ -1,8 +1,41 @@
 @extends('layouts.website')
 
-@section('title', $property->title . ' — Skyline Real Estate')
+@section('title', $property->title . ' — ' . config('app.name', 'Skyline Real Estate'))
+@section('meta_description', Str::limit(strip_tags($property->description ?? ($property->title . ' ' . $property->location_address . ' ' . $property->city . ' for ' . $property->transaction_type)), 160))
+@section('canonical', route('website.property', $property))
+@section('og_type', 'product')
+@section('og_image', $property->media->sortByDesc('is_primary')->first() ? asset('storage/' . $property->media->sortByDesc('is_primary')->first()->file_path) : asset('assets/img/og-default.jpg'))
 
 @section('content')
+@php $primaryImg = $property->media->sortByDesc('is_primary')->first(); @endphp
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "RealEstateListing",
+  "name": {{ json_encode($property->title) }},
+  "description": {{ json_encode(Str::limit(strip_tags($property->description ?? ''), 300)) }},
+  "url": {{ json_encode(route('website.property', $property)) }},
+  "image": {{ json_encode($primaryImg ? asset('storage/' . $primaryImg->file_path) : null) }},
+  "offers": {
+    "@type": "Offer",
+    "price": {{ json_encode((string) $property->price) }},
+    "priceCurrency": {{ json_encode($property->currency ?? 'PKR') }}
+  },
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": {{ json_encode($property->location_address) }},
+    "addressLocality": {{ json_encode($property->city) }},
+    "addressRegion": {{ json_encode($property->sector_town) }}
+  }
+  @if($property->latitude && $property->longitude)
+  ,"geo": {
+    "@type": "GeoCoordinates",
+    "latitude": {{ json_encode((string) $property->latitude) }},
+    "longitude": {{ json_encode((string) $property->longitude) }}
+  }
+  @endif
+}
+</script>
 <section class="page-hero" style="padding:5rem 0 2rem;">
     <div class="container position-relative">
         <nav aria-label="breadcrumb">
@@ -156,6 +189,14 @@
                 <div class="mt-4">
                     <h4>Location</h4>
                     <p class="text-secondary"><i class="ti ti-map-pin text-amber me-1"></i> {{ $property->location_address }}{{ $property->city ? ', ' . $property->city : '' }}{{ $property->sector_town ? ', ' . $property->sector_town : '' }}</p>
+                    @php
+                        $mapQuery = $property->latitude && $property->longitude
+                            ? $property->latitude.','.$property->longitude
+                            : urlencode(trim($property->location_address.' '.$property->city));
+                    @endphp
+                    <div class="rounded overflow-hidden mt-3" style="border:1px solid rgba(212,162,78,0.15);">
+                        <iframe src="https://www.google.com/maps?q={{ $mapQuery }}&z=14&output=embed" width="100%" height="320" style="border:0;display:block;" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
                 </div>
                 @endif
             </div>
@@ -224,6 +265,32 @@
                         <i class="ti ti-phone me-1"></i> Call Now
                     </a>
                     @endif
+                </div>
+
+                {{-- Enquiry Form --}}
+                <div class="filter-sidebar mb-4">
+                    <h5><i class="ti ti-message-circle me-1"></i> Request Details</h5>
+                    <form action="{{ route('website.property.enquiry', $property) }}" method="POST">
+                        @csrf
+                        <div class="mb-2">
+                            <input type="text" name="name" class="form-control" placeholder="Your name" value="{{ old('name') }}" required>
+                            @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="mb-2">
+                            <input type="email" name="email" class="form-control" placeholder="Your email" value="{{ old('email') }}" required>
+                            @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="mb-2">
+                            <input type="tel" name="phone" class="form-control" placeholder="Phone (optional)" value="{{ old('phone') }}">
+                        </div>
+                        <div class="mb-3">
+                            <textarea name="message" class="form-control" rows="3" placeholder="I am interested in this property..." required>{{ old('message') }}</textarea>
+                            @error('message') <span class="text-danger small">{{ $message }}</span> @enderror
+                        </div>
+                        <button type="submit" class="btn btn-amber w-100">
+                            <i class="ti ti-send me-1"></i> Send Enquiry
+                        </button>
+                    </form>
                 </div>
 
                 {{-- Quick Info --}}

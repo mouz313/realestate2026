@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PropertyMedia extends Model
 {
-    protected $fillable = ['property_id', 'type', 'file_path', 'caption', 'is_primary', 'sort_order'];
+    use BelongsToCompany;
+
+    protected $fillable = ['company_id', 'property_id', 'type', 'file_path', 'caption', 'is_primary', 'sort_order'];
 
     protected function casts(): array
     {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use App\Traits\LogsActivity;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -11,12 +12,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RentAgreement extends Model
 {
-    use LogsActivity, SoftDeletes;
+    use LogsActivity, SoftDeletes, BelongsToCompany;
 
     protected $table = 'rent_agreements';
 
     protected $fillable = [
-        'deal_id', 'renewed_from_id', 'property_id', 'tenant_id', 'owner_id', 'start_date', 'end_date',
+        'company_id', 'deal_id', 'renewed_from_id', 'property_id', 'tenant_id', 'owner_id', 'start_date', 'end_date',
         'rent_amount', 'security_deposit', 'deposit_received', 'deposit_returned',
         'deposit_deductions', 'deposit_deduction_notes', 'deposit_returned_date',
         'notice_period_days', 'late_fee_per_day', 'rent_increase_percent',

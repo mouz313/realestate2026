@@ -139,6 +139,32 @@ class WebsiteController extends Controller
         return back();
     }
 
+    public function submitEnquiry(Request $request, Property $property)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $validated['property_id'] = $property->id;
+        $validated['property_title'] = $property->title;
+        $validated['subject'] = 'Property Enquiry: '.$property->property_code;
+
+        Contact::create($validated);
+
+        \Mail::raw(
+            "Name: {$request->name}\nEmail: {$request->email}\nPhone: {$request->phone}\n\nProperty: {$property->title} ({$property->property_code})\nURL: ".route('website.property', $property)."\n\nMessage:\n{$request->message}",
+            fn ($msg) => $msg->to(config('app.admin_email', 'admin@example.com'))
+                ->subject('New Property Enquiry - '.config('app.name'))
+        );
+
+        toastr()->success('Thank you! Our agent will contact you about this property soon.');
+
+        return back();
+    }
+
     public function privacy()
     {
         $settings = Setting::pluck('value', 'key');
@@ -187,6 +213,11 @@ class WebsiteController extends Controller
             ['loc' => url('/privacy'), 'freq' => 'yearly', 'priority' => '0.3'],
             ['loc' => url('/terms'), 'freq' => 'yearly', 'priority' => '0.3'],
         ];
+
+        $properties = Property::where('status', 'available')->get(['id']);
+        foreach ($properties as $property) {
+            $urls[] = ['loc' => route('website.property', $property), 'freq' => 'weekly', 'priority' => '0.8'];
+        }
 
         return response()->view('website.sitemap', compact('urls'))->header('Content-Type', 'application/xml');
     }
@@ -255,6 +286,7 @@ class WebsiteController extends Controller
         if ($property->status !== 'available') {
             abort(404);
         }
+        $property->increment('views_count');
         $property->load(['owner', 'assignedAgent', 'media', 'documents']);
         $related = Property::with('primaryMedia')
             ->where('id', '!=', $property->id)

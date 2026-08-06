@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Expense extends Model
 {
-    use LogsActivity;
+    use LogsActivity, BelongsToCompany;
 
     protected $fillable = [
-        'agent_id', 'deal_id', 'category', 'title', 'amount',
+        'company_id', 'agent_id', 'deal_id', 'category', 'title', 'amount',
         'expense_date', 'payment_method', 'reference_no', 'notes',
     ];
 

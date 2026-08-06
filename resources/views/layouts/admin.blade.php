@@ -136,6 +136,14 @@
             </ul>
             <hr>
             <ul class="nav nav-pills flex-column">
+                @if(auth()->user()->isSuperAdmin())
+                <li>
+                    <a href="{{ route('companies.index') }}" class="nav-link {{ request()->routeIs('companies.*') ? 'active' : '' }}">
+                        <i class="ti ti-building"></i>
+                        Companies
+                    </a>
+                </li>
+                @endif
                 <li>
                     <a href="{{ route('home') }}" target="_blank" class="nav-link">
                         <i class="ti ti-external-link"></i>
@@ -149,6 +157,12 @@
                     </a>
                 </li>
                 @can('admin')
+                <li>
+                    <a href="{{ route('contacts.index') }}" class="nav-link {{ request()->routeIs('contacts.*') ? 'active' : '' }}">
+                        <i class="ti ti-message-report"></i>
+                        Enquiries
+                    </a>
+                </li>
                 <li>
                     <a href="{{ route('expenses.index') }}" class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }}">
                         <i class="ti ti-receipt"></i>
@@ -218,9 +232,13 @@
             </ul>
             <hr>
             <ul class="nav nav-pills flex-column p-3">
+                @if(auth()->user()->isSuperAdmin())
+                <li><a href="{{ route('companies.index') }}" class="nav-link {{ request()->routeIs('companies.*') ? 'active' : '' }}"><i class="ti ti-building"></i> Companies</a></li>
+                @endif
                 <li><a href="{{ route('home') }}" target="_blank" class="nav-link"><i class="ti ti-external-link"></i> Visit Website</a></li>
                 <li><a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}"><i class="ti ti-report"></i> Reports</a></li>
                 @can('admin')
+                <li><a href="{{ route('contacts.index') }}" class="nav-link {{ request()->routeIs('contacts.*') ? 'active' : '' }}"><i class="ti ti-message-report"></i> Enquiries</a></li>
                 <li><a href="{{ route('expenses.index') }}" class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }}"><i class="ti ti-receipt"></i> Expenses</a></li>
                 <li><a href="{{ route('admin.activity-log') }}" class="nav-link {{ request()->routeIs('admin.activity-log') ? 'active' : '' }}"><i class="ti ti-history"></i> Activity Log</a></li>
                 <li><a href="{{ route('settings.items') }}" class="nav-link {{ request()->routeIs('item-templates.*') || request()->routeIs('settings.items') ? 'active' : '' }}"><i class="ti ti-template"></i> Item Templates</a></li>

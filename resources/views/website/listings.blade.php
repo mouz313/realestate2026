@@ -1,6 +1,7 @@
 @extends('layouts.website')
 
-@section('title', 'Property Listings — Skyline Real Estate')
+@section('title', 'Property Listings — ' . config('app.name', 'Skyline Real Estate'))
+@section('meta_description', 'Browse available houses, flats, plots, and commercial properties for sale and rent in Pakistan. Filter by city, type, and budget.')
 
 @section('content')
 <section class="page-hero-creative" data-hero-label="LISTINGS">

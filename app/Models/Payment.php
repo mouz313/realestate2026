@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payment extends Model
 {
-    use LogsActivity;
+    use LogsActivity, BelongsToCompany;
 
     protected $fillable = [
-        'invoice_id', 'amount', 'method', 'reference', 'paid_date', 'notes', 'payment_type',
+        'company_id', 'invoice_id', 'amount', 'method', 'reference', 'paid_date', 'notes', 'payment_type',
     ];
 
     protected function casts(): array

@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AgentPayout extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
-        'agent_id', 'amount', 'commission_ids', 'payout_date',
+        'company_id', 'agent_id', 'amount', 'commission_ids', 'payout_date',
         'method', 'reference', 'notes',
     ];
 

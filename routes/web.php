@@ -9,6 +9,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommissionController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\ExpenseController;
@@ -45,6 +47,7 @@ Route::get('/contact', [WebsiteController::class, 'contact'])->name('website.con
 Route::post('/contact', [WebsiteController::class, 'submitContact'])->middleware('throttle:3,1')->name('website.contact.submit');
 Route::get('/listings', [WebsiteController::class, 'properties'])->name('website.properties');
 Route::get('/listings/{property}', [WebsiteController::class, 'property'])->name('website.property');
+Route::post('/listings/{property}/enquiry', [WebsiteController::class, 'submitEnquiry'])->middleware('throttle:5,1')->name('website.property.enquiry');
 Route::get('/privacy', [WebsiteController::class, 'privacy'])->name('website.privacy');
 Route::get('/terms', [WebsiteController::class, 'terms'])->name('website.terms');
 Route::get('/sitemap.xml', [WebsiteController::class, 'sitemap'])->name('website.sitemap');
@@ -69,7 +72,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/email/resend', [EmailVerificationController::class, 'resend'])->middleware('throttle:6,1')->name('verification.resend');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::middleware('role:super_admin')->group(function () {
+        Route::resource('companies', CompanyController::class)->except(['show']);
+        Route::post('/companies/{company}/switch', [CompanyController::class, 'switch'])->name('companies.switch');
+        Route::post('/companies/{company}/admins', [CompanyController::class, 'storeAdmin'])->name('companies.admins.store');
+    });
 
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::post('/profile', [ProfileController::class, 'update']);
@@ -140,6 +148,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('agent-payouts', AgentPayoutController::class);
 
     Route::get('/admin/activity-log', [ActivityLogController::class, 'index'])->name('admin.activity-log')->middleware('role:admin');
+
+    Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index')->middleware('role:admin');
+    Route::get('/contacts/{contact}', [ContactController::class, 'show'])->name('contacts.show')->middleware('role:admin');
+    Route::delete('/contacts/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy')->middleware('role:admin');
 
     Route::resource('expenses', ExpenseController::class)->except(['show'])->middleware('role:admin');
 

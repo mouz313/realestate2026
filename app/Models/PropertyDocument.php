@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PropertyDocument extends Model
 {
-    protected $fillable = ['property_id', 'document_type', 'file_path', 'title', 'expiry_date', 'is_verified'];
+    use BelongsToCompany;
+
+    protected $fillable = ['company_id', 'property_id', 'document_type', 'file_path', 'title', 'expiry_date', 'is_verified'];
 
     protected function casts(): array
     {

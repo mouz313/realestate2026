@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class QuotationVersion extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
-        'quotation_id', 'version_number', 'client_id', 'property_id',
+        'company_id', 'quotation_id', 'version_number', 'client_id', 'property_id',
         'discount_type', 'discount_value', 'discount_amount',
         'subtotal', 'tax_rate', 'tax_amount', 'total', 'notes', 'items_data',
     ];

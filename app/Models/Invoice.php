@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,10 +10,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Invoice extends Model
 {
-    use LogsActivity;
+    use LogsActivity, BelongsToCompany;
 
     protected $fillable = [
-        'quotation_id', 'deal_id', 'agent_id', 'invoice_type', 'client_id', 'invoice_number', 'status',
+        'company_id', 'quotation_id', 'deal_id', 'agent_id', 'invoice_type', 'client_id', 'invoice_number', 'status',
         'due_date', 'subtotal', 'discount_type', 'discount_value', 'discount_amount',
         'tax_rate', 'tax_amount', 'total',
         'paid_amount', 'payment_status', 'notes',

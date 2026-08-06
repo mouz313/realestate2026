@@ -13,7 +13,11 @@ class CheckRole
             abort(403);
         }
 
-        if ($role === 'admin' && ! $request->user()->isAdmin()) {
+        if ($role === 'super_admin' && ! $request->user()->isSuperAdmin()) {
+            abort(403);
+        }
+
+        if ($role === 'admin' && ! $request->user()->isAdmin() && ! $request->user()->isSuperAdmin()) {
             abort(403);
         }
 

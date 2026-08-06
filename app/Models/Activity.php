@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Activity extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
-        'causer_type', 'causer_id', 'subject_type', 'subject_id',
+        'company_id', 'causer_type', 'causer_id', 'subject_type', 'subject_id',
         'event', 'description', 'properties',
     ];
 

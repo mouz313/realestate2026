@@ -158,6 +158,22 @@
                         <label class="form-label">Address <span class="urdu">(پتہ)</span></label>
                         <textarea class="form-control @error('location_address') is-invalid @enderror" name="location_address" rows="2">{{ old('location_address') }}</textarea>
                     </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label class="form-label">Latitude <span class="urdu">(عرض البلد)</span></label>
+                                <input type="number" step="any" class="form-control @error('latitude') is-invalid @enderror" name="latitude" value="{{ old('latitude') }}" placeholder="e.g. 33.6844">
+                                @error('latitude') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label class="form-label">Longitude <span class="urdu">(طول البلد)</span></label>
+                                <input type="number" step="any" class="form-control @error('longitude') is-invalid @enderror" name="longitude" value="{{ old('longitude') }}" placeholder="e.g. 73.0479">
+                                @error('longitude') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

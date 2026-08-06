@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Installment extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
-        'plan_id', 'installment_no', 'due_date', 'amount', 'paid_amount',
+        'company_id', 'plan_id', 'installment_no', 'due_date', 'amount', 'paid_amount',
         'status', 'paid_date', 'payment_method', 'reference_no', 'late_fee', 'notes',
     ];
 

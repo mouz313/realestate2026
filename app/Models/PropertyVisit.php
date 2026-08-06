@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PropertyVisit extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
-        'property_id', 'client_id', 'agent_id', 'scheduled_date',
+        'company_id', 'property_id', 'client_id', 'agent_id', 'scheduled_date',
         'status', 'feedback', 'rating', 'notes',
     ];
 

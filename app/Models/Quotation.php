@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,10 +10,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Quotation extends Model
 {
-    use LogsActivity;
+    use LogsActivity, BelongsToCompany;
 
     protected $fillable = [
-        'client_id', 'property_id', 'deal_id', 'quote_number', 'status', 'expiry_date',
+        'company_id', 'client_id', 'property_id', 'deal_id', 'quote_number', 'status', 'expiry_date',
         'subtotal', 'discount_type', 'discount_value', 'discount_amount',
         'tax_rate', 'tax_amount', 'total', 'notes',
     ];

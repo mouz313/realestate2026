@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use App\Traits\LogsActivity;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -10,10 +11,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RentPayment extends Model
 {
-    use LogsActivity, SoftDeletes;
+    use LogsActivity, SoftDeletes, BelongsToCompany;
 
     protected $fillable = [
-        'rent_agreement_id', 'month', 'year', 'due_date', 'amount',
+        'company_id', 'rent_agreement_id', 'month', 'year', 'due_date', 'amount',
         'late_fee', 'total_due', 'status', 'paid_date',
         'payment_method', 'reference_no', 'notes',
     ];

@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class ItemTemplate extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
-        'name', 'description', 'unit', 'default_price', 'category', 'is_active',
+        'company_id', 'name', 'description', 'unit', 'default_price', 'category', 'is_active',
     ];
 
     protected function casts(): array

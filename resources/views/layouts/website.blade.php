@@ -4,8 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', config('app.name', 'RealEstate2026'))</title>
-    <meta name="description" content="@yield('meta_description', 'Find your dream property with RealEstate2026 — premium real estate agency in Pakistan.')">
+    <title>@yield('title', config('app.name', 'Skyline Real Estate'))</title>
+    <meta name="description" content="@yield('meta_description', 'Premium real estate agency in Pakistan — find houses, flats, plots, and commercial properties for sale and rent.')">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="@yield('canonical', url()->current())">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:site_name" content="{{ config('app.name', 'Skyline Real Estate') }}">
+    <meta property="og:title" content="@yield('title', config('app.name', 'Skyline Real Estate'))">
+    <meta property="og:description" content="@yield('meta_description', 'Premium real estate agency in Pakistan.')">
+    <meta property="og:url" content="@yield('canonical', url()->current())">
+    <meta property="og:image" content="@yield('og_image', asset('assets/img/og-default.jpg'))">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('title', config('app.name', 'Skyline Real Estate'))">
+    <meta name="twitter:description" content="@yield('meta_description', 'Premium real estate agency in Pakistan.')">
+    <meta name="twitter:image" content="@yield('og_image', asset('assets/img/og-default.jpg'))">
 
     <link rel="stylesheet" href="{{ asset('assets/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/tabler-icons.min.css') }}">

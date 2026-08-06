@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class QuotationItem extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
+        'company_id',
         'quotation_id',
         'item_name',
         'description',

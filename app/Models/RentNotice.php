@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RentNotice extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
-        'rent_agreement_id', 'tenant_id', 'notice_date', 'move_out_date',
+        'company_id', 'rent_agreement_id', 'tenant_id', 'notice_date', 'move_out_date',
         'notice_type', 'reason', 'status', 'admin_notes',
     ];
 

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Company;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -23,6 +25,12 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+
+            $user = Auth::user();
+            if ($user->company_id) {
+                session(['company_id' => $user->company_id]);
+            }
+
             toastr()->success('Welcome back!');
 
             return redirect()->intended(route('dashboard'));
@@ -41,21 +49,39 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
+            'company_name' => 'required|string|max:255',
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|confirmed|min:8',
         ]);
 
+        $slug = Str::slug($request->company_name);
+        $baseSlug = $slug;
+        $i = 1;
+        while (Company::where('slug', $slug)->exists()) {
+            $slug = $baseSlug.'-'.$i++;
+        }
+
+        $company = Company::create([
+            'name' => $request->company_name,
+            'slug' => $slug,
+            'email' => $request->email,
+            'is_active' => true,
+        ]);
+
         $user = User::create([
+            'company_id' => $company->id,
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'agent',
+            'role' => 'admin',
         ]);
+
+        session(['company_id' => $company->id]);
 
         Auth::login($user);
         $request->session()->regenerate();
-        toastr()->success('Account created successfully!');
+        toastr()->success('Company and account created successfully!');
 
         return redirect()->route('dashboard');
     }

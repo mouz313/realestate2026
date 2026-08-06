@@ -1,6 +1,7 @@
 @extends('layouts.website')
 
-@section('title', 'Find Your Dream Property — Skyline Real Estate')
+@section('title', 'Find Your Dream Property — ' . config('app.name', 'Skyline Real Estate'))
+@section('meta_description', 'Buy, sell, and rent houses, flats, plots, and commercial properties in Pakistan with ' . config('app.name', 'Skyline Real Estate') . ' — trusted real estate agency.')
 
 @section('content')
 {{-- HERO --}}

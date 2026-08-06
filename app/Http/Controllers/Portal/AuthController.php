@@ -27,7 +27,12 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Invalid credentials or no portal access.']);
         }
 
-        session(['client_id' => $client->id, 'client_name' => $client->name, 'portal_last_activity' => now()]);
+        session([
+            'client_id' => $client->id,
+            'client_name' => $client->name,
+            'company_id' => $client->company_id,
+            'portal_last_activity' => now(),
+        ]);
         $request->session()->regenerate();
 
         return redirect()->route('portal.quotations');
@@ -35,7 +40,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        session()->forget(['client_id', 'client_name', 'portal_last_activity']);
+        session()->forget(['client_id', 'client_name', 'company_id', 'portal_last_activity']);
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

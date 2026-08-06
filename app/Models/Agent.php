@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,10 +11,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Agent extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, BelongsToCompany;
 
     protected $fillable = [
-        'user_id', 'name', 'role', 'phone', 'whatsapp', 'email', 'cnic', 'cnic_front', 'cnic_back',
+        'company_id', 'user_id', 'name', 'role', 'phone', 'whatsapp', 'email', 'cnic', 'cnic_front', 'cnic_back',
         'photo', 'address', 'license_number', 'commission_rate',
         'status', 'type', 'join_date', 'notes',
         'bio', 'experience_years', 'languages',

@@ -1,8 +1,68 @@
 <?php
 
 use App\Helpers\Toastr;
+use App\Models\Company;
+use App\Models\Setting;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+
+if (! function_exists('current_company_id')) {
+    function current_company_id(): ?int
+    {
+        if (app()->runningInConsole()) {
+            if (session()->has('company_id')) {
+                return (int) session('company_id');
+            }
+
+            return Company::orderBy('id')->value('id');
+        }
+
+        if ($user = auth()->user()) {
+            if ($user->isSuperAdmin() && session()->has('company_id')) {
+                return (int) session('company_id');
+            }
+
+            if ($user->company_id) {
+                return (int) $user->company_id;
+            }
+
+            return session()->has('company_id') ? (int) session('company_id') : null;
+        }
+
+        if (session()->has('client_id')) {
+            return session()->has('company_id') ? (int) session('company_id') : null;
+        }
+
+        if (session()->has('company_id')) {
+            return (int) session('company_id');
+        }
+
+        return Company::orderBy('id')->value('id');
+    }
+}
+
+if (! function_exists('current_company')) {
+    function current_company(): ?Company
+    {
+        $id = current_company_id();
+
+        return $id ? Company::find($id) : null;
+    }
+}
+
+if (! function_exists('company_settings')) {
+    function company_settings(): array
+    {
+        return Setting::pluck('value', 'key')->toArray();
+    }
+}
+
+if (! function_exists('is_super_admin')) {
+    function is_super_admin(): bool
+    {
+        return auth()->check() && auth()->user()->role === 'super_admin';
+    }
+}
 
 if (! function_exists('toastr')) {
     function toastr(?string $message = null, string $type = 'success'): Toastr

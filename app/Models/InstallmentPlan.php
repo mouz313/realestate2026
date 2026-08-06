@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InstallmentPlan extends Model
 {
-    protected $fillable = ['deal_id', 'total_installments', 'installment_amount', 'frequency', 'start_date', 'notes'];
+    use BelongsToCompany;
+
+    protected $fillable = ['company_id', 'deal_id', 'total_installments', 'installment_amount', 'frequency', 'start_date', 'notes'];
 
     protected function casts(): array
     {

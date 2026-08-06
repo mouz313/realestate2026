@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Client extends Model
 {
-    use LogsActivity;
+    use LogsActivity, BelongsToCompany;
 
     protected $fillable = [
-        'name', 'company', 'email', 'phone', 'address', 'notes', 'password',
+        'company_id', 'name', 'company', 'email', 'phone', 'address', 'notes', 'password',
         'client_type', 'cnic', 'cnic_verified',
     ];
 

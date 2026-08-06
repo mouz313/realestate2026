@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,10 +10,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Property extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, BelongsToCompany;
 
     protected $fillable = [
-        'property_code', 'title', 'type', 'transaction_type', 'status',
+        'company_id', 'property_code', 'title', 'type', 'transaction_type', 'status',
         'possession_status', 'possession_year',
         'price', 'price_per_sqft', 'currency', 'location_address', 'city', 'city_id',
         'sector_town', 'block', 'plot_size', 'plot_size_unit', 'land_area',

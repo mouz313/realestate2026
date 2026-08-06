@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,10 +12,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Deal extends Model
 {
-    use LogsActivity, SoftDeletes;
+    use LogsActivity, SoftDeletes, BelongsToCompany;
 
     protected $fillable = [
-        'deal_number', 'type', 'status', 'property_id', 'buyer_id', 'seller_id',
+        'company_id', 'deal_number', 'type', 'status', 'property_id', 'buyer_id', 'seller_id',
         'agent_id', 'co_agent_id', 'sale_price', 'token_amount', 'token_date',
         'commission_percentage', 'commission_amount', 'agent_commission', 'agency_share',
         'agreement_date', 'possession_date', 'payment_plan', 'notes',
