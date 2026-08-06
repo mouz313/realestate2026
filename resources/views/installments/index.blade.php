@@ -12,7 +12,7 @@
 @endsection
 
 @section('content')
-<div class="page-header">
+<div class="page-header flex-wrap gap-2">
     <div>
         <h3>Installments <span class="urdu">(اقساط)</span></h3>
         <div class="page-header-sub">{{ $installments->total() }} <span class="urdu">(کل اقساط)</span></div>
@@ -56,8 +56,8 @@
                         <span class="badge {{ $sc[$installment->status] ?? 'status-pending' }}">{{ ucfirst($installment->status ?? 'pending') }}</span>
                     </td>
                     <td class="d-none d-md-table-cell">{{ $installment->late_fee ? number_format($installment->late_fee, 0) : '-' }}</td>
-                    <td>
-                        <div class="action-btns">
+                    <td class="text-end">
+                        <div class="action-btns flex-nowrap">
                             <a href="{{ route('installments.edit', $installment) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
                                 <i class="ti ti-edit"></i>
                             </a>

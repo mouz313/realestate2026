@@ -22,9 +22,9 @@
                         <td class="text-secondary">Status</td>
                         <td>
                             @php
-                                $ds = ['pending' => 'warning', 'active' => 'info', 'completed' => 'success', 'cancelled' => 'danger', 'on_hold' => 'secondary'];
+                                $ds = ['inquiry' => 'warning', 'visit_scheduled' => 'info', 'offer_made' => 'warning', 'token_received' => 'purple', 'agreement_signed' => 'info', 'in_progress' => 'primary', 'completed' => 'success', 'cancelled' => 'danger'];
                             @endphp
-                            <span class="badge bg-{{ $ds[$deal->status] ?? 'secondary' }}">{{ ucfirst($deal->status) }}</span>
+                            <span class="badge bg-{{ $ds[$deal->status] ?? 'secondary' }}">{{ ucfirst(str_replace('_', ' ', $deal->status)) }}</span>
                         </td>
                     </tr>
                     <tr>

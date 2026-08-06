@@ -144,7 +144,7 @@
                     </div>
                 </div>
             </div>
-            <div class="text-end">
+            <div class="d-flex flex-wrap gap-2 justify-content-end">
                 <button type="submit" class="btn btn-dark btn-lg"><i class="ti ti-device-floppy"></i> Save Invoice <span class="urdu">(انوائس محفوظ)</span></button>
                 <a href="{{ route('invoices.index') }}" class="btn btn-link text-secondary text-decoration-none">Cancel <span class="urdu">(منسوخ)</span></a>
             </div>

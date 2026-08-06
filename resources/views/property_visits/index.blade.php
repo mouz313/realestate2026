@@ -48,8 +48,8 @@
                         <span class="badge {{ $sc[$visit->status] ?? 'status-active' }}">{{ ucfirst(str_replace('_', ' ', $visit->status ?? 'scheduled')) }}</span>
                     </td>
                     <td class="d-none d-md-table-cell">{{ $visit->rating ? $visit->rating . ' / 5' : '-' }}</td>
-                    <td>
-                        <div class="action-btns">
+                    <td class="text-end">
+                        <div class="action-btns flex-nowrap">
                             <a href="{{ route('property-visits.edit', $visit) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
                                 <i class="ti ti-edit"></i>
                             </a>

@@ -34,40 +34,42 @@
                 <h5><i class="ti ti-building me-1"></i> Property Information <span class="urdu">(جائیداد کی معلومات)</span></h5>
             </div>
             <div class="card-body">
-                <table class="detail-table">
-                    <tr><th>Title <span class="urdu">(عنوان)</span></th><td>{{ $property->title }}</td></tr>
-                    <tr><th>Type <span class="urdu">(قسم)</span></th><td>{{ ucfirst($property->type ?? '-') }}</td></tr>
-                    <tr><th>Transaction Type <span class="urdu">(لین دین کی قسم)</span></th><td>{{ ucfirst($property->transaction_type ?? '-') }}</td></tr>
-                    <tr><th>Price <span class="urdu">(قیمت)</span></th><td class="fw-semibold" style="font-size:1.05rem;">{{ number_format($property->price, 0) }} {{ $property->currency ?? 'PKR' }}</td></tr>
-                    <tr><th>Price Per Sqft <span class="urdu">(قیمت فی مربع فٹ)</span></th><td>{{ $property->price_per_sqft ? number_format($property->price_per_sqft, 0) : '-' }}</td></tr>
-                    <tr><th>Possession <span class="urdu">(قبضہ)</span></th><td>@if($property->possession_status) {{ ucfirst(str_replace('_', ' ', $property->possession_status)) }}@if($property->possession_year) {{ $property->possession_year }}@endif @else - @endif</td></tr>
-                    <tr><th>City <span class="urdu">(شہر)</span></th><td>{{ $property->city ?? '-' }}</td></tr>
-                    <tr><th>Sector / Town <span class="urdu">(سیکٹر / ٹاؤن)</span></th><td>{{ $property->sector_town ?? '-' }}</td></tr>
-                    <tr><th>Block <span class="urdu">(بلاک)</span></th><td>{{ $property->block ?? '-' }}</td></tr>
-                    <tr><th>Location <span class="urdu">(مقام)</span></th><td>{{ $property->location_address ?? '-' }}</td></tr>
-                    <tr><th>Plot Size <span class="urdu">(پلاٹ کا سائز)</span></th><td>{{ $property->plot_size ? $property->plot_size . ' ' . ($property->plot_size_unit ?? '') : '-' }}</td></tr>
-                    <tr><th>Land Area <span class="urdu">(رقبہ)</span></th><td>{{ $property->land_area ?? '-' }}</td></tr>
-                    <tr><th>Covered Area <span class="urdu">(تعمیر شدہ رقبہ)</span></th><td>{{ $property->covered_area ? $property->covered_area . ' ' . ($property->covered_area_unit ?? '') : '-' }}</td></tr>
-                    <tr><th>Bedrooms / Bathrooms <span class="urdu">(بیڈروم / باتھ روم)</span></th><td>{{ $property->bedrooms ?? '0' }} / {{ $property->bathrooms ?? '0' }}</td></tr>
-                    <tr><th>Kitchens / Floors <span class="urdu">(کچن / منزلیں)</span></th><td>{{ $property->kitchens ?? '0' }} / {{ $property->floors ?? '0' }}</td></tr>
-                    <tr><th>Floor # <span class="urdu">(منزل نمبر)</span></th><td>{{ $property->floor_number !== null ? $property->floor_number : '-' }} @if($property->total_floors) / {{ $property->total_floors }} <span class="urdu">(منزلیں)</span> @endif</td></tr>
-                    <tr><th>Furnished <span class="urdu">(فرنشڈ)</span></th><td>{{ $property->furnished ? 'Yes' : 'No' }}</td></tr>
-                    <tr><th>Parking <span class="urdu">(پارکنگ)</span></th><td>{{ $property->parking_spaces ?? '0' }} <span class="urdu">(جگہیں)</span></td></tr>
-                    <tr><th>Additional Rooms <span class="urdu">(اضافی کمرے)</span></th><td>@if(!empty($property->additional_rooms)) @foreach($property->additional_rooms as $r) <span class="badge bg-light text-dark me-1"><i class="ti ti-door me-1"></i>{{ $r }}</span> @endforeach @else - @endif</td></tr>
-                    <tr><th>Building Features <span class="urdu">(عمارت کی خصوصیات)</span></th><td>@if(!empty($property->building_features)) @foreach($property->building_features as $f) <span class="badge bg-light text-dark me-1"><i class="ti ti-building-skyscraper me-1"></i>{{ $f }}</span> @endforeach @else - @endif</td></tr>
-                    <tr><th>Community Amenities <span class="urdu">(کمیونٹی سہولیات)</span></th><td>@if(!empty($property->community_amenities)) @foreach($property->community_amenities as $a) <span class="badge bg-light text-dark me-1"><i class="ti ti-users me-1"></i>{{ $a }}</span> @endforeach @else - @endif</td></tr>
-                    <tr><th>Communication <span class="urdu">(مواصلات)</span></th><td>@if(!empty($property->communication_features)) @foreach($property->communication_features as $c) <span class="badge bg-light text-dark me-1"><i class="ti ti-antenna me-1"></i>{{ $c }}</span> @endforeach @else - @endif</td></tr>
-                    <tr><th>Features <span class="urdu">(خصوصیات)</span></th><td>{{ $property->features ?? '-' }}</td></tr>
-                    <tr><th>Nearby Landmarks <span class="urdu">(قریبی نشانات)</span></th><td>{{ $property->nearby_landmarks ?? '-' }}</td></tr>
-                    <tr><th>Nearby Places <span class="urdu">(قریبی مقامات)</span></th><td>@if(!empty($property->nearby_places)) @foreach($property->nearby_places as $place) <span class="badge bg-light text-dark me-1"><i class="ti ti-map-pin me-1"></i>{{ $place }}</span> @endforeach @else - @endif</td></tr>
-                    <tr><th>Utilities <span class="urdu">(یوٹیلیٹیز)</span></th><td>@if(!empty($property->utilities)) @foreach($property->utilities as $util) <span class="badge bg-light text-dark me-1"><i class="ti ti-bolt me-1"></i>{{ $util }}</span> @endforeach @else - @endif</td></tr>
-                    <tr><th>Description <span class="urdu">(وضاحت)</span></th><td>{{ $property->description ?? '-' }}</td></tr>
-                    <tr><th>Owner <span class="urdu">(مالک)</span></th><td>@if($property->owner) <a href="{{ route('clients.show', $property->owner) }}" class="text-decoration-none">{{ $property->owner->name }}</a> @else - @endif</td></tr>
-                    <tr><th>Agent <span class="urdu">(ایجنٹ)</span></th><td>@if($property->agent) <a href="{{ route('agents.show', $property->agent) }}" class="text-decoration-none">{{ $property->agent->name }}</a> @else - @endif</td></tr>
-                    <tr><th>Listed Date <span class="urdu">(تاریخ اجراء)</span></th><td>{{ $property->listed_date ? $property->listed_date->format('d M Y') : '-' }}</td></tr>
-                    <tr><th>Expiry Date <span class="urdu">(تاریخ میعاد)</span></th><td>{{ $property->expiry_date ? $property->expiry_date->format('d M Y') : '-' }}</td></tr>
-                    <tr><th>Notes <span class="urdu">(نوٹس)</span></th><td>{{ $property->notes ?? '-' }}</td></tr>
-                </table>
+                <div class="table-responsive">
+                    <table class="detail-table table">
+                        <tr><th>Title <span class="urdu">(عنوان)</span></th><td>{{ $property->title }}</td></tr>
+                        <tr><th>Type <span class="urdu">(قسم)</span></th><td>{{ ucfirst($property->type ?? '-') }}</td></tr>
+                        <tr><th>Transaction Type <span class="urdu">(لین دین کی قسم)</span></th><td>{{ ucfirst($property->transaction_type ?? '-') }}</td></tr>
+                        <tr><th>Price <span class="urdu">(قیمت)</span></th><td class="fw-semibold" style="font-size:1.05rem;">{{ number_format($property->price, 0) }} {{ $property->currency ?? 'PKR' }}</td></tr>
+                        <tr><th>Price Per Sqft <span class="urdu">(قیمت فی مربع فٹ)</span></th><td>{{ $property->price_per_sqft ? number_format($property->price_per_sqft, 0) : '-' }}</td></tr>
+                        <tr><th>Possession <span class="urdu">(قبضہ)</span></th><td>@if($property->possession_status) {{ ucfirst(str_replace('_', ' ', $property->possession_status)) }}@if($property->possession_year) {{ $property->possession_year }}@endif @else - @endif</td></tr>
+                        <tr><th>City <span class="urdu">(شہر)</span></th><td>{{ $property->city ?? '-' }}</td></tr>
+                        <tr><th>Sector / Town <span class="urdu">(سیکٹر / ٹاؤن)</span></th><td>{{ $property->sector_town ?? '-' }}</td></tr>
+                        <tr><th>Block <span class="urdu">(بلاک)</span></th><td>{{ $property->block ?? '-' }}</td></tr>
+                        <tr><th>Location <span class="urdu">(مقام)</span></th><td>{{ $property->location_address ?? '-' }}</td></tr>
+                        <tr><th>Plot Size <span class="urdu">(پلاٹ کا سائز)</span></th><td>{{ $property->plot_size ? $property->plot_size . ' ' . ($property->plot_size_unit ?? '') : '-' }}</td></tr>
+                        <tr><th>Land Area <span class="urdu">(رقبہ)</span></th><td>{{ $property->land_area ?? '-' }}</td></tr>
+                        <tr><th>Covered Area <span class="urdu">(تعمیر شدہ رقبہ)</span></th><td>{{ $property->covered_area ? $property->covered_area . ' ' . ($property->covered_area_unit ?? '') : '-' }}</td></tr>
+                        <tr><th>Bedrooms / Bathrooms <span class="urdu">(بیڈروم / باتھ روم)</span></th><td>{{ $property->bedrooms ?? '0' }} / {{ $property->bathrooms ?? '0' }}</td></tr>
+                        <tr><th>Kitchens / Floors <span class="urdu">(کچن / منزلیں)</span></th><td>{{ $property->kitchens ?? '0' }} / {{ $property->floors ?? '0' }}</td></tr>
+                        <tr><th>Floor # <span class="urdu">(منزل نمبر)</span></th><td>{{ $property->floor_number !== null ? $property->floor_number : '-' }} @if($property->total_floors) / {{ $property->total_floors }} <span class="urdu">(منزلیں)</span> @endif</td></tr>
+                        <tr><th>Furnished <span class="urdu">(فرنشڈ)</span></th><td>{{ $property->furnished ? 'Yes' : 'No' }}</td></tr>
+                        <tr><th>Parking <span class="urdu">(پارکنگ)</span></th><td>{{ $property->parking_spaces ?? '0' }} <span class="urdu">(جگہیں)</span></td></tr>
+                        <tr><th>Additional Rooms <span class="urdu">(اضافی کمرے)</span></th><td>@if(!empty($property->additional_rooms)) @foreach($property->additional_rooms as $r) <span class="badge bg-light text-dark me-1"><i class="ti ti-door me-1"></i>{{ $r }}</span> @endforeach @else - @endif</td></tr>
+                        <tr><th>Building Features <span class="urdu">(عمارت کی خصوصیات)</span></th><td>@if(!empty($property->building_features)) @foreach($property->building_features as $f) <span class="badge bg-light text-dark me-1"><i class="ti ti-building-skyscraper me-1"></i>{{ $f }}</span> @endforeach @else - @endif</td></tr>
+                        <tr><th>Community Amenities <span class="urdu">(کمیونٹی سہولیات)</span></th><td>@if(!empty($property->community_amenities)) @foreach($property->community_amenities as $a) <span class="badge bg-light text-dark me-1"><i class="ti ti-users me-1"></i>{{ $a }}</span> @endforeach @else - @endif</td></tr>
+                        <tr><th>Communication <span class="urdu">(مواصلات)</span></th><td>@if(!empty($property->communication_features)) @foreach($property->communication_features as $c) <span class="badge bg-light text-dark me-1"><i class="ti ti-antenna me-1"></i>{{ $c }}</span> @endforeach @else - @endif</td></tr>
+                        <tr><th>Features <span class="urdu">(خصوصیات)</span></th><td>{{ $property->features ?? '-' }}</td></tr>
+                        <tr><th>Nearby Landmarks <span class="urdu">(قریبی نشانات)</span></th><td>{{ $property->nearby_landmarks ?? '-' }}</td></tr>
+                        <tr><th>Nearby Places <span class="urdu">(قریبی مقامات)</span></th><td>@if(!empty($property->nearby_places)) @foreach($property->nearby_places as $place) <span class="badge bg-light text-dark me-1"><i class="ti ti-map-pin me-1"></i>{{ $place }}</span> @endforeach @else - @endif</td></tr>
+                        <tr><th>Utilities <span class="urdu">(یوٹیلیٹیز)</span></th><td>@if(!empty($property->utilities)) @foreach($property->utilities as $util) <span class="badge bg-light text-dark me-1"><i class="ti ti-bolt me-1"></i>{{ $util }}</span> @endforeach @else - @endif</td></tr>
+                        <tr><th>Description <span class="urdu">(وضاحت)</span></th><td>{{ $property->description ?? '-' }}</td></tr>
+                        <tr><th>Owner <span class="urdu">(مالک)</span></th><td>@if($property->owner) <a href="{{ route('clients.show', $property->owner) }}" class="text-decoration-none">{{ $property->owner->name }}</a> @else - @endif</td></tr>
+                        <tr><th>Agent <span class="urdu">(ایجنٹ)</span></th><td>@if($property->agent) <a href="{{ route('agents.show', $property->agent) }}" class="text-decoration-none">{{ $property->agent->name }}</a> @else - @endif</td></tr>
+                        <tr><th>Listed Date <span class="urdu">(تاریخ اجراء)</span></th><td>{{ $property->listed_date ? $property->listed_date->format('d M Y') : '-' }}</td></tr>
+                        <tr><th>Expiry Date <span class="urdu">(تاریخ میعاد)</span></th><td>{{ $property->expiry_date ? $property->expiry_date->format('d M Y') : '-' }}</td></tr>
+                        <tr><th>Notes <span class="urdu">(نوٹس)</span></th><td>{{ $property->notes ?? '-' }}</td></tr>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

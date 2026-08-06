@@ -11,12 +11,17 @@ return new class extends Migration
         Schema::create('quotations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('client_id')->constrained()->cascadeOnDelete();
+            $table->unsignedBigInteger('property_id')->nullable()->index();
+            $table->unsignedBigInteger('deal_id')->nullable()->index();
             $table->string('quote_number')->unique();
             $table->string('status')->default('draft');
             $table->date('expiry_date')->nullable();
             $table->decimal('subtotal', 12, 2)->default(0);
             $table->decimal('tax_rate', 5, 2)->default(0);
             $table->decimal('tax_amount', 12, 2)->default(0);
+            $table->string('discount_type', 10)->nullable();
+            $table->decimal('discount_value', 12, 2)->default(0);
+            $table->decimal('discount_amount', 12, 2)->default(0);
             $table->decimal('total', 12, 2)->default(0);
             $table->text('notes')->nullable();
             $table->timestamps();

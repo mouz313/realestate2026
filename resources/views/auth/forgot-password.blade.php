@@ -1,24 +1,29 @@
 @extends('layouts.auth')
 
-@section('title', 'Forgot Password <span class="urdu">(پاس ورڈ بھول گئے)</span>')
+@section('title', 'Forgot Password')
 
 @section('content')
-<div class="card shadow">
-    <div class="card-body p-5">
-        <h2 class="text-center mb-4">Reset Password <span class="urdu">(پاس ورڈ ری سیٹ)</span></h2>
-        <p class="text-secondary text-center mb-4">Enter your email and we'll send you a reset link. <span class="urdu">(اپنا ای میل درج کریں اور ہم آپ کو ری سیٹ لنک بھیجیں گے۔)</span></p>
-        <form action="{{ route('password.email') }}" method="POST">
-            @csrf
-            <div class="mb-3">
-                <label class="form-label">Email <span class="urdu">(ای میل)</span></label>
-                <input type="email" class="form-control form-control-lg @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" placeholder="your@email.com">
-                @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            </div>
-            <button type="submit" class="btn btn-dark btn-lg w-100">Send Reset Link <span class="urdu">(ری سیٹ لنک بھیجیں)</span></button>
-        </form>
-        <p class="text-center text-secondary mt-3 mb-0">
-            <a href="{{ route('login') }}">Back to Login <span class="urdu">(لاگ ان پر واپس)</span></a>
-        </p>
+<div class="mb-4">
+    <div class="icon-box-circle mb-3" style="width:52px;height:52px;font-size:1.3rem;">
+        <i class="ti ti-lock"></i>
     </div>
+    <h2>Forgot Password?</h2>
+    <div class="auth-subtitle">No worries. Enter your email and we'll send you a reset link.</div>
+</div>
+
+<form action="{{ route('password.email') }}" method="POST">
+    @csrf
+    <div class="mb-4">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" placeholder="your@email.com" autofocus>
+        @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
+    </div>
+    <button type="submit" class="btn btn-amber btn-lg w-100" style="border-radius:10px;">
+        <i class="ti ti-send me-1"></i> Send Reset Link
+    </button>
+</form>
+
+<div class="auth-bottom-text">
+    <a href="{{ route('login') }}" class="auth-link"><i class="ti ti-arrow-left me-1"></i> Back to Login</a>
 </div>
 @endsection

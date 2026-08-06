@@ -974,6 +974,12 @@ hr {
 .status-available { background: var(--accent-invoices) !important; color: #fff !important; }
 .status-sold, .status-rented { background: var(--text-muted) !important; color: #fff !important; }
 .status-invoiced { background: var(--accent-quotations) !important; color: #fff !important; }
+.status-inquiry { background: var(--accent-pending) !important; color: #fff !important; }
+.status-visit_scheduled { background: var(--accent-unpaid) !important; color: #fff !important; }
+.status-offer_made { background: #f59e0b !important; color: #fff !important; }
+.status-token_received { background: #8b5cf6 !important; color: #fff !important; }
+.status-agreement_signed { background: #06b6d4 !important; color: #fff !important; }
+.status-in_progress { background: var(--accent-invoices) !important; color: #fff !important; }
 
 /* Detail table for show pages */
 .detail-table th {
@@ -1007,4 +1013,222 @@ hr {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========================================
+   Responsive / Mobile Breakpoints
+   ======================================== */
+
+/* Sidebar toggle button (mobile) */
+.sidebar-toggle {
+    position: fixed;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    z-index: 1050;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 50% !important;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    font-size: 1.35rem;
+}
+.offcanvas-start {
+    width: 280px !important;
+}
+.offcanvas-start .sidebar {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    overflow-y: visible !important;
+}
+.offcanvas-header {
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 1rem 1.25rem;
+}
+
+/* Table responsive improvements */
+.table-card .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Page header mobile */
+@media (max-width: 575.98px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    .page-header h3 {
+        font-size: 1.15rem;
+    }
+    .main-content-area {
+        margin-left: 0 !important;
+    }
+    .page-content {
+        padding: 1rem !important;
+    }
+    .card-body {
+        padding: 0.85rem;
+    }
+    .card-header {
+        padding: 0.75rem 0.85rem;
+    }
+    .card-footer {
+        padding: 0.75rem 0.85rem;
+    }
+    .stat-card .stat-value {
+        font-size: 1.35rem;
+    }
+    .stat-card .card-body {
+        padding: 0.85rem 1rem;
+    }
+    .detail-table th {
+        width: auto;
+        display: block;
+        padding-bottom: 0 !important;
+    }
+    .detail-table td {
+        display: block;
+        padding-top: 0.15rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+    .detail-table tr:not(:last-child) th,
+    .detail-table tr:not(:last-child) td {
+        border-bottom: none !important;
+    }
+    .detail-table tr {
+        display: block;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .breadcrumb {
+        flex-wrap: wrap;
+        font-size: 0.7rem;
+    }
+    .nav-search {
+        width: 100%;
+    }
+    .topbar .navbar-collapse {
+        padding-top: 0.75rem;
+    }
+    .action-btns {
+        gap: 0.2rem;
+    }
+    .action-btns .btn-sm {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.72rem;
+    }
+    .dash-stat-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .table thead th {
+        font-size: 0.65rem;
+        padding: 0.5rem 0.5rem;
+        white-space: nowrap;
+    }
+    .table > :not(caption) > * > * {
+        padding: 0.5rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    .p-4.page-content {
+        padding: 0.75rem !important;
+    }
+    .btn {
+        font-size: 0.8rem;
+        padding: 0.35rem 0.75rem;
+    }
+    .btn-sm {
+        font-size: 0.72rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .row.g-3 > [class*="col-"] {
+        padding-bottom: 0;
+    }
+    .topbar .dropdown-menu {
+        position: fixed !important;
+        left: 0.5rem !important;
+        right: 0.5rem !important;
+        top: auto !important;
+        transform: none !important;
+    }
+}
+
+/* Small tablets */
+@media (min-width: 576px) and (max-width: 991.98px) {
+    .main-content-area {
+        margin-left: 0 !important;
+    }
+    .page-content {
+        padding: 1.25rem !important;
+    }
+    .nav-search {
+        width: 240px;
+    }
+}
+
+/* Filter forms - collapse filter fields on mobile */
+@media (max-width: 767.98px) {
+    form.row.g-2 [class*="col-md-"] {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+    form.row.g-2 .col-12 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    .card-body.py-2 form.row.g-2 {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    .empty-state {
+        padding: 1.5rem 1rem;
+    }
+    .empty-state i {
+        font-size: 1.8rem;
+    }
+    .form-section {
+        font-size: 0.75rem;
+    }
+}
+
+/* Dashboard grid */
+@media (max-width: 1199.98px) {
+    .row-cols-xl-4 > * {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+@media (max-width: 767.98px) {
+    .row-cols-md-2 > * {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+/* Auth pages responsive */
+@media (max-width: 575.98px) {
+    .auth-card {
+        margin: 1rem;
+        border-radius: 0.75rem !important;
+    }
+    .auth-card .card-body {
+        padding: 1.5rem 1.25rem;
+    }
+}
+
+/* Reports responsive */
+@media (max-width: 767.98px) {
+    .report-cards [class*="col-md-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+/* Offcanvas backdrop z-index fix */
+.offcanvas-backdrop {
+    z-index: 1040 !important;
 }

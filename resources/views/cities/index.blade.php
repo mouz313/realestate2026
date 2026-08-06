@@ -12,7 +12,7 @@
 @endsection
 
 @section('content')
-<div class="page-header">
+<div class="page-header flex-wrap gap-2">
     <div>
         <h3>Cities <span class="urdu">(شہر)</span></h3>
         <div class="page-header-sub">{{ $cities->total() }} <span class="urdu">(کل شہر)</span></div>
@@ -42,8 +42,8 @@
                         @php $sc = [1 => 'status-active', 0 => 'status-draft']; @endphp
                         <span class="badge {{ $sc[(int)$city->is_active] ?? 'status-draft' }}">{{ $city->is_active ? 'Active' : 'Inactive' }}</span>
                     </td>
-                    <td>
-                        <div class="action-btns">
+                    <td class="text-end">
+                        <div class="action-btns flex-nowrap">
                             <a href="{{ route('cities.show', $city) }}" class="btn btn-sm btn-outline-secondary" title="View">
                                 <i class="ti ti-eye"></i>
                             </a>

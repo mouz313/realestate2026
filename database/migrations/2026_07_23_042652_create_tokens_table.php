@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('payment_method')->nullable();
             $table->string('reference_no')->nullable();
             $table->date('received_date');
-            $table->enum('status', ['active', 'adjusted_in_sale', 'refunded', 'forfeited'])->default('active');
+            $table->enum('status', ['received', 'pending', 'cancelled'])->default('received');
             $table->date('refund_date')->nullable();
             $table->text('refund_reason')->nullable();
             $table->text('notes')->nullable();

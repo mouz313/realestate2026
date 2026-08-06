@@ -21,7 +21,7 @@
     <form action="{{ route('clients.update', $client) }}" method="POST">
         @csrf @method('PUT')
         <div class="card-body">
-            <div class="row">
+            <div class="row g-3">
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label class="form-label">Name <span class="urdu">(نام)</span> <span class="text-danger">*</span></label>
@@ -57,7 +57,7 @@
                 </div>
             </div>
         </div>
-        <div class="card-footer">
+        <div class="card-footer d-flex flex-wrap gap-2">
             <button type="submit" class="btn btn-dark"><i class="ti ti-device-floppy"></i> Update Client <span class="urdu">(گاہک اپ ڈیٹ)</span></button>
             <a href="{{ route('clients.index') }}" class="btn btn-link text-secondary text-decoration-none">Cancel <span class="urdu">(منسوخ)</span></a>
         </div>

@@ -18,7 +18,7 @@
             <a class="navbar-brand" href="{{ route('home') }}">
                 <i class="ti ti-building-skyscraper"></i> Sky<span>line</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#skyNavCollapse">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#skyNavCollapse" aria-controls="skyNavCollapse" aria-expanded="false">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="skyNavCollapse">

@@ -43,8 +43,8 @@
                     <td class="text-secondary d-none d-sm-table-cell">{{ $payout->payout_date ? $payout->payout_date->format('d M Y') : '-' }}</td>
                     <td class="d-none d-sm-table-cell">{{ ucfirst($payout->method ?? '-') }}</td>
                     <td class="text-secondary d-none d-md-table-cell">{{ $payout->reference ?? '-' }}</td>
-                    <td>
-                        <div class="action-btns">
+                    <td class="text-end">
+                        <div class="action-btns flex-nowrap">
                             <a href="{{ route('agent-payouts.edit', $payout) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
                                 <i class="ti ti-edit"></i>
                             </a>

@@ -20,7 +20,7 @@
     <form action="{{ route('properties.update', $property) }}" method="POST" enctype="multipart/form-data">
         @csrf @method('PUT')
         <div class="card-body">
-            <div class="row">
+            <div class="row g-3">
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label class="form-label">Title <span class="urdu">(عنوان)</span> <span class="text-danger">*</span></label>
@@ -458,7 +458,7 @@
                 </div>
             </div>
         </div>
-        <div class="card-footer">
+        <div class="card-footer d-flex flex-wrap gap-2">
             <div class="uploading-overlay" id="uploadingOverlay">
                 <div class="uploading-spinner"></div>
                 <span><span class="urdu">(میڈیا اپ لوڈ ہو رہا ہے...)</span></span>

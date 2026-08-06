@@ -30,18 +30,20 @@
                 <h5><i class="ti ti-building me-1"></i> City Information <span class="urdu">(شہر کی معلومات)</span></h5>
             </div>
             <div class="card-body">
-                <table class="detail-table">
-                    <tr><th>Name <span class="urdu">(نام)</span></th><td>{{ $city->name }}</td></tr>
-                    <tr><th>Province <span class="urdu">(صوبہ)</span></th><td>{{ $city->province ?? '-' }}</td></tr>
-                    <tr>
-                        <th>Status <span class="urdu">(کیفیت)</span></th>
-                        <td>
-                            <span class="badge {{ $city->is_active ? 'status-active' : 'status-draft' }}">{{ $city->is_active ? 'Active' : 'Inactive' }}</span>
-                        </td>
-                    </tr>
-                    <tr><th>Created <span class="urdu">(تخلیق)</span></th><td>{{ $city->created_at->format('d M Y') }}</td></tr>
-                    <tr><th>Last Updated <span class="urdu">(آخری اپ ڈیٹ)</span></th><td>{{ $city->updated_at->format('d M Y') }}</td></tr>
-                </table>
+                <div class="table-responsive">
+                    <table class="detail-table table">
+                        <tr><th>Name <span class="urdu">(نام)</span></th><td>{{ $city->name }}</td></tr>
+                        <tr><th>Province <span class="urdu">(صوبہ)</span></th><td>{{ $city->province ?? '-' }}</td></tr>
+                        <tr>
+                            <th>Status <span class="urdu">(کیفیت)</span></th>
+                            <td>
+                                <span class="badge {{ $city->is_active ? 'status-active' : 'status-draft' }}">{{ $city->is_active ? 'Active' : 'Inactive' }}</span>
+                            </td>
+                        </tr>
+                        <tr><th>Created <span class="urdu">(تخلیق)</span></th><td>{{ $city->created_at->format('d M Y') }}</td></tr>
+                        <tr><th>Last Updated <span class="urdu">(آخری اپ ڈیٹ)</span></th><td>{{ $city->updated_at->format('d M Y') }}</td></tr>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

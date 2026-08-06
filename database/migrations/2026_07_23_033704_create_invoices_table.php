@@ -11,17 +11,26 @@ return new class extends Migration
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('quotation_id')->nullable()->constrained()->nullOnDelete();
+            $table->unsignedBigInteger('deal_id')->nullable()->index();
+            $table->unsignedBigInteger('agent_id')->nullable()->index();
             $table->foreignId('client_id')->constrained()->cascadeOnDelete();
+            $table->string('invoice_type', 50)->default('sale');
             $table->string('invoice_number')->unique();
             $table->string('status')->default('unpaid');
             $table->date('due_date')->nullable();
             $table->decimal('subtotal', 12, 2)->default(0);
             $table->decimal('tax_rate', 5, 2)->default(0);
             $table->decimal('tax_amount', 12, 2)->default(0);
+            $table->string('discount_type', 10)->nullable();
+            $table->decimal('discount_value', 12, 2)->default(0);
+            $table->decimal('discount_amount', 12, 2)->default(0);
             $table->decimal('total', 12, 2)->default(0);
             $table->decimal('paid_amount', 12, 2)->default(0);
             $table->string('payment_status')->default('pending');
             $table->text('notes')->nullable();
+            $table->boolean('is_recurring')->default(false);
+            $table->string('recurring_frequency', 20)->nullable();
+            $table->date('recurring_next_date')->nullable();
             $table->timestamps();
         });
     }

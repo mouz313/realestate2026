@@ -19,7 +19,9 @@ use App\Http\Controllers\ItemTemplateController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Portal\AuthController as PortalAuthController;
 use App\Http\Controllers\Portal\DocumentController as PortalDocumentController;
+use App\Http\Controllers\Portal\OwnerRentController;
 use App\Http\Controllers\Portal\QuotationController as PortalQuotationController;
+use App\Http\Controllers\Portal\TenantRentController;
 use App\Http\Controllers\Portal\VisitController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PropertyController;
@@ -110,6 +112,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/properties/media/{media}', [PropertyController::class, 'destroyMedia'])->name('properties.media.destroy');
 
     Route::resource('deals', DealController::class);
+    Route::get('/deals/export', [DealController::class, 'export'])->name('deals.export');
+    Route::get('/deals/trash', [DealController::class, 'trash'])->name('deals.trash');
+    Route::patch('/deals/{deal}/restore', [DealController::class, 'restore'])->name('deals.restore');
+    Route::delete('/deals/{deal}/force-delete', [DealController::class, 'forceDelete'])->name('deals.force-delete');
     Route::resource('tokens', TokenController::class);
     Route::get('/installments', [InstallmentController::class, 'index'])->name('installments.index');
     Route::get('/installments/create/{deal?}', [InstallmentController::class, 'create'])->name('installments.create');
@@ -120,6 +126,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/installments/{installment}/pay', [InstallmentController::class, 'markPaid'])->name('installments.pay');
     Route::resource('rent-agreements', RentAgreementController::class);
     Route::post('/rent-agreements/{rent_agreement}/regenerate-schedule', [RentPaymentController::class, 'regenerateSchedule'])->name('rent-agreements.regenerate-schedule');
+    Route::post('/rent-agreements/{rent_agreement}/generate-next-month', [RentPaymentController::class, 'generateNextMonth'])->name('rent-agreements.generate-next-month');
+    Route::post('/rent-agreements/{rent_agreement}/renew', [RentAgreementController::class, 'renew'])->name('rent-agreements.renew');
+    Route::post('/rent-agreements/{rent_agreement}/settle-deposit', [RentAgreementController::class, 'settleDeposit'])->name('rent-agreements.settle-deposit');
+    Route::post('/rent-agreements/{rent_agreement}/notices/{rentNotice}/respond', [RentAgreementController::class, 'respondNotice'])->name('rent-agreements.notices.respond');
     Route::resource('rent-payments', RentPaymentController::class)->except(['create', 'store']);
     Route::patch('/rent-payments/{rentPayment}/pay', [RentPaymentController::class, 'updateStatus'])->name('rent-payments.pay');
     Route::patch('/rent-payments/{rentPayment}/waive', [RentPaymentController::class, 'waive'])->name('rent-payments.waive');
@@ -183,5 +193,22 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::get('/deals', [App\Http\Controllers\Portal\DealController::class, 'index'])->name('deals');
         Route::get('/deals/{deal}', [App\Http\Controllers\Portal\DealController::class, 'show'])->name('deals.show');
         Route::resource('documents', PortalDocumentController::class)->only(['index', 'create', 'store', 'destroy']);
+
+        Route::prefix('rent')->name('rent.')->group(function () {
+            Route::get('/dashboard', [TenantRentController::class, 'dashboard'])->name('dashboard');
+            Route::get('/agreements', [TenantRentController::class, 'agreements'])->name('agreements');
+            Route::get('/agreements/{rentAgreement}', [TenantRentController::class, 'agreement'])->name('agreement');
+            Route::post('/agreements/{rentAgreement}/notice', [TenantRentController::class, 'submitNotice'])->name('notice');
+            Route::get('/payments', [TenantRentController::class, 'payments'])->name('payments');
+            Route::get('/payments/{rentPayment}/receipt', [TenantRentController::class, 'receipt'])->name('receipt');
+        });
+
+        Route::prefix('owner')->name('owner.')->group(function () {
+            Route::get('/dashboard', [OwnerRentController::class, 'dashboard'])->name('dashboard');
+            Route::get('/properties', [OwnerRentController::class, 'properties'])->name('properties');
+            Route::get('/properties/{rentAgreement}', [OwnerRentController::class, 'property'])->name('property');
+            Route::get('/income', [OwnerRentController::class, 'income'])->name('income');
+            Route::get('/tenants', [OwnerRentController::class, 'tenants'])->name('tenants');
+        });
     });
 });

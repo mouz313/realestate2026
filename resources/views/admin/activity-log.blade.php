@@ -3,18 +3,18 @@
 @section('title', 'Activity Log')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <h4 class="mb-0"><i class="ti ti-history me-1"></i> Activity Log <span class="urdu">(سرگرمی کا ریکارڈ)</span></h4>
 </div>
 
 <div class="card shadow-sm mb-3">
     <div class="card-body">
         <form method="GET" class="row g-2 align-items-end">
-            <div class="col-md-5">
+            <div class="col-12 col-sm-6 col-md-5">
                 <label class="form-label small">Search</label>
                 <input type="text" name="search" class="form-control form-control-sm" value="{{ request('search') }}" placeholder="Search activity...">
             </div>
-            <div class="col-md-3">
+            <div class="col-6 col-sm-3 col-md-3">
                 <label class="form-label small">Event Type</label>
                 <select name="event" class="form-select form-select-sm">
                     <option value="">All Events</option>
@@ -23,10 +23,10 @@
                     <option value="deleted" {{ request('event') === 'deleted' ? 'selected' : '' }}>Deleted</option>
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-2">
                 <button type="submit" class="btn btn-dark btn-sm w-100"><i class="ti ti-filter"></i> Filter</button>
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-2">
                 <a href="{{ route('admin.activity-log') }}" class="btn btn-outline-secondary btn-sm w-100">Clear</a>
             </div>
         </form>

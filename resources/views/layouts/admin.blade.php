@@ -15,8 +15,13 @@
 </head>
 <body>
 <div class="d-flex" style="min-height: 100vh;">
-    {{-- Sidebar --}}
-    <div class="d-flex flex-column flex-shrink-0 p-3 sidebar" style="width: 260px; position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; z-index: 100;">
+    {{-- Sidebar Toggle Button (mobile only) --}}
+    <button class="btn btn-dark sidebar-toggle d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+        <i class="ti ti-menu-2"></i>
+    </button>
+
+    {{-- Sidebar (Desktop) --}}
+    <div class="d-none d-lg-flex flex-column flex-shrink-0 p-3 sidebar" style="width: 260px; position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; z-index: 100;">
         <a href="{{ route('dashboard') }}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none gap-2 sidebar-brand">
             @php $brandLogo = \App\Models\Setting::where('key', 'brand_logo')->value('value'); @endphp
             @if($brandLogo)
@@ -172,13 +177,66 @@
             </ul>
         </div>
 
+    {{-- Sidebar (Mobile Offcanvas) --}}
+    <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+        <div class="offcanvas-header" style="background:var(--sidebar-bg);">
+            <a href="{{ route('dashboard') }}" class="text-decoration-none sidebar-brand d-flex align-items-center gap-2">
+                @php $brandLogo = \App\Models\Setting::where('key', 'brand_logo')->value('value'); @endphp
+                @if($brandLogo)
+                    <img src="{{ Storage::url($brandLogo) }}" alt="{{ config('app.name') }}" class="sidebar-logo">
+                @else
+                    <span class="fs-5 fw-bold">{{ config('app.name') }}</span>
+                @endif
+            </a>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0 sidebar" style="background:var(--sidebar-bg);">
+            <ul class="nav nav-pills flex-column p-3 mb-auto">
+                <li class="nav-item">
+                    <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                        <i class="ti ti-home"></i> Dashboard
+                    </a>
+                </li>
+                <li><a href="{{ route('clients.index') }}" class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}"><i class="ti ti-users"></i> Clients</a></li>
+                <li><a href="{{ route('quotations.index') }}" class="nav-link {{ request()->routeIs('quotations.*') ? 'active' : '' }}"><i class="ti ti-file-description"></i> Quotations</a></li>
+                <li><a href="{{ route('invoices.index') }}" class="nav-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}"><i class="ti ti-file-invoice"></i> Invoices</a></li>
+                <li><a href="{{ route('payments.index') }}" class="nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}"><i class="ti ti-currency-dollar"></i> Payments</a></li>
+                <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Real Estate</span></li>
+                <li><a href="{{ route('properties.index') }}" class="nav-link {{ request()->routeIs('properties.*') ? 'active' : '' }}"><i class="ti ti-building"></i> Properties</a></li>
+                @can('admin')
+                <li><a href="{{ route('agents.index') }}" class="nav-link {{ request()->routeIs('agents.*') ? 'active' : '' }}"><i class="ti ti-users-group"></i> Team</a></li>
+                <li><a href="{{ route('cities.index') }}" class="nav-link {{ request()->routeIs('cities.*') ? 'active' : '' }}"><i class="ti ti-building-community"></i> Cities</a></li>
+                @endcan
+                <li><a href="{{ route('deals.index') }}" class="nav-link {{ request()->routeIs('deals.*') ? 'active' : '' }}"><i class="ti ti-handshake"></i> Deals</a></li>
+                <li><a href="{{ route('tokens.index') }}" class="nav-link {{ request()->routeIs('tokens.*') ? 'active' : '' }}"><i class="ti ti-coin"></i> Tokens</a></li>
+                <li><a href="{{ route('installments.index') }}" class="nav-link {{ request()->routeIs('installments.*') ? 'active' : '' }}"><i class="ti ti-calendar-stats"></i> Installments</a></li>
+                <li><a href="{{ route('rent-agreements.index') }}" class="nav-link {{ request()->routeIs('rent-agreements.*') ? 'active' : '' }}"><i class="ti ti-home-2"></i> Rent Agreements</a></li>
+                <li><a href="{{ route('rent-payments.index') }}" class="nav-link {{ request()->routeIs('rent-payments.*') ? 'active' : '' }}"><i class="ti ti-cash"></i> Rent Payments</a></li>
+                <li><a href="{{ route('property-visits.index') }}" class="nav-link {{ request()->routeIs('property-visits.*') ? 'active' : '' }}"><i class="ti ti-calendar-event"></i> Visits</a></li>
+                <li><a href="{{ route('commissions.index') }}" class="nav-link {{ request()->routeIs('commissions.*') ? 'active' : '' }}"><i class="ti ti-percentage"></i> Commissions</a></li>
+                <li><a href="{{ route('agent-payouts.index') }}" class="nav-link {{ request()->routeIs('agent-payouts.*') ? 'active' : '' }}"><i class="ti ti-cash"></i> Agent Payouts</a></li>
+            </ul>
+            <hr>
+            <ul class="nav nav-pills flex-column p-3">
+                <li><a href="{{ route('home') }}" target="_blank" class="nav-link"><i class="ti ti-external-link"></i> Visit Website</a></li>
+                <li><a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}"><i class="ti ti-report"></i> Reports</a></li>
+                @can('admin')
+                <li><a href="{{ route('expenses.index') }}" class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }}"><i class="ti ti-receipt"></i> Expenses</a></li>
+                <li><a href="{{ route('admin.activity-log') }}" class="nav-link {{ request()->routeIs('admin.activity-log') ? 'active' : '' }}"><i class="ti ti-history"></i> Activity Log</a></li>
+                <li><a href="{{ route('settings.items') }}" class="nav-link {{ request()->routeIs('item-templates.*') || request()->routeIs('settings.items') ? 'active' : '' }}"><i class="ti ti-template"></i> Item Templates</a></li>
+                <li><a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') && !request()->routeIs('settings.items') ? 'active' : '' }}"><i class="ti ti-settings"></i> Settings</a></li>
+                @endcan
+            </ul>
+        </div>
+    </div>
+
         {{-- Main Content --}}
         <div class="d-flex flex-column flex-grow-1 main-content-area" style="margin-left: 260px;">
             {{-- Top Navbar --}}
             <nav class="navbar navbar-expand-lg topbar shadow-sm">
                 <div class="container-fluid">
-                    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                        <span class="navbar-toggler-icon"></span>
+                    <button class="btn btn-link d-lg-none text-decoration-none text-secondary me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
+                        <i class="ti ti-menu-2" style="font-size:1.4rem;"></i>
                     </button>
                     <div class="collapse navbar-collapse" id="navbarNav">
                         {{-- Global Search --}}

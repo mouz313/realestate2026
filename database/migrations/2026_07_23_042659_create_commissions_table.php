@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('deal_id')->constrained()->cascadeOnDelete();
             $table->foreignId('agent_id')->constrained('agents')->cascadeOnDelete();
-            $table->enum('type', ['primary', 'co_agent', 'referral'])->default('primary');
+            $table->enum('type', ['percentage', 'fixed'])->default('percentage');
             $table->decimal('percentage', 5, 2);
             $table->decimal('amount', 14, 2);
             $table->enum('status', ['pending', 'approved', 'paid', 'cancelled'])->default('pending');

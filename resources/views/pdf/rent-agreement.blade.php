@@ -31,6 +31,9 @@
 </table>
 
 <div class="sec-title">Terms</div>
+@if($rentAgreement->terms)
+    {!! nl2br(e($rentAgreement->terms)) !!}
+@else
 <ol>
     <li>Rent of Rs. {{ number_format($rentAgreement->rent_amount, 2) }} payable by 10th each month.</li>
     <li>Security deposit of Rs. {{ number_format($rentAgreement->security_deposit ?? 0, 2) }} refundable at end of tenancy (less damages).</li>
@@ -38,6 +41,7 @@
     <li>Utility bills payable by Tenant.</li>
     <li>30 days notice required from either party.</li>
 </ol>
+@endif
 
 <div class="sec-title">Signatures</div>
 <div class="signatures">

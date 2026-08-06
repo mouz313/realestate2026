@@ -12,7 +12,7 @@
 @endsection
 
 @section('content')
-<div class="page-header">
+<div class="page-header flex-wrap gap-2">
     <div>
         <h3>Quotations <span class="urdu">(کوٹیشنز)</span></h3>
         <div class="page-header-sub">{{ $quotations->total() }} <span class="urdu">کل کوٹیشنز</span></div>
@@ -94,8 +94,8 @@
                         @php $sc = ['draft' => 'status-draft', 'sent' => 'status-sent', 'approved' => 'status-approved', 'rejected' => 'status-rejected', 'invoiced' => 'status-invoiced']; @endphp
                         <span class="badge {{ $sc[$q->status] ?? 'status-draft' }}">{{ ucfirst($q->status) }}</span>
                     </td>
-                    <td>
-                        <div class="action-btns">
+                    <td class="text-end">
+                        <div class="action-btns flex-nowrap">
                             <a href="{{ route('quotations.show', $q) }}" class="btn btn-sm btn-outline-secondary" title="View">
                                 <i class="ti ti-eye"></i>
                             </a>

@@ -12,7 +12,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name');
+            $table->string('role')->nullable();
             $table->string('phone');
+            $table->string('whatsapp')->nullable();
             $table->string('email')->nullable();
             $table->string('cnic')->unique();
             $table->string('cnic_front')->nullable();
@@ -25,13 +27,31 @@ return new class extends Migration
             $table->enum('type', ['in_house', 'freelance', 'partner'])->default('in_house');
             $table->date('join_date')->nullable();
             $table->text('notes')->nullable();
+            $table->text('bio')->nullable();
+            $table->unsignedTinyInteger('experience_years')->nullable();
+            $table->string('languages')->nullable();
+            $table->string('facebook')->nullable();
+            $table->string('twitter')->nullable();
+            $table->string('linkedin')->nullable();
+            $table->string('instagram')->nullable();
+            $table->string('website')->nullable();
+            $table->json('specializations')->nullable();
             $table->timestamps();
             $table->softDeletes();
+            $table->index('deleted_at');
+        });
+
+        Schema::table('users', function (Blueprint $table) {
+            $table->foreign('agent_id')->references('id')->on('agents')->onDelete('set null');
         });
     }
 
     public function down(): void
     {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropForeign(['agent_id']);
+        });
+
         Schema::dropIfExists('agents');
     }
 };

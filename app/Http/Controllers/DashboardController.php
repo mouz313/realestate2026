@@ -70,6 +70,11 @@ class DashboardController extends Controller
                 ->where('status', 'active')->count(),
             'properties_by_status' => Property::select('status', DB::raw('count(*) as total'))
                 ->groupBy('status')->pluck('total', 'status'),
+            'deals_by_status' => Deal::when($agentId, fn ($q) => $q->where('agent_id', $agentId))
+                ->select('status', DB::raw('count(*) as total'))
+                ->groupBy('status')->pluck('total', 'status'),
+            'total_deal_value' => Deal::when($agentId, fn ($q) => $q->where('agent_id', $agentId))
+                ->whereNotIn('status', ['cancelled'])->sum('sale_price'),
         ];
 
         $recentPayments = Payment::with('invoice.client')->latest()->take(5)->get();

@@ -14,6 +14,9 @@ return new class extends Migration
             $table->foreignId('client_id')->constrained()->cascadeOnDelete();
             $table->string('action');
             $table->text('notes')->nullable();
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->string('signed_name')->nullable();
             $table->timestamps();
         });
     }

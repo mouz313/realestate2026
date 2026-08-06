@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('deal_id')->constrained()->cascadeOnDelete();
             $table->integer('total_installments');
             $table->decimal('installment_amount', 14, 2);
-            $table->enum('frequency', ['monthly', 'quarterly', 'biannual', 'custom'])->default('monthly');
+            $table->string('frequency', 50)->default('monthly');
             $table->date('start_date');
             $table->text('notes')->nullable();
             $table->timestamps();

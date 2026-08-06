@@ -30,103 +30,105 @@
                 <h5><i class="ti ti-user me-1"></i> Agent Information</h5>
             </div>
             <div class="card-body">
-                <table class="detail-table">
-                    <tr>
-                        <th>Name</th>
-                        <td>{{ $agent->name }}</td>
-                    </tr>
-                    <tr>
-                        <th>Role</th>
-                        <td>{{ $agent->role ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Phone</th>
-                        <td>{{ $agent->phone ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>WhatsApp</th>
-                        <td>{{ $agent->whatsapp ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Email</th>
-                        <td><a href="mailto:{{ $agent->email }}" class="text-decoration-none">{{ $agent->email ?? '-' }}</a></td>
-                    </tr>
-                    <tr>
-                        <th>CNIC</th>
-                        <td>{{ $agent->cnic ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Commission Rate</th>
-                        <td>{{ $agent->commission_rate ? $agent->commission_rate . '%' : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Status</th>
-                        <td>
-                            <span class="badge status-{{ $agent->status ?? 'inactive' }}">{{ ucfirst($agent->status ?? 'inactive') }}</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Type</th>
-                        <td>{{ ucfirst(str_replace('_', ' ', $agent->type ?? '-')) }}</td>
-                    </tr>
-                    <tr>
-                        <th>Join Date</th>
-                        <td>{{ $agent->join_date ? $agent->join_date->format('d M Y') : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>License Number</th>
-                        <td>{{ $agent->license_number ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Address</th>
-                        <td>{{ $agent->address ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Bio / About</th>
-                        <td>{{ $agent->bio ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Experience</th>
-                        <td>{{ $agent->experience_years ? $agent->experience_years . ' years' : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Languages</th>
-                        <td>{{ $agent->languages ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Specializations</th>
-                        <td>
-                            @if($agent->specializations)
-                                @php $specs = is_array($agent->specializations) ? $agent->specializations : json_decode($agent->specializations, true); @endphp
-                                @foreach($specs as $s)
-                                <span class="badge bg-light text-dark me-1">{{ $s }}</span>
-                                @endforeach
-                            @else
-                                -
-                            @endif
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Website</th>
-                        <td>@if($agent->website)<a href="{{ $agent->website }}" target="_blank" class="text-decoration-none">{{ $agent->website }}</a>@else-@endif</td>
-                    </tr>
-                    <tr>
-                        <th>Social Media</th>
-                        <td>
-                            <div class="d-flex gap-2">
-                                @if($agent->facebook)<a href="{{ $agent->facebook }}" target="_blank" class="text-decoration-none" title="Facebook"><i class="ti ti-brand-facebook fs-5 text-primary"></i></a>@endif
-                                @if($agent->twitter)<a href="{{ $agent->twitter }}" target="_blank" class="text-decoration-none" title="Twitter"><i class="ti ti-brand-twitter fs-5"></i></a>@endif
-                                @if($agent->linkedin)<a href="{{ $agent->linkedin }}" target="_blank" class="text-decoration-none" title="LinkedIn"><i class="ti ti-brand-linkedin fs-5 text-primary"></i></a>@endif
-                                @if($agent->instagram)<a href="{{ $agent->instagram }}" target="_blank" class="text-decoration-none" title="Instagram"><i class="ti ti-brand-instagram fs-5 text-danger"></i></a>@endif
-                                @if(!$agent->facebook && !$agent->twitter && !$agent->linkedin && !$agent->instagram)-@endif
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Notes</th>
-                        <td>{{ $agent->notes ?? '-' }}</td>
-                    </tr>
-                </table>
+                <div class="table-responsive">
+                    <table class="detail-table table">
+                        <tr>
+                            <th>Name</th>
+                            <td>{{ $agent->name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Role</th>
+                            <td>{{ $agent->role ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Phone</th>
+                            <td>{{ $agent->phone ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>WhatsApp</th>
+                            <td>{{ $agent->whatsapp ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Email</th>
+                            <td><a href="mailto:{{ $agent->email }}" class="text-decoration-none">{{ $agent->email ?? '-' }}</a></td>
+                        </tr>
+                        <tr>
+                            <th>CNIC</th>
+                            <td>{{ $agent->cnic ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Commission Rate</th>
+                            <td>{{ $agent->commission_rate ? $agent->commission_rate . '%' : '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status</th>
+                            <td>
+                                <span class="badge status-{{ $agent->status ?? 'inactive' }}">{{ ucfirst($agent->status ?? 'inactive') }}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Type</th>
+                            <td>{{ ucfirst(str_replace('_', ' ', $agent->type ?? '-')) }}</td>
+                        </tr>
+                        <tr>
+                            <th>Join Date</th>
+                            <td>{{ $agent->join_date ? $agent->join_date->format('d M Y') : '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>License Number</th>
+                            <td>{{ $agent->license_number ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Address</th>
+                            <td>{{ $agent->address ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Bio / About</th>
+                            <td>{{ $agent->bio ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Experience</th>
+                            <td>{{ $agent->experience_years ? $agent->experience_years . ' years' : '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Languages</th>
+                            <td>{{ $agent->languages ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Specializations</th>
+                            <td>
+                                @if($agent->specializations)
+                                    @php $specs = is_array($agent->specializations) ? $agent->specializations : json_decode($agent->specializations, true); @endphp
+                                    @foreach($specs as $s)
+                                    <span class="badge bg-light text-dark me-1">{{ $s }}</span>
+                                    @endforeach
+                                @else
+                                    -
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Website</th>
+                            <td>@if($agent->website)<a href="{{ $agent->website }}" target="_blank" class="text-decoration-none">{{ $agent->website }}</a>@else-@endif</td>
+                        </tr>
+                        <tr>
+                            <th>Social Media</th>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    @if($agent->facebook)<a href="{{ $agent->facebook }}" target="_blank" class="text-decoration-none" title="Facebook"><i class="ti ti-brand-facebook fs-5 text-primary"></i></a>@endif
+                                    @if($agent->twitter)<a href="{{ $agent->twitter }}" target="_blank" class="text-decoration-none" title="Twitter"><i class="ti ti-brand-twitter fs-5"></i></a>@endif
+                                    @if($agent->linkedin)<a href="{{ $agent->linkedin }}" target="_blank" class="text-decoration-none" title="LinkedIn"><i class="ti ti-brand-linkedin fs-5 text-primary"></i></a>@endif
+                                    @if($agent->instagram)<a href="{{ $agent->instagram }}" target="_blank" class="text-decoration-none" title="Instagram"><i class="ti ti-brand-instagram fs-5 text-danger"></i></a>@endif
+                                    @if(!$agent->facebook && !$agent->twitter && !$agent->linkedin && !$agent->instagram)-@endif
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Notes</th>
+                            <td>{{ $agent->notes ?? '-' }}</td>
+                        </tr>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

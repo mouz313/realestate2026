@@ -12,14 +12,56 @@
 @endsection
 
 @section('content')
-<div class="page-header">
+<div class="page-header flex-wrap gap-2">
     <div>
         <h3>Deals <span class="urdu">(ڈیلز)</span></h3>
         <div class="page-header-sub">{{ $deals->total() }} <span class="urdu">(کل ڈیلز)</span></div>
     </div>
-    <a href="{{ route('deals.create') }}" class="btn btn-dark">
-        <i class="ti ti-plus"></i> <span class="urdu">(ڈیل شامل کریں)</span>
-    </a>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ route('deals.export', request()->query()) }}" class="btn btn-outline-dark">
+            <i class="ti ti-download"></i> Export
+        </a>
+        <a href="{{ route('deals.trash') }}" class="btn btn-outline-danger">
+            <i class="ti ti-trash"></i> Trash
+        </a>
+        <a href="{{ route('deals.create') }}" class="btn btn-dark">
+            <i class="ti ti-plus"></i> <span class="urdu">(ڈیل شامل کریں)</span>
+        </a>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="GET" action="{{ route('deals.index') }}" class="row g-2 align-items-end">
+            <div class="col-md-3 col-sm-6">
+                <input type="text" name="search" class="form-control form-control-sm" placeholder="Search deal #, property, buyer, seller..." value="{{ request('search') }}">
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Statuses</option>
+                    @foreach($statuses as $s)
+                        <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>{{ ucfirst(str_replace('_', ' ', $s)) }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <select name="type" class="form-select form-select-sm">
+                    <option value="">All Types</option>
+                    @foreach(['sale', 'rent', 'lease'] as $t)
+                        <option value="{{ $t }}" {{ request('type') === $t ? 'selected' : '' }}>{{ ucfirst($t) }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-1 col-sm-6">
+                <button type="submit" class="btn btn-sm btn-dark w-100"><i class="ti ti-search"></i> Filter</button>
+            </div>
+            @if(request()->hasAny(['search', 'status', 'type']))
+            <div class="col-md-1 col-sm-6">
+                <a href="{{ route('deals.index') }}" class="btn btn-sm btn-outline-secondary w-100"><i class="ti ti-x"></i> Clear</a>
+            </div>
+            @endif
+        </form>
+    </div>
 </div>
 
 <div class="card table-card">
@@ -45,8 +87,8 @@
                     <td class="fw-semibold">{{ $deal->deal_number }}</td>
                     <td>{{ ucfirst($deal->type ?? '-') }}</td>
                     <td>
-                        @php $sc = ['pending' => 'status-pending', 'active' => 'status-active', 'completed' => 'status-completed', 'cancelled' => 'status-cancelled']; @endphp
-                        <span class="badge {{ $sc[$deal->status] ?? 'status-pending' }}">{{ ucfirst($deal->status ?? 'pending') }}</span>
+                        @php $sc = ['inquiry' => 'status-inquiry', 'visit_scheduled' => 'status-visit_scheduled', 'offer_made' => 'status-offer_made', 'token_received' => 'status-token_received', 'agreement_signed' => 'status-agreement_signed', 'in_progress' => 'status-in_progress', 'completed' => 'status-completed', 'cancelled' => 'status-cancelled']; @endphp
+                        <span class="badge {{ $sc[$deal->status] ?? 'status-pending' }}">{{ ucfirst(str_replace('_', ' ', $deal->status ?? 'pending')) }}</span>
                     </td>
                     <td>{{ $deal->property->title ?? '-' }}</td>
                     <td>{{ $deal->buyer->name ?? '-' }}</td>
@@ -54,8 +96,8 @@
                     <td class="d-none d-md-table-cell">{{ $deal->agent->name ?? '-' }}</td>
                     <td class="fw-medium">{{ number_format($deal->sale_price, 0) }}</td>
                     <td class="d-none d-md-table-cell">{{ $deal->commission_amount ? number_format($deal->commission_amount, 0) : ($deal->commission_percentage ? $deal->commission_percentage . '%' : '-') }}</td>
-                    <td>
-                        <div class="action-btns">
+                    <td class="text-end">
+                        <div class="action-btns flex-nowrap">
                             <a href="{{ route('deals.show', $deal) }}" class="btn btn-sm btn-outline-secondary" title="View">
                                 <i class="ti ti-eye"></i>
                             </a>
@@ -76,7 +118,7 @@
                     <td colspan="10">
                         <div class="empty-state">
                             <i class="ti ti-handshake"></i>
-                            <p>No deals yet. <span class="urdu">(ابھی تک کوئی ڈیل نہیں)</span></p>
+                            <p>No deals found. <span class="urdu">(کوئی ڈیل نہیں ملی)</span></p>
                             <a href="{{ route('deals.create') }}" class="text-decoration-none fw-medium"><span class="urdu">(اپنی پہلی ڈیل شامل کریں)</span></a>
                         </div>
                     </td>
@@ -87,7 +129,7 @@
     </div>
     @if($deals->hasPages())
     <div class="p-3 border-top">
-        {{ $deals->withQueryString()->links() }}
+        {{ $deals->links() }}
     </div>
     @endif
 </div>

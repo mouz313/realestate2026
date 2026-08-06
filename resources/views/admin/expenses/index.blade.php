@@ -94,7 +94,7 @@
                         <td class="text-secondary">{{ $exp->deal?->deal_number ?? '-' }}</td>
                         <td class="text-end fw-bold text-danger">Rs. {{ number_format($exp->amount, 0) }}</td>
                         <td class="text-end">
-                            <div class="action-btns justify-content-end">
+                            <div class="action-btns justify-content-end flex-nowrap">
                                 <a href="{{ route('expenses.edit', $exp) }}" class="btn btn-sm btn-outline-dark" title="Edit"><i class="ti ti-pencil"></i></a>
                                 <form action="{{ route('expenses.destroy', $exp) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this expense?')">
                                     @csrf @method('DELETE')

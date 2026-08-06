@@ -56,8 +56,8 @@
                         <span class="badge {{ $sc[$commission->status] ?? 'status-pending' }}">{{ ucfirst($commission->status ?? 'pending') }}</span>
                     </td>
                     <td class="text-secondary d-none d-md-table-cell">{{ $commission->paid_date ? $commission->paid_date->format('d M Y') : '-' }}</td>
-                    <td>
-                        <div class="action-btns">
+                    <td class="text-end">
+                        <div class="action-btns flex-nowrap">
                             <a href="{{ route('pdf.commission-invoice', $commission) }}" class="btn btn-sm btn-outline-secondary" title="Download Invoice">
                                 <i class="ti ti-file-download"></i>
                             </a>

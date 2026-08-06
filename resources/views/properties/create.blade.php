@@ -457,7 +457,7 @@
                 </div>
             </div>
         </div>
-        <div class="card-footer">
+        <div class="card-footer d-flex flex-wrap gap-2">
             <div class="uploading-overlay" id="uploadingOverlay">
                 <div class="uploading-spinner"></div>
                 <span><span class="urdu">(میڈیا اپ لوڈ ہو رہا ہے...)</span></span>

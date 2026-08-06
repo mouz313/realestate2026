@@ -105,6 +105,11 @@
                         @error('commission_percentage') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Commission Amount <span class="urdu">(کمیشن رقم)</span></label>
+                        <input type="number" step="0.01" min="0" class="form-control @error('commission_amount') is-invalid @enderror" name="commission_amount" value="{{ old('commission_amount', $deal->commission_amount) }}" placeholder="Auto-calculated if percentage is set">
+                        @error('commission_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Agent Commission <span class="urdu">(ایجنٹ کمیشن)</span></label>
                         <input type="number" step="0.01" min="0" class="form-control @error('agent_commission') is-invalid @enderror" name="agent_commission" value="{{ old('agent_commission', $deal->agent_commission) }}">
                         @error('agent_commission') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -147,7 +152,7 @@
                 </div>
             </div>
         </div>
-        <div class="card-footer">
+        <div class="card-footer d-flex flex-wrap gap-2">
             <button type="submit" class="btn btn-dark"><i class="ti ti-device-floppy"></i> <span class="urdu">(ڈیل اپ ڈیٹ کریں)</span></button>
             <a href="{{ route('deals.index') }}" class="btn btn-link text-secondary text-decoration-none"><span class="urdu">(منسوخ کریں)</span></a>
         </div>

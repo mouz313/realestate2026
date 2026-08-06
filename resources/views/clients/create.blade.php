@@ -56,7 +56,7 @@
                 </div>
             </div>
         </div>
-        <div class="card-footer">
+        <div class="card-footer d-flex flex-wrap gap-2">
             <button type="submit" class="btn btn-dark"><i class="ti ti-device-floppy"></i> Save Client <span class="urdu">(گاہک محفوظ)</span></button>
             <a href="{{ route('clients.index') }}" class="btn btn-link text-secondary text-decoration-none">Cancel <span class="urdu">(منسوخ)</span></a>
         </div>

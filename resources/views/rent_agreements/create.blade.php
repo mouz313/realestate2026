@@ -98,22 +98,35 @@
                     <div class="mb-3">
                         <label class="form-label">Rent Increase Frequency <span class="urdu">(کرایہ میں اضافے کی تعدد)</span></label>
                         <select class="form-select @error('rent_increase_frequency') is-invalid @enderror" name="rent_increase_frequency">
-                            <option value="">Select <span class="urdu">(منتخب)</span></option>
+                            <option value="none" {{ old('rent_increase_frequency', 'none') == 'none' ? 'selected' : '' }}>None</option>
                             <option value="monthly" {{ old('rent_increase_frequency') == 'monthly' ? 'selected' : '' }}>Monthly</option>
+                            <option value="quarterly" {{ old('rent_increase_frequency') == 'quarterly' ? 'selected' : '' }}>Quarterly</option>
                             <option value="yearly" {{ old('rent_increase_frequency') == 'yearly' ? 'selected' : '' }}>Yearly</option>
-                            <option value="custom" {{ old('rent_increase_frequency') == 'custom' ? 'selected' : '' }}>Custom</option>
                         </select>
                         @error('rent_increase_frequency') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Payment Frequency <span class="urdu">(ادائیگی کی تعدد)</span></label>
+                        <select class="form-select @error('payment_frequency') is-invalid @enderror" name="payment_frequency">
+                            <option value="monthly" {{ old('payment_frequency', 'monthly') == 'monthly' ? 'selected' : '' }}>Monthly</option>
+                            <option value="quarterly" {{ old('payment_frequency') == 'quarterly' ? 'selected' : '' }}>Quarterly</option>
+                            <option value="half-yearly" {{ old('payment_frequency') == 'half-yearly' ? 'selected' : '' }}>Half-Yearly</option>
+                        </select>
+                        @error('payment_frequency') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Status <span class="urdu">(کیفیت)</span></label>
                         <select class="form-select @error('status') is-invalid @enderror" name="status">
-                            <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>Active</option>
+                            <option value="active" {{ old('status', 'active') == 'active' ? 'selected' : '' }}>Active</option>
                             <option value="pending" {{ old('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="expired" {{ old('status') == 'expired' ? 'selected' : '' }}>Expired</option>
-                            <option value="terminated" {{ old('status') == 'terminated' ? 'selected' : '' }}>Terminated</option>
                         </select>
                         @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Terms & Conditions <span class="urdu">(شرائط و ضوابط)</span></label>
+                        <textarea class="form-control @error('terms') is-invalid @enderror" name="terms" rows="4">{{ old('terms') }}</textarea>
+                        <div class="form-text">Leave empty for default terms.</div>
+                        @error('terms') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Notes <span class="urdu">(نوٹس)</span></label>

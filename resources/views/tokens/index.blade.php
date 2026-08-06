@@ -12,7 +12,7 @@
 @endsection
 
 @section('content')
-<div class="page-header">
+<div class="page-header flex-wrap gap-2">
     <div>
         <h3>Tokens <span class="urdu">(ٹوکنز)</span></h3>
         <div class="page-header-sub">{{ $tokens->total() }} <span class="urdu">(کل ٹوکنز)</span></div>
@@ -50,8 +50,8 @@
                         @php $sc = ['received' => 'status-paid', 'pending' => 'status-pending', 'cancelled' => 'status-cancelled']; @endphp
                         <span class="badge {{ $sc[$token->status] ?? 'status-pending' }}">{{ ucfirst($token->status ?? 'pending') }}</span>
                     </td>
-                    <td>
-                        <div class="action-btns">
+                    <td class="text-end">
+                        <div class="action-btns flex-nowrap">
                             <a href="{{ route('tokens.edit', $token) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
                                 <i class="ti ti-edit"></i>
                             </a>

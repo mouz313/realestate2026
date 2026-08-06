@@ -18,7 +18,7 @@
         <h3><i class="ti ti-template me-1"></i> Item Templates <span class="urdu">(آئٹم ٹیمپلیٹس)</span></h3>
         <div class="page-header-sub">Pre-defined line items for quotations and invoices <span class="urdu">(کوٹیشنز اور انوائسز کے لیے پہلے سے طے شدہ آئٹمز)</span></div>
     </div>
-    <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#createModal">
+    <div class="d-flex flex-wrap gap-2">
         <i class="ti ti-plus"></i> New Template <span class="urdu">(نیا ٹیمپلیٹ)</span>
     </button>
 </div>

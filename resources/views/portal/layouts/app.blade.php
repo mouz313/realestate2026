@@ -41,6 +41,19 @@
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('portal.invoices*') ? 'active' : '' }}" href="{{ route('portal.invoices') }}"><i class="ti ti-receipt"></i> Invoices</a>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('portal.rent.*') ? 'active' : '' }}" href="#" data-bs-toggle="dropdown"><i class="ti ti-cash"></i> Rent</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ route('portal.rent.dashboard') }}"><i class="ti ti-user me-1"></i> My Rent (Tenant)</a></li>
+                            <li><a class="dropdown-item" href="{{ route('portal.rent.agreements') }}"><i class="ti ti-file-text me-1"></i> My Agreements</a></li>
+                            <li><a class="dropdown-item" href="{{ route('portal.rent.payments') }}"><i class="ti ti-cash me-1"></i> My Payments</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ route('portal.owner.dashboard') }}"><i class="ti ti-building me-1"></i> Owner Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{{ route('portal.owner.properties') }}"><i class="ti ti-home me-1"></i> My Rented Properties</a></li>
+                            <li><a class="dropdown-item" href="{{ route('portal.owner.income') }}"><i class="ti ti-chart-bar me-1"></i> Income Overview</a></li>
+                            <li><a class="dropdown-item" href="{{ route('portal.owner.tenants') }}"><i class="ti ti-users me-1"></i> My Tenants</a></li>
+                        </ul>
+                    </li>
                 </ul>
                 <div class="d-flex align-items-center">
                     <span class="text-white-50 me-2 small">{{ session('client_name') }}</span>

@@ -7,16 +7,18 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RentAgreement extends Model
 {
-    use LogsActivity;
+    use LogsActivity, SoftDeletes;
 
     protected $table = 'rent_agreements';
 
     protected $fillable = [
-        'deal_id', 'property_id', 'tenant_id', 'owner_id', 'start_date', 'end_date',
+        'deal_id', 'renewed_from_id', 'property_id', 'tenant_id', 'owner_id', 'start_date', 'end_date',
         'rent_amount', 'security_deposit', 'deposit_received', 'deposit_returned',
+        'deposit_deductions', 'deposit_deduction_notes', 'deposit_returned_date',
         'notice_period_days', 'late_fee_per_day', 'rent_increase_percent',
         'rent_increase_frequency', 'payment_frequency', 'agreement_doc', 'status', 'notes', 'terms',
     ];
@@ -33,12 +35,24 @@ class RentAgreement extends Model
             'notice_period_days' => 'integer',
             'late_fee_per_day' => 'decimal:2',
             'rent_increase_percent' => 'decimal:2',
+            'deposit_deductions' => 'decimal:2',
+            'deposit_returned_date' => 'date',
         ];
     }
 
     public function deal(): BelongsTo
     {
         return $this->belongsTo(Deal::class);
+    }
+
+    public function renewedFrom(): BelongsTo
+    {
+        return $this->belongsTo(RentAgreement::class, 'renewed_from_id');
+    }
+
+    public function renewals(): HasMany
+    {
+        return $this->hasMany(RentAgreement::class, 'renewed_from_id');
     }
 
     public function property(): BelongsTo
@@ -59,6 +73,11 @@ class RentAgreement extends Model
     public function rentPayments(): HasMany
     {
         return $this->hasMany(RentPayment::class);
+    }
+
+    public function rentNotices(): HasMany
+    {
+        return $this->hasMany(RentNotice::class);
     }
 
     public function generateSchedule(): void
@@ -171,5 +190,10 @@ class RentAgreement extends Model
     public function getTotalPendingAttribute(): float
     {
         return (float) $this->rentPayments()->whereIn('status', ['pending', 'overdue'])->sum('total_due');
+    }
+
+    public function getNetDepositReturnAttribute(): float
+    {
+        return (float) $this->security_deposit - (float) $this->deposit_deductions;
     }
 }

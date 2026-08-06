@@ -12,7 +12,7 @@
 @endsection
 
 @section('content')
-<div class="page-header">
+<div class="page-header flex-wrap gap-2">
     <div>
         <h3>Clients <span class="urdu">(گاہک)</span></h3>
         <div class="page-header-sub">{{ $clients->total() }} <span class="urdu">(کل گاہک)</span></div>
@@ -41,8 +41,8 @@
                     <td class="text-secondary d-none d-md-table-cell">{{ $client->company ?? '-' }}</td>
                     <td class="d-none d-md-table-cell"><a href="mailto:{{ $client->email }}" class="text-decoration-none">{{ $client->email ?? '-' }}</a></td>
                     <td>{{ $client->phone ?? '-' }}</td>
-                    <td>
-                        <div class="action-btns">
+                    <td class="text-end">
+                        <div class="action-btns flex-nowrap">
                             <a href="{{ route('clients.show', $client) }}" class="btn btn-sm btn-outline-secondary" title="View">
                                 <i class="ti ti-eye"></i>
                             </a>

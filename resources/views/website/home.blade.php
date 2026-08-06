@@ -665,13 +665,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, { threshold: 0.25 });
         howObserver.observe(howSection);
     }
-        q.addEventListener('click', function() {
-            var item = this.closest('.faq-item');
-            var isActive = item.classList.contains('active');
-            document.querySelectorAll('.faq-item.active').forEach(function(a) { a.classList.remove('active'); });
-            if (!isActive) item.classList.add('active');
-        });
-    });
 
 });
 </script>

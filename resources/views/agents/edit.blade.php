@@ -167,7 +167,7 @@
                 </div>
             </div>
         </div>
-        <div class="card-footer">
+        <div class="card-footer d-flex flex-wrap gap-2">
             <button type="submit" class="btn btn-dark"><i class="ti ti-device-floppy"></i> Update Agent</button>
             <a href="{{ route('agents.index') }}" class="btn btn-link text-secondary text-decoration-none">Cancel</a>
         </div>

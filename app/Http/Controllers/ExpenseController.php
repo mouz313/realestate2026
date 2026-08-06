@@ -32,7 +32,7 @@ class ExpenseController extends Controller
         }
 
         $expenses = $query->latest('expense_date')->paginate(20)->withQueryString();
-        $totalAmount = (clone $query)->withoutPagination()->sum('amount');
+        $totalAmount = (clone $query)->toBase()->sum('amount');
         $categories = Expense::select('category')->distinct()->pluck('category');
 
         return view('admin.expenses.index', compact('expenses', 'totalAmount', 'categories'));

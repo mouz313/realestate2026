@@ -30,13 +30,15 @@
                 <h5><i class="ti ti-info-circle me-1"></i> Client Details <span class="urdu">(گاہک کی تفصیلات)</span></h5>
             </div>
             <div class="card-body">
-                <table class="detail-table">
-                    <tr><th>Name <span class="urdu">(نام)</span></th><td>{{ $client->name }}</td></tr>
-                    <tr><th>Company <span class="urdu">(کمپنی)</span></th><td>{{ $client->company ?? '-' }}</td></tr>
-                    <tr><th>Email <span class="urdu">(ای میل)</span></th><td>{{ $client->email ?? '-' }}</td></tr>
-                    <tr><th>Phone <span class="urdu">(فون)</span></th><td>{{ $client->phone ?? '-' }}</td></tr>
-                    <tr><th>Address <span class="urdu">(پتہ)</span></th><td>{{ $client->address ?? '-' }}</td></tr>
-                </table>
+                <div class="table-responsive">
+                    <table class="detail-table table">
+                        <tr><th>Name <span class="urdu">(نام)</span></th><td>{{ $client->name }}</td></tr>
+                        <tr><th>Company <span class="urdu">(کمپنی)</span></th><td>{{ $client->company ?? '-' }}</td></tr>
+                        <tr><th>Email <span class="urdu">(ای میل)</span></th><td>{{ $client->email ?? '-' }}</td></tr>
+                        <tr><th>Phone <span class="urdu">(فون)</span></th><td>{{ $client->phone ?? '-' }}</td></tr>
+                        <tr><th>Address <span class="urdu">(پتہ)</span></th><td>{{ $client->address ?? '-' }}</td></tr>
+                    </table>
+                </div>
             </div>
         </div>
         @if($client->notes)

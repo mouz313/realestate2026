@@ -50,8 +50,8 @@
                         <span class="badge {{ $sc[$agreement->status] ?? 'status-pending' }}">{{ ucfirst($agreement->status ?? 'pending') }}</span>
                     </td>
                     <td class="d-none d-md-table-cell">{{ $agreement->security_deposit ? number_format($agreement->security_deposit, 0) : '-' }}</td>
-                    <td>
-                        <div class="action-btns">
+                    <td class="text-end">
+                        <div class="action-btns flex-nowrap">
                             <a href="{{ route('rent-agreements.show', $agreement) }}" class="btn btn-sm btn-outline-secondary" title="View">
                                 <i class="ti ti-eye"></i>
                             </a>

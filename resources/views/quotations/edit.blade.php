@@ -169,7 +169,7 @@
                     </div>
                 </div>
             </div>
-            <div class="text-end">
+            <div class="d-flex flex-wrap gap-2 justify-content-end">
                 <button type="submit" class="btn btn-dark btn-lg"><i class="ti ti-device-floppy"></i> Update Quotation <span class="urdu">(کوٹیشن اپ ڈیٹ)</span></button>
                 <a href="{{ route('quotations.show', $quotation) }}" class="btn btn-link text-secondary text-decoration-none">Cancel <span class="urdu">(منسوخ)</span></a>
             </div>

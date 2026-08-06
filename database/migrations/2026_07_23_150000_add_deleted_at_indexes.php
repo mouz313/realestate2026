@@ -8,12 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('agents', function (Blueprint $table) {
-            $table->index('deleted_at');
-        });
-        Schema::table('properties', function (Blueprint $table) {
-            $table->index('deleted_at');
-        });
         Schema::table('deals', function (Blueprint $table) {
             $table->index('deleted_at');
         });
@@ -21,12 +15,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('agents', function (Blueprint $table) {
-            $table->dropIndex(['deleted_at']);
-        });
-        Schema::table('properties', function (Blueprint $table) {
-            $table->dropIndex(['deleted_at']);
-        });
         Schema::table('deals', function (Blueprint $table) {
             $table->dropIndex(['deleted_at']);
         });

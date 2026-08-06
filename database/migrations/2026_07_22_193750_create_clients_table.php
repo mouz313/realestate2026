@@ -16,6 +16,10 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->text('address')->nullable();
             $table->text('notes')->nullable();
+            $table->string('password')->nullable();
+            $table->enum('client_type', ['buyer', 'seller', 'tenant', 'landlord', 'both'])->default('both');
+            $table->string('cnic', 15)->nullable();
+            $table->boolean('cnic_verified')->default(false);
             $table->timestamps();
         });
     }

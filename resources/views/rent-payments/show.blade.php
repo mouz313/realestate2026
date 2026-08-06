@@ -111,7 +111,7 @@
 <div class="card shadow-sm">
     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5 class="mb-0"><i class="ti ti-calendar-stats me-1"></i> Payment History <span class="urdu">(ادائیگیوں کی تاریخ)</span></h5>
-        <form action="{{ route('rent-agreements.regenerate-schedule', $rentAgreement) }}" method="POST" onsubmit="return confirm('Generate next month payment if not already created?')">
+        <form action="{{ route('rent-agreements.generate-next-month', $rentAgreement) }}" method="POST" onsubmit="return confirm('Generate the next month payment if not already created?')">
             @csrf
             <button type="submit" class="btn btn-sm btn-outline-dark"><i class="ti ti-plus"></i> Generate Next Month</button>
         </form>
@@ -169,6 +169,15 @@
                                 <i class="ti ti-receipt"></i>
                             </a>
                             @endif
+                            <a href="{{ route('rent-payments.edit', $rp) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                <i class="ti ti-edit"></i>
+                            </a>
+                            <form action="{{ route('rent-payments.destroy', $rp) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this payment record?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <i class="ti ti-trash"></i>
+                                </button>
+                            </form>
                         </td>
                     </tr>
 

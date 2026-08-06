@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\RentPaymentConfirmation;
 use App\Models\RentAgreement;
 use App\Models\RentPayment;
 use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class RentPaymentController extends Controller
 {
@@ -55,6 +57,12 @@ class RentPaymentController extends Controller
     {
         $rentAgreement = RentAgreement::with(['property', 'tenant', 'owner', 'rentPayments'])->findOrFail($id);
 
+        $rentAgreement->rentPayments->each(function ($payment) {
+            $payment->syncLateFee();
+        });
+
+        $rentAgreement->load('rentPayments');
+
         $totalPaid = (float) $rentAgreement->rentPayments->where('status', 'paid')->sum('amount');
         $totalPending = (float) $rentAgreement->rentPayments->whereIn('status', ['pending', 'overdue'])->sum('total_due');
         $totalLateFee = (float) $rentAgreement->rentPayments->sum('late_fee');
@@ -64,6 +72,49 @@ class RentPaymentController extends Controller
         $payments = $rentAgreement->rentPayments->sortBy('year')->sortBy('month')->values();
 
         return view('rent-payments.show', compact('rentAgreement', 'payments', 'totalPaid', 'totalPending', 'totalLateFee', 'monthsPaid', 'totalMonths'));
+    }
+
+    public function edit($id)
+    {
+        $rentPayment = RentPayment::with('rentAgreement')->findOrFail($id);
+
+        return view('rent-payments.edit', compact('rentPayment'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $rentPayment = RentPayment::findOrFail($id);
+        $request->validate([
+            'month' => 'required|integer|min:1|max:12',
+            'year' => 'required|integer|min:2020|max:2050',
+            'amount' => 'required|numeric|min:0',
+            'due_date' => 'required|date',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $rentPayment->update([
+            'month' => $request->month,
+            'year' => $request->year,
+            'amount' => $request->amount,
+            'total_due' => $request->amount + $rentPayment->late_fee,
+            'due_date' => $request->due_date,
+            'notes' => $request->notes,
+        ]);
+
+        toastr()->success('Rent payment updated.');
+
+        return redirect()->route('rent-payments.show', $rentPayment->rent_agreement_id);
+    }
+
+    public function destroy($id)
+    {
+        $rentPayment = RentPayment::findOrFail($id);
+        $agreementId = $rentPayment->rent_agreement_id;
+        $rentPayment->delete();
+
+        toastr()->success('Rent payment deleted.');
+
+        return redirect()->route('rent-payments.show', $agreementId);
     }
 
     public function updateStatus(Request $request, RentPayment $rentPayment)
@@ -85,6 +136,14 @@ class RentPaymentController extends Controller
 
         $rentPayment->rentAgreement->generateNextMonth();
 
+        if ($rentPayment->rentAgreement->tenant && $rentPayment->rentAgreement->tenant->email) {
+            try {
+                Mail::to($rentPayment->rentAgreement->tenant->email)->send(new RentPaymentConfirmation($rentPayment));
+            } catch (\Exception $e) {
+                // Silently fail — don't block payment recording
+            }
+        }
+
         toastr()->success('Rent payment marked as paid.');
 
         return back();
@@ -105,6 +164,14 @@ class RentPaymentController extends Controller
     {
         $rentAgreement->generateSchedule();
         toastr()->success('Payment schedule regenerated.');
+
+        return back();
+    }
+
+    public function generateNextMonth(RentAgreement $rentAgreement)
+    {
+        $rentAgreement->generateNextMonth();
+        toastr()->success('Next month payment generated.');
 
         return back();
     }

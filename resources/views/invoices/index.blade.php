@@ -12,7 +12,7 @@
 @endsection
 
 @section('content')
-<div class="page-header">
+<div class="page-header flex-wrap gap-2">
     <div>
         <h3>Invoices <span class="urdu">(انوائسز)</span></h3>
         <div class="page-header-sub">{{ $invoices->total() }} <span class="urdu">کل انوائسز</span></div>
@@ -101,8 +101,8 @@
                         @php $ps = ['pending' => 'status-pending', 'partial' => 'status-partial', 'paid' => 'status-paid']; @endphp
                         <span class="badge {{ $ps[$inv->payment_status] ?? 'status-pending' }}">{{ ucfirst($inv->payment_status) }}</span>
                     </td>
-                    <td>
-                        <div class="action-btns">
+                    <td class="text-end">
+                        <div class="action-btns flex-nowrap">
                             <a href="{{ route('invoices.show', $inv) }}" class="btn btn-sm btn-outline-secondary" title="View">
                                 <i class="ti ti-eye"></i>
                             </a>

@@ -12,7 +12,7 @@
 @endsection
 
 @section('content')
-<div class="page-header">
+<div class="page-header flex-wrap gap-2">
     <div>
         <h3>Payments <span class="urdu">(ادائیگیاں)</span></h3>
         <div class="page-header-sub">{{ $payments->total() }} <span class="urdu">کل ادائیگیاں</span></div>
@@ -44,8 +44,8 @@
                     <td class="d-none d-sm-table-cell">{{ $payment->method ?: '-' }}</td>
                     <td class="text-secondary d-none d-sm-table-cell">{{ $payment->reference ?: '-' }}</td>
                     <td class="text-secondary d-none d-sm-table-cell">{{ $payment->paid_date->format('d M Y') }}</td>
-                    <td>
-                        <div class="action-btns">
+                    <td class="text-end">
+                        <div class="action-btns flex-nowrap">
                             <a href="{{ route('invoices.show', $payment->invoice) }}" class="btn btn-sm btn-outline-secondary" title="View Invoice">
                                 <i class="ti ti-eye"></i>
                             </a>

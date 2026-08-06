@@ -34,6 +34,7 @@ class TokenController extends Controller
             'amount' => 'required|numeric|min:0',
             'payment_method' => 'nullable|string|max:50',
             'received_date' => 'nullable|date',
+            'status' => 'nullable|string|in:received,pending,cancelled',
             'notes' => 'nullable|string|max:1000',
         ]);
 
@@ -67,6 +68,7 @@ class TokenController extends Controller
             'amount' => 'required|numeric|min:0',
             'payment_method' => 'nullable|string|max:50',
             'received_date' => 'nullable|date',
+            'status' => 'nullable|string|in:received,pending,cancelled',
             'notes' => 'nullable|string|max:1000',
         ]);
 

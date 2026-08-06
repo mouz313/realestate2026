@@ -23,8 +23,8 @@
 
 @section('content')
 {{-- Core Business Stats --}}
-<div class="row g-3">
-    <div class="col-6 col-md-4 col-xl-3">
+<div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-3">
+    <div class="col">
         <div class="card stat-card stat-card-clients">
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between">
@@ -38,7 +38,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-xl-3">
+    <div class="col">
         <div class="card stat-card stat-card-quotations">
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between">
@@ -52,7 +52,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-xl-3">
+    <div class="col">
         <div class="card stat-card stat-card-pending">
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between">
@@ -66,7 +66,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-xl-3">
+    <div class="col">
         <div class="card stat-card stat-card-invoices">
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between">
@@ -80,7 +80,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-xl-3">
+    <div class="col">
         <div class="card stat-card stat-card-unpaid">
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between">
@@ -94,7 +94,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-xl-3">
+    <div class="col">
         <div class="card stat-card" style="--accent-clients: #10b981;">
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between">
@@ -108,7 +108,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-xl-3">
+    <div class="col">
         <div class="card stat-card" style="--accent-clients: #ef4444;">
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between">
@@ -122,7 +122,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-xl-3">
+    <div class="col">
         <div class="card stat-card" style="--accent-clients: #8b5cf6;">
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between">
@@ -136,7 +136,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-xl-3">
+    <div class="col">
         <div class="card stat-card" style="--accent-clients: #f59e0b;">
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between">
@@ -437,6 +437,29 @@
                 @endforeach
                 <div class="mt-2 pt-2 border-top">
                     <a href="{{ route('properties.index') }}" class="stat-link">View all Properties <i class="ti ti-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="ti ti-handshake me-1"></i> Deals by Status</h5>
+                <span class="badge bg-dark">Total: Rs. {{ number_format($stats['total_deal_value'] ?? 0, 0) }}</span>
+            </div>
+            <div class="card-body">
+                @php $dealStatusColors = ['inquiry' => 'warning', 'visit_scheduled' => 'info', 'offer_made' => 'warning', 'token_received' => 'purple', 'agreement_signed' => 'info', 'in_progress' => 'primary', 'completed' => 'success', 'cancelled' => 'danger']; @endphp
+                @foreach($stats['deals_by_status'] as $status => $count)
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-{{ $dealStatusColors[$status] ?? 'secondary' }} text-capitalize">{{ str_replace('_', ' ', $status) }}</span>
+                    <span class="fw-bold">{{ $count }}</span>
+                </div>
+                @endforeach
+                @if($stats['deals_by_status']->isEmpty())
+                <div class="text-center text-secondary py-3">No deals yet.</div>
+                @endif
+                <div class="mt-2 pt-2 border-top">
+                    <a href="{{ route('deals.index') }}" class="stat-link">View all Deals <i class="ti ti-arrow-right"></i></a>
                 </div>
             </div>
         </div>

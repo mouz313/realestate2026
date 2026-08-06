@@ -15,7 +15,7 @@ class WebsiteController extends Controller
     public function home()
     {
         $featuredProperties = Property::with(['primaryMedia', 'media'])
-            ->whereIn('status', ['available', 'pending'])
+            ->where('status', 'available')
             ->latest()
             ->take(6)
             ->get();
@@ -27,14 +27,14 @@ class WebsiteController extends Controller
             'clients' => Client::count(),
         ];
 
-        $cities = Property::whereIn('status', ['available', 'pending'])
+        $cities = Property::where('status', 'available')
             ->whereNotNull('city')
             ->select('city')
             ->distinct()
             ->take(8)
             ->pluck('city');
 
-        $typeCounts = Property::whereIn('status', ['available', 'pending'])
+        $typeCounts = Property::where('status', 'available')
             ->select('type', DB::raw('count(*) as total'))
             ->groupBy('type')
             ->pluck('total', 'type');
@@ -193,7 +193,7 @@ class WebsiteController extends Controller
 
     public function properties(Request $request)
     {
-        $query = Property::with(['primaryMedia', 'owner'])->whereIn('status', ['available', 'pending']);
+        $query = Property::with(['primaryMedia', 'owner'])->where('status', 'available');
 
         if ($request->filled('type')) {
             $query->where('type', $request->type);
@@ -224,7 +224,7 @@ class WebsiteController extends Controller
         }
 
         $properties = $query->latest()->paginate(12)->withQueryString();
-        $cities = Property::whereIn('status', ['available', 'pending'])
+        $cities = Property::where('status', 'available')
             ->whereNotNull('city')
             ->distinct('city')
             ->pluck('city');
@@ -252,7 +252,7 @@ class WebsiteController extends Controller
 
     public function property(Property $property)
     {
-        if (! in_array($property->status, ['available', 'pending'])) {
+        if ($property->status !== 'available') {
             abort(404);
         }
         $property->load(['owner', 'assignedAgent', 'media', 'documents']);
@@ -262,7 +262,7 @@ class WebsiteController extends Controller
                 $q->where('city', $property->city)
                     ->orWhere('type', $property->type);
             })
-            ->whereIn('status', ['available', 'pending'])
+            ->where('status', 'available')
             ->take(4)
             ->get();
 

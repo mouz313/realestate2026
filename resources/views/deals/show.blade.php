@@ -29,9 +29,6 @@
                 <li><a class="dropdown-item" href="{{ route('pdf.possession-letter', $deal) }}">Possession Letter <span class="urdu">(قبضے کا خط)</span></a></li>
             </ul>
         </div>
-        <a href="{{ \App\Helpers\WhatsApp::shareLink($settings['business_phone'] ?? '', \App\Helpers\WhatsApp::dealUpdateMessage($deal)) }}" target="_blank" class="btn btn-success me-2">
-            <i class="ti ti-brand-whatsapp"></i> WhatsApp <span class="urdu">(واٹس ایپ)</span>
-        </a>
         <a href="{{ route('deals.edit', $deal) }}" class="btn btn-dark">
             <i class="ti ti-edit"></i> <span class="urdu">(ڈیل میں ترمیم کریں)</span>
         </a>
@@ -45,60 +42,62 @@
                 <h5><i class="ti ti-file-description me-1"></i> Deal Information <span class="urdu">(ڈیل کی معلومات)</span></h5>
             </div>
             <div class="card-body">
-                <table class="detail-table">
-                    <tr>
-                        <th>Deal Number <span class="urdu">(ڈیل نمبر)</span></th>
-                        <td>{{ $deal->deal_number }}</td>
-                    </tr>
-                    <tr>
-                        <th>Type <span class="urdu">(قسم)</span></th>
-                        <td>{{ ucfirst($deal->type ?? '-') }}</td>
-                    </tr>
-                    <tr>
-                        <th>Status <span class="urdu">(کیفیت)</span></th>
-                        <td>
-                            <span class="badge status-{{ $deal->status ?? 'pending' }}">{{ ucfirst($deal->status ?? 'pending') }}</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Sale Price <span class="urdu">(فروخت قیمت)</span></th>
-                        <td class="fw-semibold">{{ number_format($deal->sale_price, 2) }}</td>
-                    </tr>
-                    <tr>
-                        <th>Commission Percentage <span class="urdu">(کمیشن فیصد)</span></th>
-                        <td>{{ $deal->commission_percentage ? $deal->commission_percentage . '%' : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Commission Amount <span class="urdu">(کمیشن رقم)</span></th>
-                        <td class="text-success fw-semibold">
-                            {{ $deal->commission_amount ? number_format($deal->commission_amount, 2) : ($deal->commission_percentage ? number_format($deal->sale_price * $deal->commission_percentage / 100, 2) : '-') }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Token Amount <span class="urdu">(ٹوکن رقم)</span></th>
-                        <td>{{ $deal->token_amount ? number_format($deal->token_amount, 2) : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Token Date <span class="urdu">(ٹوکن تاریخ)</span></th>
-                        <td>{{ $deal->token_date ? $deal->token_date->format('d M Y') : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Agreement Date <span class="urdu">(معاہدے کی تاریخ)</span></th>
-                        <td>{{ $deal->agreement_date ? $deal->agreement_date->format('d M Y') : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Possession Date <span class="urdu">(قبضے کی تاریخ)</span></th>
-                        <td>{{ $deal->possession_date ? $deal->possession_date->format('d M Y') : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Payment Plan <span class="urdu">(ادائیگی کا منصوبہ)</span></th>
-                        <td><pre class="mb-0 small">{{ $deal->payment_plan ?? '-' }}</pre></td>
-                    </tr>
-                    <tr>
-                        <th>Notes <span class="urdu">(نوٹس)</span></th>
-                        <td>{{ $deal->notes ?? '-' }}</td>
-                    </tr>
-                </table>
+                <div class="table-responsive">
+                    <table class="detail-table table">
+                        <tr>
+                            <th>Deal Number <span class="urdu">(ڈیل نمبر)</span></th>
+                            <td>{{ $deal->deal_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Type <span class="urdu">(قسم)</span></th>
+                            <td>{{ ucfirst($deal->type ?? '-') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status <span class="urdu">(کیفیت)</span></th>
+                            <td>
+                                <span class="badge status-{{ $deal->status ?? 'pending' }}">{{ ucfirst($deal->status ?? 'pending') }}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Sale Price <span class="urdu">(فروخت قیمت)</span></th>
+                            <td class="fw-semibold">{{ number_format($deal->sale_price, 2) }}</td>
+                        </tr>
+                        <tr>
+                            <th>Commission Percentage <span class="urdu">(کمیشن فیصد)</span></th>
+                            <td>{{ $deal->commission_percentage ? $deal->commission_percentage . '%' : '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Commission Amount <span class="urdu">(کمیشن رقم)</span></th>
+                            <td class="text-success fw-semibold">
+                                {{ $deal->commission_amount ? number_format($deal->commission_amount, 2) : ($deal->commission_percentage ? number_format($deal->sale_price * $deal->commission_percentage / 100, 2) : '-') }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Token Amount <span class="urdu">(ٹوکن رقم)</span></th>
+                            <td>{{ $deal->token_amount ? number_format($deal->token_amount, 2) : '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Token Date <span class="urdu">(ٹوکن تاریخ)</span></th>
+                            <td>{{ $deal->token_date ? $deal->token_date->format('d M Y') : '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Agreement Date <span class="urdu">(معاہدے کی تاریخ)</span></th>
+                            <td>{{ $deal->agreement_date ? $deal->agreement_date->format('d M Y') : '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Possession Date <span class="urdu">(قبضے کی تاریخ)</span></th>
+                            <td>{{ $deal->possession_date ? $deal->possession_date->format('d M Y') : '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Payment Plan <span class="urdu">(ادائیگی کا منصوبہ)</span></th>
+                            <td><pre class="mb-0 small">{{ $deal->payment_plan ?? '-' }}</pre></td>
+                        </tr>
+                        <tr>
+                            <th>Notes <span class="urdu">(نوٹس)</span></th>
+                            <td>{{ $deal->notes ?? '-' }}</td>
+                        </tr>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -110,28 +109,30 @@
             </div>
             <div class="card-body">
                 @if($deal->property)
-                <table class="detail-table">
-                    <tr>
-                        <th>Title <span class="urdu">(عنوان)</span></th>
-                        <td><a href="{{ route('properties.show', $deal->property) }}" class="text-decoration-none">{{ $deal->property->title }}</a></td>
-                    </tr>
-                    <tr>
-                        <th>Code <span class="urdu">(کوڈ)</span></th>
-                        <td>{{ $deal->property->property_code ?? $deal->property->id }}</td>
-                    </tr>
-                    <tr>
-                        <th>Type <span class="urdu">(قسم)</span></th>
-                        <td>{{ ucfirst($deal->property->type ?? '-') }}</td>
-                    </tr>
-                    <tr>
-                        <th>Price <span class="urdu">(قیمت)</span></th>
-                        <td>{{ number_format($deal->property->price, 2) }}</td>
-                    </tr>
-                    <tr>
-                        <th>City <span class="urdu">(شہر)</span></th>
-                        <td>{{ $deal->property->city ?? '-' }}</td>
-                    </tr>
-                </table>
+                <div class="table-responsive">
+                    <table class="detail-table table">
+                        <tr>
+                            <th>Title <span class="urdu">(عنوان)</span></th>
+                            <td><a href="{{ route('properties.show', $deal->property) }}" class="text-decoration-none">{{ $deal->property->title }}</a></td>
+                        </tr>
+                        <tr>
+                            <th>Code <span class="urdu">(کوڈ)</span></th>
+                            <td>{{ $deal->property->property_code ?? $deal->property->id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Type <span class="urdu">(قسم)</span></th>
+                            <td>{{ ucfirst($deal->property->type ?? '-') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Price <span class="urdu">(قیمت)</span></th>
+                            <td>{{ number_format($deal->property->price, 2) }}</td>
+                        </tr>
+                        <tr>
+                            <th>City <span class="urdu">(شہر)</span></th>
+                            <td>{{ $deal->property->city ?? '-' }}</td>
+                        </tr>
+                    </table>
+                </div>
                 @else
                 <div class="empty-state">
                     <i class="ti ti-building"></i>
@@ -205,7 +206,7 @@
 
 {{-- Tokens --}}
 <div class="card mt-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5><i class="ti ti-coin me-1"></i> Tokens <span class="urdu">(ٹوکنز)</span></h5>
         <a href="{{ route('tokens.create', ['deal_id' => $deal->id]) }}" class="btn btn-sm btn-dark"><i class="ti ti-plus"></i> <span class="urdu">(ٹوکن شامل کریں)</span></a>
     </div>
@@ -245,7 +246,7 @@
 
 {{-- Invoices --}}
 <div class="card mt-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5><i class="ti ti-file-invoice me-1"></i> Invoices <span class="urdu">(انوائسز)</span></h5>
         <a href="{{ route('invoices.create', ['deal_id' => $deal->id]) }}" class="btn btn-sm btn-dark"><i class="ti ti-plus"></i> <span class="urdu">(انوائس شامل کریں)</span></a>
     </div>
@@ -281,7 +282,7 @@
 
 {{-- Commissions --}}
 <div class="card mt-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5><i class="ti ti-currency-dollar me-1"></i> Commissions <span class="urdu">(کمیشنز)</span></h5>
         <a href="{{ route('commissions.create', ['deal_id' => $deal->id]) }}" class="btn btn-sm btn-dark"><i class="ti ti-plus"></i> <span class="urdu">(کمیشن شامل کریں)</span></a>
     </div>
@@ -322,7 +323,7 @@
 {{-- Installment Plan --}}
 @if(($deal->installmentPlan ?? null) || ($deal->installments ?? null)?->isNotEmpty())
 <div class="card mt-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5><i class="ti ti-calendar-stats me-1"></i> Installment Plan <span class="urdu">(قسط کا منصوبہ)</span></h5>
         <a href="{{ route('installments.create', ['deal_id' => $deal->id]) }}" class="btn btn-sm btn-dark"><i class="ti ti-plus"></i> <span class="urdu">(قسط شامل کریں)</span></a>
     </div>

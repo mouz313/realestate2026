@@ -12,7 +12,7 @@
 @endsection
 
 @section('content')
-<div class="page-header">
+<div class="page-header flex-wrap gap-2">
     <div>
         <h3>Agents</h3>
         <div class="page-header-sub">{{ $agents->total() }} total agents</div>
@@ -50,8 +50,8 @@
                         @php $sc = ['active' => 'status-active', 'inactive' => 'status-draft', 'suspended' => 'status-cancelled']; @endphp
                         <span class="badge {{ $sc[$agent->status] ?? 'status-draft' }}">{{ ucfirst($agent->status ?? 'inactive') }}</span>
                     </td>
-                    <td>
-                        <div class="action-btns">
+                    <td class="text-end">
+                        <div class="action-btns flex-nowrap">
                             <a href="{{ route('agents.show', $agent) }}" class="btn btn-sm btn-outline-secondary" title="View">
                                 <i class="ti ti-eye"></i>
                             </a>

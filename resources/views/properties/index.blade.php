@@ -12,7 +12,7 @@
 @endsection
 
 @section('content')
-<div class="page-header">
+<div class="page-header flex-wrap gap-2">
     <div>
         <h3>Properties <span class="urdu">(جائیدادیں)</span></h3>
         <div class="page-header-sub">{{ $properties->total() }} <span class="urdu">(کل جائیدادیں)</span></div>
@@ -52,8 +52,8 @@
                     </td>
                     <td class="d-none d-md-table-cell">{{ $property->owner->name ?? '-' }}</td>
                     <td class="d-none d-md-table-cell">{{ $property->agent->name ?? '-' }}</td>
-                    <td>
-                        <div class="action-btns">
+                    <td class="text-end">
+                        <div class="action-btns flex-nowrap">
                             <a href="{{ route('properties.show', $property) }}" class="btn btn-sm btn-outline-secondary" title="View">
                                 <i class="ti ti-eye"></i>
                             </a>
