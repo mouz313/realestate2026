@@ -137,12 +137,22 @@
             <hr>
             <ul class="nav nav-pills flex-column">
                 @if(auth()->user()->isSuperAdmin())
+                <li class="nav-item mt-3">
+                    <span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.1em;">Companies</span>
+                </li>
                 <li>
-                    <a href="{{ route('companies.index') }}" class="nav-link {{ request()->routeIs('companies.*') ? 'active' : '' }}">
+                    <a href="{{ route('companies.index') }}" class="nav-link {{ request()->routeIs('companies.*') && !request()->routeIs('companies.create') ? 'active' : '' }}">
                         <i class="ti ti-building"></i>
                         Companies
                     </a>
                 </li>
+                <li>
+                    <a href="{{ route('companies.create') }}" class="nav-link {{ request()->routeIs('companies.create') ? 'active' : '' }}">
+                        <i class="ti ti-building-plus"></i>
+                        Add Company
+                    </a>
+                </li>
+                <li><hr class="my-2 opacity-25"></li>
                 @endif
                 <li>
                     <a href="{{ route('home') }}" target="_blank" class="nav-link">
@@ -233,7 +243,10 @@
             <hr>
             <ul class="nav nav-pills flex-column p-3">
                 @if(auth()->user()->isSuperAdmin())
-                <li><a href="{{ route('companies.index') }}" class="nav-link {{ request()->routeIs('companies.*') ? 'active' : '' }}"><i class="ti ti-building"></i> Companies</a></li>
+                <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Companies</span></li>
+                <li><a href="{{ route('companies.index') }}" class="nav-link {{ request()->routeIs('companies.*') && !request()->routeIs('companies.create') ? 'active' : '' }}"><i class="ti ti-building"></i> Companies</a></li>
+                <li><a href="{{ route('companies.create') }}" class="nav-link {{ request()->routeIs('companies.create') ? 'active' : '' }}"><i class="ti ti-building-plus"></i> Add Company</a></li>
+                <li><hr class="my-2 opacity-25"></li>
                 @endif
                 <li><a href="{{ route('home') }}" target="_blank" class="nav-link"><i class="ti ti-external-link"></i> Visit Website</a></li>
                 <li><a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}"><i class="ti ti-report"></i> Reports</a></li>
