@@ -233,7 +233,7 @@
         {{-- Main Content --}}
         <div class="d-flex flex-column flex-grow-1 main-content-area" style="margin-left: 260px;">
             {{-- Top Navbar --}}
-            <nav class="navbar navbar-expand-lg topbar shadow-sm">
+            <nav class="navbar navbar-expand topbar shadow-sm">
                 <div class="container-fluid">
                     <button class="btn btn-link d-lg-none text-decoration-none text-secondary me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
                         <i class="ti ti-menu-2" style="font-size:1.4rem;"></i>

@@ -1042,7 +1042,8 @@ hr {
     position: static !important;
     width: auto !important;
     height: auto !important;
-    overflow-y: visible !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
 }
 .offcanvas-header {
     border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -1113,7 +1114,12 @@ hr {
         width: 100%;
     }
     .topbar .navbar-collapse {
+        flex-wrap: wrap;
+        gap: 0.5rem;
         padding-top: 0.75rem;
+    }
+    .topbar .navbar-collapse .navbar-nav {
+        margin-left: 0 !important;
     }
     .action-btns {
         gap: 0.2rem;
