@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Models\Agent;
 use App\Notifications\ResetPasswordNotification;
-use App\Traits\BelongsToCompany;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -20,7 +19,7 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, BelongsToCompany;
+    use HasFactory, Notifiable;
 
     protected function casts(): array
     {

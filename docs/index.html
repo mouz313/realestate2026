@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agency — Real Estate Management System | Documentation</title>
+  <style>
+    :root{
+      --primary:#2563eb; --primary-dark:#1e40af;
+      --ink:#0f172a; --muted:#64748b; --border:#e2e8f0;
+      --bg:#f8fafc; --card:#ffffff; --codebg:#0f172a; --codetext:#cbd5e1;
+      --accent:#0891b2; --accent2:#2563eb;
+      --shadow:0 1px 2px 0 rgba(15,23,42,.05),0 1px 4px 0 rgba(15,23,42,.08);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+      color:var(--ink);background:var(--bg);line-height:1.65;
+      background:radial-gradient(1280px 520px at 70% -10%,#f0f9ff 0,#ffffff 55%);
+      opacity:1;
+    }
+    body.fade body > *:not(main){opacity:0}
+    a{color:var(--primary);text-decoration:none;font-weight:500}
+    a:hover{text-decoration:underline}
+    .layout{display:flex;min-height:100vh}
+    /* Sidebar */
+    aside{width:280px;background:linear-gradient(180deg,#0f172a 0,#1e293b 100%);color:#cbd5e1;
+      position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0;border-right:1px solid var(--border);
+      box-shadow:var(--shadow);}
+    aside .brand{padding:22px 20px;border-bottom:1px solid #334155;display:flex;align-items:center;gap:10px}
+    aside .brand .logo{font-size:19px;font-weight:700;color:#fff;letter-spacing:-.2px}
+    aside .brand .logo i{color:var(--accent)}
+    aside .brand small{display:block;color:#94a3b8;font-size:12px;margin-top:2px}
+    aside nav{padding:8px 0}
+    aside nav a{display:block;color:#cbd5e1;padding:7px 20px;font-size:13.5px;border-left:3px solid transparent;
+      transition:all .18s ease;border-radius:0 6px 6px 0}
+    aside nav a:hover{color:#fff;background:#0f172a;border-left-color:var(--accent);box-shadow:inset 0 0 0 1px #334155}
+    aside nav a.active{color:#fff;background:var(--accent);border-left-color:var(--accent)}
+    aside nav .group{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;padding:14px 20px 4px}
+    /* Main */
+    main{flex:1;padding:44px 48px;max-width:980px;margin:auto}
+    h1{font-size:32px;font-weight:700;margin:0 0 4px;letter-spacing:-.3px}
+    .leadows{color:var(--muted);margin-top:0;font-size:16px;animation:fadeUp .6s ease .1s both}
+    h2{font-size:22px;font-weight:700;margin:46px 0 12px;position:relative;padding-bottom:10px;
+      animation:fadeUp .5s ease both}
+    h2:before{content:"";position:absolute;bottom:0;left:0;width:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:2px;transition:width .45s ease .1s}
+    .animate-in h2:before,.in-view h2:before{width:44px}
+    h3{font-size:17px;font-weight:600;margin:26px 0 10px;color:var(--primary-dark);animation:fadeUp .45s ease both}
+    p{margin:10px 0;animation:fadeUp .45s ease both}
+    ul,ol{margin:10px 0;padding-left:24px}
+    li{margin:5px 0;animation:fadeUp .45s ease both}
+    code,.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#eef2f7;color:#be185d;
+      padding:3px 7px;border-radius:5px;font-size:.85em;font-weight:600;transition:background-color .2s}
+    pre{background:var(--codebg);color:var(--codetext);padding:16px 18px;border-radius:10px;overflow:auto;
+      font-size:13.5px;line-height:1.55;border:1px solid var(--border);box-shadow:var(--shadow);
+      animation:fadeUp .5s ease both;transition:box-shadow .25s}
+    pre:hover{box-shadow:0 8px 20px rgba(15,23,42,.12)}
+    pre code{background:none;color:inherit;padding:0;font-weight:400}
+    table{width:100%;border-collapse:separated;border-spacing:0 1px;margin:14px 0;font-size:14px;
+      background:var(--card);border:1px solid var(--border);border-radius:9px;overflow:hidden;
+      animation:fadeUp .5s ease both;box-shadow:var(--shadow)}
+    th,td{padding:10px 12px;border:none}
+    th{background:#f8fafc;font-weight:600;color:var(--primary-dark);text-transform:uppercase;font-size:12px;letter-spacing:.04em}
+    td{border-top:1px solid var(--border)}
+    tr:hover td{background:#f0f9ff}
+    .tr-head td{background:#f0f9ff}
+    .badge{display:inline-block;background:var(--primary);color:#fff;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600}
+    .note{border-left:4px solid var(--accent);background:#ecfeff;padding:14px 16px;border-radius:8px;margin:16px 0;font-size:14.5px;
+      animation:fadeUp .5s ease both;box-shadow:var(--shadow);transition:transform .2s}
+    .note:hover{transform:translateY(-1px)}
+    hr{border:none;border-top:1px solid var(--border);margin:26px 0}
+    /* Chips */
+    .grid{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0}
+    .chip{flex:1 1 180px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;
+      box-shadow:var(--shadow);transition:all .2s ease;animation:fadeUp .45s ease both;cursor:default}
+    .chip:hover{transform:-translateY(2px);box-shadow:0 10px 22px rgba(15,23,42,.1);border-color:var(--primary-dark)}
+    .chip b{display:block;color:var(--primary-dark);margin-bottom:2px;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+    .chip span{color:var(--ink);font-weight:500}
+    .steps{counter-reset:step;margin:18px 0}
+    .steps li{counter-increment:step;list-style:none;position:relative;padding-left:38px;margin:16px 0}
+    .steps li:before{content:counter(step);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;
+      background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;display:flex;align-items:center;
+      justify-content:center;font-size:13px;font-weight:700;box-shadow:var(--shadow)}
+    .toc-box{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:18px 20px;margin:14px 0;
+      animation:fadeUp .5s ease both;box-shadow:var(--shadow)}
+    /* Back to top */
+    #backTop{position:fixed;bottom:28px;right:28px;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));
+      color:#fff;border:none;cursor:pointer;box-shadow:0 6px 18px rgba(37,99,235,.4);align-items:center;justify-content:center;
+      opacity:0;visibility:hidden;pointer-events:none;transition:all .3s ease;z-index:1000}
+    #backTop.show{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)}
+    #backTop:hover{background:linear-gradient(135deg,var(--accent),var(--primary-dark));transform:scale(1.08)}
+    #backTop i{font-size:20px}
+    /* Animations */
+    @keyframes fadeUp{from{opacity:0;transform:translateY:14px}to{opacity:1;transform:none}}
+    @media(max-width:768px){
+      .layout{flex-direction:column}
+      aside{width:100%;height:auto;position:relative}
+      main{padding:24px 18px;margin-top:0}
+      #backTop{bottom:20px;right:18px}
+    }
+  </style>
+  <script>
+    // Smooth scroll + back-to-top + entrance reveal + active sidebar highlight
+    document.addEventListener('DOMContentLoaded',function(){
+      document.body.classList.add('loaded');
+      const bt=document.getElementById('backTop');
+      const onScroll=()=>{
+        if(window.scrollY>660){bt.classList.add('show')}else{bt.classList.remove('show')};
+        const loc=window.location.hash||'';
+        document.querySelectorAll('aside a').forEach(a=>{
+          a.classList.toggle('active', loc.startsWith(a.getAttribute('href')) );
+        });
+      };
+      window.addEventListener('scroll',onScroll);
+      onScroll();
+      bt.addEventListener('click',()=>{window.scrollTo({top:0,behavior:'smooth'})});
+      // Scroll reveal
+      if('IntersectionObserver' in window){
+        const obs=new IntersectionObserver((entries)=>{
+          entries.forEach(e=>{ if(e.isIntersecting){e.target.classList.add('in-view')} });
+        },{threshold:.12});
+        document.querySelectorAll('main > *').forEach(el=>obs.observe(el));
+      }
+    });
+  </script>
+  </head>
+  <body>
+  <div class="layout">
+
+<aside>
+  <div class="brand">
+    <div class="logo">Agency</div>
+    <small>Real Estate Management System</small>
+  </div>
+  <nav>
+    <div class="group">Overview</div>
+    <a href="#overview">Introduction</a>
+    <a href="#features">Features</a>
+    <a href="#stack">Technology Stack</a>
+    <a href="#roles">Roles &amp; Permissions</a>
+    <br>
+    <div class="group">Architecture</div>
+    <a href="#tenancy">Multi-Company Design</a>
+    <a href="#modules">Modules</a>
+    <a href="#portals">Portals</a>
+    <br>
+    <div class="group">Getting Started</div>
+    <a href="#install">Installation</a>
+    <a href="#config">Configuration</a>
+    <a href="#scheduler">Scheduler &amp; Cron</a>
+    <br>
+    <div class="group">Operations</div>
+    <a href="#deploy">Production Deployment</a>
+    <a href="#security">Security</a>
+  </nav>
+</aside>
+
+<main>
+  <h1>Agency — Real Estate Management System</h1>
+  <p class="leadows">A full-featured, multi-tenant real estate agency management platform built with <b>Laravel</b>. It runs multiple independent agencies ("companies") under a single installation — each with isolated data, users, and settings — alongside a public-facing, bilingual (EN/UR) property listing website and secure <b>client / tenant / owner</b> portals.</p>
+
+  <h2 id="overview">Introduction</h2>
+  <p>This documentation describes the system's capabilities, architecture, roles, modules, local setup, configuration, scheduled tasks, and production deployment.</p>
+  <div class="grid">
+    <div class="chip"><b>Backend</b>PHP 8.3+ · Laravel 13</div>
+    <div class="chip"><b>Database</b>MySQL / MariaDB</div>
+    <div class="chip"><b>Web</b>Blade · Bootstrap 5</div>
+    <div class="chip"><b>Tenancy</b>Multi-company (isolated)</div>
+  </div>
+
+  <h2 id="features">Features</h2>
+
+  <h3>Platform &amp; Tenancy</h3>
+  <ul>
+    <li><b>Multi-company support</b> — register new agencies; each is an isolated tenant</li>
+    <li><b>Role-based access control</b> — <code>super_admin</code>, <code>admin</code>, <code>agent</code></li>
+    <li><b>Per-company data isolation</b> via global model scopes</li>
+    <li><b>Company management</b> — super-admins create/edit companies, switch between tenants, and create admin users per company</li>
+    <li><b>Registration</b> — self-service sign-up creates a company and its first admin account</li>
+  </ul>
+
+  <h3>Public Website</h3>
+  <ul>
+    <li>Property listings with search and filters</li>
+    <li>Hero slider managed from the admin settings</li>
+    <li>Bilingual (English / Urdu)</li>
+    <li>About, privacy, terms pages, and SEO <code>sitemap.xml</code></li>
+    <li>Contact form and per-property enquiry forms</li>
+  </ul>
+
+  <h3>Real-Estate Operations</h3>
+  <ul>
+    <li><b>Properties</b> — full CRUD, media galleries (primary-image control), documents, owner/agent assignment, listing expiry, view counts</li>
+    <li><b>Clients</b> — profiles with attached documents</li>
+    <li><b>Deals</b> — sale/rental deals, token (bayana) management, trash/restore, CSV export</li>
+    <li><b>Property visits</b> — scheduling with client/agent assignment and status filters</li>
+    <li><b>Cities</b> — managed list for listing metadata</li>
+  </ul>
+
+  <h3>Financials</h3>
+  <ul>
+    <li><b>Quotations</b> — versioning, mark-sent, client approval workflow, PDF export</li>
+    <li><b>Invoices</b> — standalone or converted from quotations, payment tracking (paid/unpaid/outstanding), PDF export</li>
+    <li><b>Payments</b> — central payments ledger with edit/delete</li>
+    <li><b>Installment plans</b> — per-deal plans with per-installment payments (mark paid)</li>
+    <li><b>Commissions</b> — record and mark paid</li>
+    <li><b>Agent payouts</b> — with payout receipts</li>
+    <li><b>Expenses</b> — recorded company expenses</li>
+    <li><b>Recurring invoices</b> — scheduled auto-generation</li>
+  </ul>
+
+  <h3>Property Management (Rent)</h3>
+  <ul>
+    <li><b>Rent agreements</b> — rent terms, deposit settlement, renewal, regeneration</li>
+    <li><b>Rent schedules</b> — regenerate schedule / generate-next-month</li>
+    <li><b>Rent payments</b> — mark paid/waive, printable receipts</li>
+    <li><b>Rent notices</b> — issue and respond</li>
+  </ul>
+
+  <h3>Operations Tools</h3>
+  <ul>
+    <li><b>Reports</b> — sales (with PDF export), agent performance, commissions, rent</li>
+    <li><b>Global search</b> — cross-module admin toolbar search</li>
+    <li><b>Activity log</b> — review of system activity</li>
+    <li><b>Item templates</b> — reusable line items for quotations/invoices</li>
+  </ul>
+
+  <h3>Settings</h3>
+  <p>Configurable per company: business info, branding (logo/slider/favicon), email/SMTP, payment/bank details, real-estate defaults, SMS, and website content.</p>
+
+  <h2 id="stack">Technology Stack</h2>
+  <table>
+    <tr><th>Layer</th><th>Technology</th></tr>
+    <tr><td>Backend</td><td>PHP 8.3+, Laravel 13</td></tr>
+    <tr><td>Database</td><td>MySQL / MariaDB</td></tr>
+    <tr><td>Frontend</td><td>Blade templates, Bootstrap 5, Tabler Icons, Vanilla JS</td></tr>
+    <tr><td>Image handling</td><td>GD extension (crop-and-save to WebP)</td></tr>
+    <tr><td>PDF generation</td><td>Server-side PDF rendering</td></tr>
+    <tr><td>Auth</td><td>Session-based auth, email verification, password reset</td></tr>
+  </table>
+
+  <h2 id="roles">Roles &amp; Permissions</h2>
+  <table>
+    <tr><th>Role</th><th>Scope</th><th>Description</th></tr>
+    <tr><td><code>super_admin</code></td><td>Platform</td><td>Owner. Can create/edit/switch between companies, manage every company, and sees all admin features.</td></tr>
+    <tr><td><code>admin</code></td><td>Own company</td><td>Full management of their own company's data and settings.</td></tr>
+    <tr><td><code>agent</code></td><td>Own company</td><td>Day-to-day operations (properties, deals, clients) without company settings.</td></tr>
+  </table>
+  <p><b>Middleware:</b></p>
+  <ul>
+    <li><code>role:{role}</code> route middleware (<code>CheckRole</code>) enforces the role.</li>
+    <li>Blade gates (<code>@can('admin')</code>) control UI visibility. <code>super_admin</code> passes all admin-level gates.</li>
+    <li>The <b>client portal</b> uses its own <code>portal.auth</code> middleware and is fully isolated from the admin panel.</li>
+  </ul>
+
+  <h2 id="tenancy">Architecture &amp; Multi-Company</h2>
+  <p>Each model inherits <code>App\Traits\BelongsToCompany</code>, which provides:</p>
+  <ol>
+    <li><b>Read scoping</b> — a global scope <code>WHERE company_id = &lt;current&gt;</code> so every query only sees the active tenant's records.</li>
+    <li><b>Write scoping</b> — auto-assigns <code>company_id</code> when a record is created.</li>
+  </ol>
+  <p>The current company is resolved by <code>current_company_id()</code> (in <code>app/helpers.php</code>):</p>
+  <ul>
+    <li>A logged-in <code>super_admin</code> uses the company selected in the session (switchable).</li>
+    <li>A logged-in <code>admin</code>/<code>agent</code> uses their own <code>company_id</code>.</li>
+    <li>The public website (no user) falls back to the default company.</li>
+    <li>Console/CLI jobs fall back to a company stored in session or the default company.</li>
+  </ul>
+  <p>A <code>companies</code> table holds each tenant, and all 30 domain tables carry a <code>company_id</code> column.</p>
+
+  <h2 id="modules">Modules</h2>
+  <table>
+    <tr><th>Module</th><th>Controller</th><th>Notable routes</th></tr>
+    <tr><td>Properties</td><td><code>PropertyController</code></td><td><code>/properties</code>, media, documents</td></tr>
+    <tr><td>Clients</td><td><code>ClientController</code></td><td><code>/clients</code></td></tr>
+    <tr><td>Deals</td><td><code>DealController</code></td><td><code>/deals</code>, export, trash/restore</td></tr>
+    <tr><td>Tokens</td><td><code>TokenController</code></td><td><code>/tokens</code></td></tr>
+    <tr><td>Quotations</td><td><code>QuotationController</code></td><td><code>/quotations</code>, versions, PDF</td></tr>
+    <tr><td>Invoices</td><td><code>InvoiceController</code></td><td><code>/invoices</code>, convert, PDF, payments</td></tr>
+    <tr><td>Payments</td><td><code>PaymentController</code></td><td><code>/payments</code></td></tr>
+    <tr><td>Installments</td><td><code>InstallmentController</code></td><td><code>/installments</code></td></tr>
+    <tr><td>Rent agreements</td><td><code>RentAgreementController</code></td><td><code>/rent-agreements</code>, renew, deposit</td></tr>
+    <tr><td>Rent payments</td><td><code>RentPaymentController</code></td><td><code>/rent-payments</code>, receipts</td></tr>
+    <tr><td>Property visits</td><td><code>PropertyVisitController</code></td><td><code>/property-visits</code></td></tr>
+    <tr><td>Commissions</td><td><code>CommissionController</code></td><td><code>/commissions</code></td></tr>
+    <tr><td>Agent payouts</td><td><code>AgentPayoutController</code></td><td><code>/agent-payouts</code></td></tr>
+    <tr><td>Expenses</td><td><code>ExpenseController</code></td><td><code>/expenses</code></td></tr>
+    <tr><td>Cities</td><td><code>CityController</code></td><td><code>/cities</code></td></tr>
+    <tr><td>Agents</td><td><code>AgentController</code></td><td><code>/agents</code></td></tr>
+    <tr><td>Contacts / Enquiries</td><td><code>ContactController</code></td><td><code>/contacts</code></td></tr>
+    <tr><td>Item templates</td><td><code>ItemTemplateController</code></td><td><code>/settings/items</code></td></tr>
+    <tr><td>Settings</td><td><code>SettingsController</code></td><td><code>/settings</code></td></tr>
+    <tr><td>Reports</td><td><code>ReportController</code></td><td><code>/reports/*</code></td></tr>
+    <tr><td>Activity log</td><td><code>ActivityLogController</code></td><td><code>/admin/activity-log</code></td></tr>
+    <tr><td>Companies</td><td><code>CompanyController</code></td><td><code>/companies</code></td></tr>
+    <tr><td>Search</td><td><code>SearchController</code></td><td><code>/search</code></td></tr>
+    <tr><td>Profile</td><td><code>ProfileController</code></td><td><code>/profile</code></td></tr>
+  </table>
+
+  <h2 id="portals">Portals</h2>
+  <table>
+    <tr><th>Portal</th><th>Access</th><th>Content</th></tr>
+    <tr><td>Client portal</td><td>Client credentials</td><td>Quotations, invoices, properties, deals, documents</td></tr>
+    <tr><td>Tenant portal</td><td>Tenant credentials</td><td>Rent dashboard, agreements, notices, receipts</td></tr>
+    <tr><td>Owner portal</td><td>Owner credentials</td><td>Properties, income, tenant overview</td></tr>
+  </table>
+
+  <h2 id="install">Local Installation</h2>
+  <h3>Requirements</h3>
+  <ul>
+    <li>PHP 8.3+</li>
+    <li>MySQL / MariaDB</li>
+    <li>Composer</li>
+    <li>GD extension (image cropping)</li>
+    <li>PHP extensions: <code>fileinfo</code>, <code>gd</code>, <code>mbstring</code>, <code>openssl</code>, <code>pdo_mysql</code></li>
+  </ul>
+  <h3>Steps</h3>
+  <pre><code># 1. Clone & enter project
+git clone &lt;repository-url&gt; agency
+cd agency
+
+# 2. Install PHP dependencies
+composer install
+
+# 3. Environment setup
+cp .env.example .env
+php artisan key:generate
+
+# 4. Configure the database in .env
+#    DB_DATABASE=agency_db
+#    DB_USERNAME=root
+
+# 5. Create the storage symlink
+php artisan storage:link
+
+# 6. Migrate + seed (default company, accounts, sample data)
+php artisan migrate --seed
+
+# 7. Start the local server
+php artisan serve</code></pre>
+  <p>Visit <code>http://127.0.0.1:8000</code></p>
+  <h3>Default Accounts</h3>
+  <table>
+    <tr><th>Role</th><th>Email</th><th>Password</th></tr>
+    <tr><td>Super Admin (platform owner)</td><td><code>superadmin@agency.com</code></td><td><code>password</code></td></tr>
+    <tr><td>Admin (default company)</td><td><code>admin@agency.com</code></td><td><code>password</code></td></tr>
+  </table>
+  <div class="note"><b>Note:</b> The default company <em>Prime Property Agency</em> and a <code>DummyDataSeeder</code> dataset are created by the seeders.</div>
+
+  <h2 id="config">Configuration Reference</h2>
+  <p>Key <code>.env</code> variables:</p>
+  <pre><code>APP_URL=http://localhost:8000
+APP_DEBUG=true
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=agency_db
+DB_USERNAME=root
+
+SESSION_DRIVER=database
+SESSION_ENCRYPT=true
+
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+
+MAIL_MAILER=log            # set to 'smtp' in production
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_FROM_ADDRESS=</code></pre>
+  <div class="note"><code>MAIL_MAILER=log</code> logs emails to the Laravel log instead of sending. Switch to <code>smtp</code> and set a real provider for production (see Deployment).</div>
+
+  <h2 id="scheduler">Scheduled Tasks &amp; Cron</h2>
+  <p>The app defines scheduled commands in <code>routes/console.php</code>. Trigger the scheduler once a minute:</p>
+  <pre><code>* * * * * cd /path-to-project &amp;&amp; php artisan schedule:run &gt;&gt; /dev/null 2&gt;&amp;1</code></pre>
+  <table>
+    <tr><th>Command</th><th>Schedule</th><th>Purpose</th></tr>
+    <tr><td><code>rent:sync-overdue</code></td><td>daily</td><td>Mark overdue rent payments</td></tr>
+    <tr><td><code>rent:expire-agreements</code></td><td>daily</td><td>Expire ended rent agreements</td></tr>
+    <tr><td><code>rent:send-notifications</code></td><td>daily</td><td>Send rent reminders / notifications</td></tr>
+    <tr><td><code>invoices:generate-recurring</code></td><td>daily</td><td>Auto-generate recurring invoices</td></tr>
+    <tr><td><code>queue:work --stop-when-empty</code></td><td>every minute (<code>bootstrap/app.php</code>)</td><td>Process queued jobs (mail etc.)</td></tr>
+  </table>
+
+  <h2 id="deploy">Production Deployment</h2>
+  <h3>Environment</h3>
+  <pre><code>APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://yourdomain.com
+LOG_LEVEL=warning
+SESSION_ENCRYPT=true
+SESSION_SECURE_COOKIE=true</code></pre>
+  <h3>Mail (send real email)</h3>
+  <pre><code>MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=you@example.com
+MAIL_PASSWORD=your-app-password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="noreply@yourdomain.com"
+MAIL_FROM_NAME="Agency"</code></pre>
+  <h3>Queue</h3>
+  <pre><code>php artisan queue:work --daemon</code></pre>
+  <h3>Web Server</h3>
+  <ul>
+    <li>Point the document root to the <code>public/</code> directory.</li>
+    <li>Apache uses the provided <code>.htaccess</code>.</li>
+  </ul>
+  <p><b>Nginx:</b></p>
+  <pre><code>location / {
+    try_files $uri $uri/ /index.php?$query_string;
+}</code></pre>
+  <h3>TLS</h3>
+  <p>Terminate HTTPS at the web server / load balancer. The app trusts proxies automatically (<code>trustProxies(at: '*')</code>) for correct URL generation.</p>
+
+  <h2 id="security">Security</h2>
+  <ul>
+    <li>Encrypted <code>session</code> data (database driver)</li>
+    <li>Cross-site request forgery (CSRF) protection on all forms</li>
+    <li>Rate limiting: login (5/min) and contact form (3/min)</li>
+    <li>Auth required on all admin routes</li>
+    <li>Role gates + route-level <code>role:</code> middleware</li>
+    <li>Multi-company isolation via global scopes</li>
+    <li>Client portal isolated from admin/backend</li>
+    <li>Password reset (expiring tokens) and email verification flow</li>
+  </ul>
+
+  <hr>
+  <p style="color:var(--muted);font-size:13px">Agency — Real Estate Management System. Generated documentation. &copy; 2026. All rights reserved.</p>
+  </main>
+
+  <button id="backTop" aria-label="Back to top"><i>&#8593;</i></button>
+
+</div>
+</body>
+</html>
