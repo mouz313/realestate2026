@@ -174,6 +174,7 @@
                 </li>
                 <li><hr class="my-2 opacity-25"></li>
                 @endif
+                @if(!request()->is('superadmin/*'))
                 <li>
                     <a href="{{ route('home') }}" target="_blank" class="nav-link">
                         <i class="ti ti-external-link"></i>
@@ -224,6 +225,7 @@
                     </a>
                 </li>
                 @endcan
+                @endif
             </ul>
         </div>
 
@@ -279,6 +281,7 @@
                 <li><a href="{{ route('subscriptions.index') }}" class="nav-link {{ request()->routeIs('subscriptions.*') ? 'active' : '' }}"><i class="ti ti-clock-dollar"></i> Subscriptions</a></li>
                 <li><hr class="my-2 opacity-25"></li>
                 @endif
+                @if(!request()->is('superadmin/*'))
                 <li><a href="{{ route('home') }}" target="_blank" class="nav-link"><i class="ti ti-external-link"></i> Visit Website</a></li>
                 <li><a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}"><i class="ti ti-report"></i> Reports</a></li>
                 @can('admin')
@@ -291,6 +294,7 @@
                 <li><a href="{{ route('roles.index') }}" class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}"><i class="ti ti-shield"></i> Roles</a></li>
                 <li><a href="{{ route('permissions.index') }}" class="nav-link {{ request()->routeIs('permissions.*') ? 'active' : '' }}"><i class="ti ti-key"></i> Permissions</a></li>
                 @endcan
+                @endif
             </ul>
         </div>
     </div>
