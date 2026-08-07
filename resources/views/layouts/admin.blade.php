@@ -38,6 +38,7 @@
                     Dashboard
                 </a>
             </li>
+            @if(!request()->is('superadmin/*'))
             <li>
                 <a href="{{ route('clients.index') }}" class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}">
                     <i class="ti ti-users"></i>
@@ -133,6 +134,7 @@
                         Agent Payouts
                     </a>
                 </li>
+                @endif
             </ul>
             <hr>
             <ul class="nav nav-pills flex-column">
@@ -245,6 +247,7 @@
                         <i class="ti ti-home"></i> Dashboard
                     </a>
                 </li>
+                @if(!request()->is('superadmin/*'))
                 <li><a href="{{ route('clients.index') }}" class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}"><i class="ti ti-users"></i> Clients</a></li>
                 <li><a href="{{ route('quotations.index') }}" class="nav-link {{ request()->routeIs('quotations.*') ? 'active' : '' }}"><i class="ti ti-file-description"></i> Quotations</a></li>
                 <li><a href="{{ route('invoices.index') }}" class="nav-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}"><i class="ti ti-file-invoice"></i> Invoices</a></li>
@@ -263,6 +266,7 @@
                 <li><a href="{{ route('property-visits.index') }}" class="nav-link {{ request()->routeIs('property-visits.*') ? 'active' : '' }}"><i class="ti ti-calendar-event"></i> Visits</a></li>
                 <li><a href="{{ route('commissions.index') }}" class="nav-link {{ request()->routeIs('commissions.*') ? 'active' : '' }}"><i class="ti ti-percentage"></i> Commissions</a></li>
                 <li><a href="{{ route('agent-payouts.index') }}" class="nav-link {{ request()->routeIs('agent-payouts.*') ? 'active' : '' }}"><i class="ti ti-cash"></i> Agent Payouts</a></li>
+                @endif
             </ul>
             <hr>
             <ul class="nav nav-pills flex-column p-3">
