@@ -5,7 +5,7 @@
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard <span class="urdu">(ڈیش بورڈ)</span></a></li>
+        <li class="breadcrumb-item"><a href="{{ route(dashboard_route()) }}" class="text-decoration-none">Dashboard <span class="urdu">(ڈیش بورڈ)</span></a></li>
         <li class="breadcrumb-item"><a href="{{ route('quotations.index') }}" class="text-decoration-none">Quotations <span class="urdu">(کوٹیشنز)</span></a></li>
         <li class="breadcrumb-item active">{{ $quotation->quote_number }}</li>
     </ol>

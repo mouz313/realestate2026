@@ -5,7 +5,7 @@
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ route(dashboard_route()) }}" class="text-decoration-none">Dashboard</a></li>
         <li class="breadcrumb-item"><a href="{{ route('agents.index') }}" class="text-decoration-none">Agents</a></li>
         <li class="breadcrumb-item active">Edit Agent</li>
     </ol>

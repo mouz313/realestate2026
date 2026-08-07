@@ -5,7 +5,7 @@
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard <span class="urdu">(ڈیش بورڈ)</span></a></li>
+        <li class="breadcrumb-item"><a href="{{ route(dashboard_route()) }}" class="text-decoration-none">Dashboard <span class="urdu">(ڈیش بورڈ)</span></a></li>
         <li class="breadcrumb-item"><a href="{{ route('agent-payouts.index') }}" class="text-decoration-none">Agent Payouts <span class="urdu">(ایجنٹ ادائیگیاں)</span></a></li>
         <li class="breadcrumb-item active">#{{ $agentPayout->id }}</li>
     </ol>

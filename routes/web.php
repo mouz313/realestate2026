@@ -74,125 +74,139 @@ Route::middleware('auth')->group(function () {
     Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware('signed')->name('verification.verify');
     Route::post('/email/resend', [EmailVerificationController::class, 'resend'])->middleware('throttle:6,1')->name('verification.resend');
 
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-    Route::middleware('role:super_admin')->group(function () {
-        Route::resource('companies', CompanyController::class)->except(['show']);
-        Route::post('/companies/{company}/switch', [CompanyController::class, 'switch'])->name('companies.switch');
-        Route::post('/companies/{company}/admins', [CompanyController::class, 'storeAdmin'])->name('companies.admins.store');
-        Route::resource('packages', PackageController::class)->except(['show']);
-        Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('admin.subscriptions.index');
-        Route::get('/subscriptions/pending', [SubscriptionController::class, 'pending'])->name('admin.subscriptions.pending');
-        Route::put('/subscriptions/{subscription}/approve', [SubscriptionController::class, 'approve'])->name('admin.subscriptions.approve');
-        Route::put('/subscriptions/{subscription}/block', [SubscriptionController::class, 'block'])->name('admin.subscriptions.block');
-        Route::put('/subscriptions/{subscription}/unblock', [SubscriptionController::class, 'unblock'])->name('admin.subscriptions.unblock');
-    });
-
-    Route::middleware('role:admin')->group(function () {
-        Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
-        Route::get('/billing/checkout/{package:slug}', [BillingController::class, 'checkout'])->name('billing.checkout');
-        Route::post('/billing/checkout/{package:slug}', [BillingController::class, 'storeCheckout'])->name('billing.checkout.store');
-        Route::delete('/billing/subscriptions/{subscription}', [BillingController::class, 'cancelPending'])->name('billing.cancel');
-    });
-
+    // Profile routes (available to all authenticated users)
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::post('/profile', [ProfileController::class, 'update']);
     Route::post('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
 
-    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index')->middleware('role:admin');
-    Route::post('/settings', [SettingsController::class, 'update'])->middleware('role:admin');
+    // Super Admin routes — /superadmin prefix
+    Route::prefix('superadmin')->middleware('role:super_admin')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('superadmin.dashboard');
 
-    Route::resource('item-templates', ItemTemplateController::class)->except(['show', 'create'])->middleware('role:admin');
-    Route::get('/settings/items', [ItemTemplateController::class, 'index'])->name('settings.items')->middleware('role:admin');
+        Route::resource('companies', CompanyController::class)->except(['show']);
+        Route::post('/companies/{company}/switch', [CompanyController::class, 'switch'])->name('companies.switch');
+        Route::post('/companies/{company}/admins', [CompanyController::class, 'storeAdmin'])->name('companies.admins.store');
 
-    Route::resource('clients', ClientController::class)->middleware('subscribed');
+        Route::resource('packages', PackageController::class)->except(['show']);
 
-    Route::resource('quotations', QuotationController::class)->middleware('subscribed');
-    Route::get('/quotations/{quotation}/pdf', [QuotationController::class, 'pdf'])->name('quotations.pdf');
-    Route::patch('/quotations/{quotation}/mark-sent', [QuotationController::class, 'markSent'])->name('quotations.mark-sent');
-    Route::get('/quotations/{quotation}/versions', [QuotationController::class, 'versions'])->name('quotations.versions');
-
-    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
-    Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoices.create');
-    Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
-    Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
-    Route::get('/invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
-    Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
-    Route::get('/invoices/convert/{quotation}', [InvoiceController::class, 'convertFromQuotation'])->name('invoices.convert');
-    Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
-    Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'addPayment'])->name('invoices.payments.store');
-    Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
-
-    Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
-    Route::get('/payments/{payment}/edit', [PaymentController::class, 'edit'])->name('payments.edit');
-    Route::put('/payments/{payment}', [PaymentController::class, 'update'])->name('payments.update');
-    Route::delete('/payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
-    Route::get('/search', [SearchController::class, 'index'])->name('search.index');
-
-    Route::resource('agents', AgentController::class)->middleware(['role:admin', 'subscribed']);
-    Route::resource('cities', CityController::class)->middleware('role:admin');
-    Route::resource('properties', PropertyController::class)->middleware('subscribed');
-    Route::post('/properties/media/{media}/primary', [PropertyController::class, 'setPrimary'])->name('properties.media.primary');
-    Route::delete('/properties/media/{media}', [PropertyController::class, 'destroyMedia'])->name('properties.media.destroy');
-
-    Route::resource('deals', DealController::class)->middleware('subscribed');
-    Route::get('/deals/export', [DealController::class, 'export'])->name('deals.export');
-    Route::get('/deals/trash', [DealController::class, 'trash'])->name('deals.trash');
-    Route::patch('/deals/{deal}/restore', [DealController::class, 'restore'])->name('deals.restore');
-    Route::delete('/deals/{deal}/force-delete', [DealController::class, 'forceDelete'])->name('deals.force-delete');
-    Route::resource('tokens', TokenController::class);
-    Route::get('/installments', [InstallmentController::class, 'index'])->name('installments.index');
-    Route::get('/installments/create/{deal?}', [InstallmentController::class, 'create'])->name('installments.create');
-    Route::post('/installments', [InstallmentController::class, 'store'])->name('installments.store');
-    Route::get('/installments/{installmentPlan}/edit', [InstallmentController::class, 'edit'])->name('installments.edit');
-    Route::put('/installments/{installmentPlan}', [InstallmentController::class, 'update'])->name('installments.update');
-    Route::delete('/installments/{installmentPlan}', [InstallmentController::class, 'destroy'])->name('installments.destroy');
-    Route::patch('/installments/{installment}/pay', [InstallmentController::class, 'markPaid'])->name('installments.pay');
-    Route::resource('rent-agreements', RentAgreementController::class);
-    Route::post('/rent-agreements/{rent_agreement}/regenerate-schedule', [RentPaymentController::class, 'regenerateSchedule'])->name('rent-agreements.regenerate-schedule');
-    Route::post('/rent-agreements/{rent_agreement}/generate-next-month', [RentPaymentController::class, 'generateNextMonth'])->name('rent-agreements.generate-next-month');
-    Route::post('/rent-agreements/{rent_agreement}/renew', [RentAgreementController::class, 'renew'])->name('rent-agreements.renew');
-    Route::post('/rent-agreements/{rent_agreement}/settle-deposit', [RentAgreementController::class, 'settleDeposit'])->name('rent-agreements.settle-deposit');
-    Route::post('/rent-agreements/{rent_agreement}/notices/{rentNotice}/respond', [RentAgreementController::class, 'respondNotice'])->name('rent-agreements.notices.respond');
-    Route::resource('rent-payments', RentPaymentController::class)->except(['create', 'store']);
-    Route::patch('/rent-payments/{rentPayment}/pay', [RentPaymentController::class, 'updateStatus'])->name('rent-payments.pay');
-    Route::patch('/rent-payments/{rentPayment}/waive', [RentPaymentController::class, 'waive'])->name('rent-payments.waive');
-    Route::get('/rent-payments/{rentPayment}/receipt', [RentPaymentController::class, 'receipt'])->name('rent-payments.receipt');
-    Route::resource('property-visits', PropertyVisitController::class);
-    Route::resource('commissions', CommissionController::class);
-    Route::patch('/commissions/{commission}/mark-paid', [CommissionController::class, 'markPaid'])->name('commissions.mark-paid');
-    Route::resource('agent-payouts', AgentPayoutController::class);
-
-    Route::get('/admin/activity-log', [ActivityLogController::class, 'index'])->name('admin.activity-log')->middleware('role:admin');
-
-    Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index')->middleware('role:admin');
-    Route::get('/contacts/{contact}', [ContactController::class, 'show'])->name('contacts.show')->middleware('role:admin');
-    Route::delete('/contacts/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy')->middleware('role:admin');
-
-    Route::resource('expenses', ExpenseController::class)->except(['show'])->middleware('role:admin');
-
-    Route::prefix('reports')->name('reports.')->group(function () {
-        Route::get('/', [ReportController::class, 'index'])->name('index');
-        Route::get('/sales', [ReportController::class, 'salesReport'])->name('sales');
-        Route::get('/agent-performance', [ReportController::class, 'agentPerformance'])->name('agent-performance');
-        Route::get('/commissions', [ReportController::class, 'commissionReport'])->name('commissions');
-        Route::get('/rent-roll', [ReportController::class, 'rentRoll'])->name('rent-roll');
-        Route::get('/sales/pdf', [ReportController::class, 'exportSalesPdf'])->name('sales.pdf');
+        Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+        Route::get('/subscriptions/pending', [SubscriptionController::class, 'pending'])->name('subscriptions.pending');
+        Route::put('/subscriptions/{subscription}/approve', [SubscriptionController::class, 'approve'])->name('subscriptions.approve');
+        Route::put('/subscriptions/{subscription}/block', [SubscriptionController::class, 'block'])->name('subscriptions.block');
+        Route::put('/subscriptions/{subscription}/unblock', [SubscriptionController::class, 'unblock'])->name('subscriptions.unblock');
     });
 
-    Route::get('/pdf/sale-agreement/{deal}', [AgreementPDFController::class, 'saleAgreement'])->name('pdf.sale-agreement');
-    Route::get('/pdf/rent-agreement/{rentAgreement}', [AgreementPDFController::class, 'rentAgreement'])->name('pdf.rent-agreement');
-    Route::get('/pdf/token-receipt/{deal}', [AgreementPDFController::class, 'tokenReceipt'])->name('pdf.token-receipt');
-    Route::get('/pdf/commission-invoice/{commission}', [AgreementPDFController::class, 'commissionInvoice'])->name('pdf.commission-invoice');
-    Route::get('/pdf/possession-letter/{deal}', [AgreementPDFController::class, 'possessionLetter'])->name('pdf.possession-letter');
+    // Admin routes — /admin prefix (admin + super_admin)
+    Route::prefix('admin')->middleware('role:admin')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 
-    Route::get('/payments/raast-redirect', function (Request $request) {
-        $amount = $request->amount;
-        $reference = $request->reference;
-        $iban = $request->iban;
+        // Billing
+        Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+        Route::get('/billing/checkout/{package:slug}', [BillingController::class, 'checkout'])->name('billing.checkout');
+        Route::post('/billing/checkout/{package:slug}', [BillingController::class, 'storeCheckout'])->name('billing.checkout.store');
+        Route::delete('/billing/subscriptions/{subscription}', [BillingController::class, 'cancelPending'])->name('billing.cancel');
 
-        return view('payments.raast-redirect', compact('amount', 'reference', 'iban'));
-    })->name('payments.raast.redirect');
+        // Admin-only features
+        Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log');
+
+        Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
+        Route::get('/contacts/{contact}', [ContactController::class, 'show'])->name('contacts.show');
+        Route::delete('/contacts/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
+
+        Route::resource('expenses', ExpenseController::class)->except(['show']);
+        Route::resource('cities', CityController::class);
+        Route::resource('agents', AgentController::class)->middleware('subscribed');
+        Route::resource('item-templates', ItemTemplateController::class)->except(['show', 'create']);
+        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::post('/settings', [SettingsController::class, 'update']);
+        Route::get('/settings/items', [ItemTemplateController::class, 'index'])->name('settings.items');
+    });
+
+    // Shared routes — /admin prefix (admin + agent)
+    Route::prefix('admin')->group(function () {
+        Route::resource('clients', ClientController::class)->middleware('subscribed');
+        Route::resource('properties', PropertyController::class)->middleware('subscribed');
+        Route::post('/properties/media/{media}/primary', [PropertyController::class, 'setPrimary'])->name('properties.media.primary');
+        Route::delete('/properties/media/{media}', [PropertyController::class, 'destroyMedia'])->name('properties.media.destroy');
+
+        Route::resource('quotations', QuotationController::class)->middleware('subscribed');
+        Route::get('/quotations/{quotation}/pdf', [QuotationController::class, 'pdf'])->name('quotations.pdf');
+        Route::patch('/quotations/{quotation}/mark-sent', [QuotationController::class, 'markSent'])->name('quotations.mark-sent');
+        Route::get('/quotations/{quotation}/versions', [QuotationController::class, 'versions'])->name('quotations.versions');
+
+        Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+        Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoices.create');
+        Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
+        Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+        Route::get('/invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
+        Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
+        Route::get('/invoices/convert/{quotation}', [InvoiceController::class, 'convertFromQuotation'])->name('invoices.convert');
+        Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
+        Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'addPayment'])->name('invoices.payments.store');
+        Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
+
+        Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
+        Route::get('/payments/{payment}/edit', [PaymentController::class, 'edit'])->name('payments.edit');
+        Route::put('/payments/{payment}', [PaymentController::class, 'update'])->name('payments.update');
+        Route::delete('/payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
+
+        Route::get('/installments', [InstallmentController::class, 'index'])->name('installments.index');
+        Route::get('/installments/create/{deal?}', [InstallmentController::class, 'create'])->name('installments.create');
+        Route::post('/installments', [InstallmentController::class, 'store'])->name('installments.store');
+        Route::get('/installments/{installmentPlan}/edit', [InstallmentController::class, 'edit'])->name('installments.edit');
+        Route::put('/installments/{installmentPlan}', [InstallmentController::class, 'update'])->name('installments.update');
+        Route::delete('/installments/{installmentPlan}', [InstallmentController::class, 'destroy'])->name('installments.destroy');
+        Route::patch('/installments/{installment}/pay', [InstallmentController::class, 'markPaid'])->name('installments.pay');
+
+        Route::resource('deals', DealController::class)->middleware('subscribed');
+        Route::get('/deals/export', [DealController::class, 'export'])->name('deals.export');
+        Route::get('/deals/trash', [DealController::class, 'trash'])->name('deals.trash');
+        Route::patch('/deals/{deal}/restore', [DealController::class, 'restore'])->name('deals.restore');
+        Route::delete('/deals/{deal}/force-delete', [DealController::class, 'forceDelete'])->name('deals.force-delete');
+
+        Route::resource('tokens', TokenController::class);
+        Route::resource('rent-agreements', RentAgreementController::class);
+        Route::post('/rent-agreements/{rent_agreement}/regenerate-schedule', [RentPaymentController::class, 'regenerateSchedule'])->name('rent-agreements.regenerate-schedule');
+        Route::post('/rent-agreements/{rent_agreement}/generate-next-month', [RentPaymentController::class, 'generateNextMonth'])->name('rent-agreements.generate-next-month');
+        Route::post('/rent-agreements/{rent_agreement}/renew', [RentAgreementController::class, 'renew'])->name('rent-agreements.renew');
+        Route::post('/rent-agreements/{rent_agreement}/settle-deposit', [RentAgreementController::class, 'settleDeposit'])->name('rent-agreements.settle-deposit');
+        Route::post('/rent-agreements/{rent_agreement}/notices/{rentNotice}/respond', [RentAgreementController::class, 'respondNotice'])->name('rent-agreements.notices.respond');
+
+        Route::resource('rent-payments', RentPaymentController::class)->except(['create', 'store']);
+        Route::patch('/rent-payments/{rentPayment}/pay', [RentPaymentController::class, 'updateStatus'])->name('rent-payments.pay');
+        Route::patch('/rent-payments/{rentPayment}/waive', [RentPaymentController::class, 'waive'])->name('rent-payments.waive');
+        Route::get('/rent-payments/{rentPayment}/receipt', [RentPaymentController::class, 'receipt'])->name('rent-payments.receipt');
+
+        Route::resource('property-visits', PropertyVisitController::class);
+        Route::resource('commissions', CommissionController::class);
+        Route::patch('/commissions/{commission}/mark-paid', [CommissionController::class, 'markPaid'])->name('commissions.mark-paid');
+        Route::resource('agent-payouts', AgentPayoutController::class);
+
+        Route::get('/search', [SearchController::class, 'index'])->name('search.index');
+
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/', [ReportController::class, 'index'])->name('index');
+            Route::get('/sales', [ReportController::class, 'salesReport'])->name('sales');
+            Route::get('/agent-performance', [ReportController::class, 'agentPerformance'])->name('agent-performance');
+            Route::get('/commissions', [ReportController::class, 'commissionReport'])->name('commissions');
+            Route::get('/rent-roll', [ReportController::class, 'rentRoll'])->name('rent-roll');
+            Route::get('/sales/pdf', [ReportController::class, 'exportSalesPdf'])->name('sales.pdf');
+        });
+
+        Route::get('/pdf/sale-agreement/{deal}', [AgreementPDFController::class, 'saleAgreement'])->name('pdf.sale-agreement');
+        Route::get('/pdf/rent-agreement/{rentAgreement}', [AgreementPDFController::class, 'rentAgreement'])->name('pdf.rent-agreement');
+        Route::get('/pdf/token-receipt/{deal}', [AgreementPDFController::class, 'tokenReceipt'])->name('pdf.token-receipt');
+        Route::get('/pdf/commission-invoice/{commission}', [AgreementPDFController::class, 'commissionInvoice'])->name('pdf.commission-invoice');
+        Route::get('/pdf/possession-letter/{deal}', [AgreementPDFController::class, 'possessionLetter'])->name('pdf.possession-letter');
+
+        Route::get('/payments/raast-redirect', function (Request $request) {
+            $amount = $request->amount;
+            $reference = $request->reference;
+            $iban = $request->iban;
+
+            return view('payments.raast-redirect', compact('amount', 'reference', 'iban'));
+        })->name('payments.raast.redirect');
+    });
 });
 
 Route::prefix('portal')->name('portal.')->group(function () {

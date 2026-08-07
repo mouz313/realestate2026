@@ -27,7 +27,7 @@
                 <button type="submit" class="btn btn-dark btn-sm w-100"><i class="ti ti-filter"></i> Filter</button>
             </div>
             <div class="col-6 col-md-2">
-                <a href="{{ route('admin.activity-log') }}" class="btn btn-outline-secondary btn-sm w-100">Clear</a>
+                <a href="{{ route('activity-log') }}" class="btn btn-outline-secondary btn-sm w-100">Clear</a>
             </div>
         </form>
     </div>

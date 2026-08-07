@@ -18,7 +18,7 @@ class EmailVerificationController extends Controller
         $request->fulfill();
         toastr()->success('Email verified successfully.');
 
-        return redirect()->route('dashboard');
+        return redirect()->route(dashboard_route());
     }
 
     public function resend(Request $request)

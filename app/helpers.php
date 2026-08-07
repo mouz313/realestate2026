@@ -162,3 +162,23 @@ if (! function_exists('crop_and_save')) {
         return $savePath;
     }
 }
+
+if (! function_exists('dashboard_route')) {
+    function dashboard_route(): string
+    {
+        $user = auth()->user();
+
+        if ($user && $user->isSuperAdmin()) {
+            return 'superadmin.dashboard';
+        }
+
+        return 'admin.dashboard';
+    }
+}
+
+if (! function_exists('dashboard_url')) {
+    function dashboard_url(): string
+    {
+        return route(dashboard_route());
+    }
+}

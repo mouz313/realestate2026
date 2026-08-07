@@ -5,8 +5,8 @@
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{{ route('admin.subscriptions.index') }}" class="text-decoration-none">Subscriptions</a></li>
+        <li class="breadcrumb-item"><a href="{{ route(dashboard_route()) }}" class="text-decoration-none">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ route('subscriptions.index') }}" class="text-decoration-none">Subscriptions</a></li>
         <li class="breadcrumb-item active">Pending Approval</li>
     </ol>
 </nav>
@@ -57,14 +57,14 @@
                     <td class="text-end">
                         <div class="action-btns flex-nowrap">
                             {{-- Approve --}}
-                            <form action="{{ route('admin.subscriptions.approve', $subscription) }}" method="POST" class="d-inline">
+                            <form action="{{ route('subscriptions.approve', $subscription) }}" method="POST" class="d-inline">
                                 @csrf @method('PUT')
                                 <button type="submit" onclick="return confirm('Approve and activate this subscription for {{ $subscription->company->name }}?')" class="btn btn-sm btn-outline-success" title="Approve">
                                     <i class="ti ti-check"></i>
                                 </button>
                             </form>
                             {{-- Block --}}
-                            <form action="{{ route('admin.subscriptions.block', $subscription) }}" method="POST" class="d-inline" onsubmit="return fillBlock(this)">
+                            <form action="{{ route('subscriptions.block', $subscription) }}" method="POST" class="d-inline" onsubmit="return fillBlock(this)">
                                 @csrf @method('PUT')
                                 <input type="hidden" name="block_reason" class="block-reason">
                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Block">

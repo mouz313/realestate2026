@@ -5,7 +5,7 @@
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard <span class="urdu">(ڈیش بورڈ)</span></a></li>
+        <li class="breadcrumb-item"><a href="{{ route(dashboard_route()) }}" class="text-decoration-none">Dashboard <span class="urdu">(ڈیش بورڈ)</span></a></li>
         <li class="breadcrumb-item"><a href="{{ route('cities.index') }}" class="text-decoration-none">Cities <span class="urdu">(شہر)</span></a></li>
         <li class="breadcrumb-item active">Add City <span class="urdu">(نیا شہر)</span></li>
     </ol>

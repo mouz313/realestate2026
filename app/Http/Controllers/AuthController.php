@@ -33,7 +33,7 @@ class AuthController extends Controller
 
             toastr()->success('Welcome back!');
 
-            return redirect()->intended(route('dashboard'));
+            return redirect()->intended(route(dashboard_route()));
         }
 
         return back()->withErrors([
@@ -83,7 +83,7 @@ class AuthController extends Controller
         $request->session()->regenerate();
         toastr()->success('Company and account created successfully!');
 
-        return redirect()->route('dashboard');
+        return redirect()->route(dashboard_route());
     }
 
     public function logout(Request $request)

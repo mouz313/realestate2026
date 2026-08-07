@@ -22,7 +22,7 @@
 
     {{-- Sidebar (Desktop) --}}
     <div class="d-none d-lg-flex flex-column flex-shrink-0 p-3 sidebar" style="width: 260px; position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; z-index: 100;">
-        <a href="{{ route('dashboard') }}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none gap-2 sidebar-brand">
+        <a href="{{ route(dashboard_route()) }}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none gap-2 sidebar-brand">
             @php $brandLogo = \App\Models\Setting::where('key', 'brand_logo')->value('value'); @endphp
             @if($brandLogo)
                 <img src="{{ Storage::url($brandLogo) }}" alt="{{ config('app.name') }}" class="sidebar-logo">
@@ -33,7 +33,7 @@
         <hr>
         <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item">
-                <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                <a href="{{ route(dashboard_route()) }}" class="nav-link {{ request()->routeIs(dashboard_route()) ? 'active' : '' }}">
                     <i class="ti ti-home"></i>
                     Dashboard
                 </a>
@@ -165,7 +165,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('admin.subscriptions.index') }}" class="nav-link {{ request()->routeIs('subscriptions.*') ? 'active' : '' }}">
+                    <a href="{{ route('subscriptions.index') }}" class="nav-link {{ request()->routeIs('subscriptions.*') ? 'active' : '' }}">
                         <i class="ti ti-clock-dollar"></i>
                         Subscriptions
                     </a>
@@ -198,7 +198,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('admin.activity-log') }}" class="nav-link {{ request()->routeIs('admin.activity-log') ? 'active' : '' }}">
+                    <a href="{{ route('activity-log') }}" class="nav-link {{ request()->routeIs('activity-log') ? 'active' : '' }}">
                         <i class="ti ti-history"></i>
                         Activity Log
                     </a>
@@ -228,7 +228,7 @@
     {{-- Sidebar (Mobile Offcanvas) --}}
     <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
         <div class="offcanvas-header" style="background:var(--sidebar-bg);">
-            <a href="{{ route('dashboard') }}" class="text-decoration-none sidebar-brand d-flex align-items-center gap-2">
+            <a href="{{ route(dashboard_route()) }}" class="text-decoration-none sidebar-brand d-flex align-items-center gap-2">
                 @php $brandLogo = \App\Models\Setting::where('key', 'brand_logo')->value('value'); @endphp
                 @if($brandLogo)
                     <img src="{{ Storage::url($brandLogo) }}" alt="{{ config('app.name') }}" class="sidebar-logo">
@@ -241,7 +241,7 @@
         <div class="offcanvas-body p-0 sidebar" style="background:var(--sidebar-bg);">
             <ul class="nav nav-pills flex-column p-3 mb-auto">
                 <li class="nav-item">
-                    <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    <a href="{{ route(dashboard_route()) }}" class="nav-link {{ request()->routeIs(dashboard_route()) ? 'active' : '' }}">
                         <i class="ti ti-home"></i> Dashboard
                     </a>
                 </li>
@@ -272,7 +272,7 @@
                 <li><a href="{{ route('companies.create') }}" class="nav-link {{ request()->routeIs('companies.create') ? 'active' : '' }}"><i class="ti ti-building-plus"></i> Add Company</a></li>
                 <li><a href="{{ route('packages.index') }}" class="nav-link {{ request()->routeIs('packages.*') && !request()->routeIs('packages.create') ? 'active' : '' }}"><i class="ti ti-ticket"></i> Packages</a></li>
                 <li><a href="{{ route('packages.create') }}" class="nav-link {{ request()->routeIs('packages.create') ? 'active' : '' }}"><i class="ti ti-plus"></i> Add Package</a></li>
-                <li><a href="{{ route('admin.subscriptions.index') }}" class="nav-link {{ request()->routeIs('subscriptions.*') ? 'active' : '' }}"><i class="ti ti-clock-dollar"></i> Subscriptions</a></li>
+                <li><a href="{{ route('subscriptions.index') }}" class="nav-link {{ request()->routeIs('subscriptions.*') ? 'active' : '' }}"><i class="ti ti-clock-dollar"></i> Subscriptions</a></li>
                 <li><hr class="my-2 opacity-25"></li>
                 @endif
                 <li><a href="{{ route('home') }}" target="_blank" class="nav-link"><i class="ti ti-external-link"></i> Visit Website</a></li>
@@ -280,7 +280,7 @@
                 @can('admin')
                 <li><a href="{{ route('contacts.index') }}" class="nav-link {{ request()->routeIs('contacts.*') ? 'active' : '' }}"><i class="ti ti-message-report"></i> Enquiries</a></li>
                 <li><a href="{{ route('expenses.index') }}" class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }}"><i class="ti ti-receipt"></i> Expenses</a></li>
-                <li><a href="{{ route('admin.activity-log') }}" class="nav-link {{ request()->routeIs('admin.activity-log') ? 'active' : '' }}"><i class="ti ti-history"></i> Activity Log</a></li>
+                <li><a href="{{ route('activity-log') }}" class="nav-link {{ request()->routeIs('activity-log') ? 'active' : '' }}"><i class="ti ti-history"></i> Activity Log</a></li>
                 <li><a href="{{ route('settings.items') }}" class="nav-link {{ request()->routeIs('item-templates.*') || request()->routeIs('settings.items') ? 'active' : '' }}"><i class="ti ti-template"></i> Item Templates</a></li>
                 <li><a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') && !request()->routeIs('settings.items') ? 'active' : '' }}"><i class="ti ti-settings"></i> Settings</a></li>
                 <li><a href="{{ route('billing.index') }}" class="nav-link {{ request()->routeIs('billing.*') ? 'active' : '' }}"><i class="ti ti-currency-dollar"></i> Billing</a></li>

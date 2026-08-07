@@ -5,7 +5,7 @@
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ route(dashboard_route()) }}" class="text-decoration-none">Dashboard</a></li>
         <li class="breadcrumb-item"><a href="{{ route('rent-payments.index') }}" class="text-decoration-none">Rent Overview</a></li>
         <li class="breadcrumb-item active">{{ $rentAgreement->property?->title ?? 'Agreement #' . $rentAgreement->id }}</li>
     </ol>

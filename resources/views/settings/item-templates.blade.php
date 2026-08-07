@@ -5,7 +5,7 @@
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard <span class="urdu">(ڈیش بورڈ)</span></a></li>
+        <li class="breadcrumb-item"><a href="{{ route(dashboard_route()) }}" class="text-decoration-none">Dashboard <span class="urdu">(ڈیش بورڈ)</span></a></li>
         <li class="breadcrumb-item"><a href="{{ route('settings.index') }}" class="text-decoration-none">Settings <span class="urdu">(ترتیبات)</span></a></li>
         <li class="breadcrumb-item active">Item Templates <span class="urdu">(آئٹم ٹیمپلیٹس)</span></li>
     </ol>

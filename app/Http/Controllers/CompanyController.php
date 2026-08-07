@@ -94,7 +94,7 @@ class CompanyController extends Controller
 
         toastr()->success("Switched to {$company->name}.");
 
-        return redirect()->route('dashboard');
+        return redirect()->route(dashboard_route());
     }
 
     public function storeAdmin(Request $request, Company $company)

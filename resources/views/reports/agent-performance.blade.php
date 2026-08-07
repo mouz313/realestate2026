@@ -3,7 +3,7 @@
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard <span class="urdu">(ڈیش بورڈ)</span></a></li>
+        <li class="breadcrumb-item"><a href="{{ route(dashboard_route()) }}">Dashboard <span class="urdu">(ڈیش بورڈ)</span></a></li>
         <li class="breadcrumb-item"><a href="{{ route('reports.index') }}">Reports <span class="urdu">(رپورٹس)</span></a></li>
         <li class="breadcrumb-item active">Agent Performance <span class="urdu">(ایجنٹ کارکردگی)</span></li>
     </ol>

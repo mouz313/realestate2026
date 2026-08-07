@@ -5,7 +5,7 @@
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ route(dashboard_route()) }}" class="text-decoration-none">Dashboard</a></li>
         <li class="breadcrumb-item active">Subscriptions</li>
     </ol>
 </nav>
@@ -18,7 +18,7 @@
         <div class="page-header-sub">All company subscriptions across every plan.</div>
     </div>
     <div class="d-flex gap-2">
-        <a href="{{ route('admin.subscriptions.pending') }}" class="btn btn-outline-dark btn-sm">
+        <a href="{{ route('subscriptions.pending') }}" class="btn btn-outline-dark btn-sm">
             <i class="ti ti-clock-dollar"></i> Pending ({{ $pendingCount }})
         </a>
     </div>
@@ -53,13 +53,13 @@
                     <td class="text-end">
                         <div class="action-btns flex-nowrap">
                             @if($subscription->status === \App\Models\Subscription::STATUS_SUSPENDED && ($subscription->company->current_subscription_id === $subscription->id || is_null($subscription->company->current_subscription_id)))
-                            <form action="{{ route('admin.subscriptions.unblock', $subscription) }}" method="POST" class="d-inline" onsubmit="return confirm('Unblock this company?')">
+                            <form action="{{ route('subscriptions.unblock', $subscription) }}" method="POST" class="d-inline" onsubmit="return confirm('Unblock this company?')">
                                 @csrf @method('PUT')
                                 <button type="submit" class="btn btn-sm btn-outline-success" title="Unblock"><i class="ti ti-lock-open"></i></button>
                             </form>
                             @endif
                             @if($subscription->status === \App\Models\Subscription::STATUS_PENDING)
-                            <a href="{{ route('admin.subscriptions.pending') }}" class="btn btn-sm btn-outline-primary"><i class="ti ti-checklist"></i></a>
+                            <a href="{{ route('subscriptions.pending') }}" class="btn btn-sm btn-outline-primary"><i class="ti ti-checklist"></i></a>
                             @endif
                         </div>
                     </td>

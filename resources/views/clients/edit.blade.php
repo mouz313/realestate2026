@@ -5,7 +5,7 @@
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard <span class="urdu">(ڈیش بورڈ)</span></a></li>
+        <li class="breadcrumb-item"><a href="{{ route(dashboard_route()) }}" class="text-decoration-none">Dashboard <span class="urdu">(ڈیش بورڈ)</span></a></li>
         <li class="breadcrumb-item"><a href="{{ route('clients.index') }}" class="text-decoration-none">Clients <span class="urdu">(گاہک)</span></a></li>
         <li class="breadcrumb-item"><a href="{{ route('clients.show', $client) }}" class="text-decoration-none">{{ $client->name }}</a></li>
         <li class="breadcrumb-item active">Edit <span class="urdu">(ترمیم)</span></li>
