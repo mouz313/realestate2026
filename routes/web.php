@@ -217,7 +217,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::prefix('portal')->name('portal.')->group(function () {
-    Route::middleware(['guest', 'throttle:5,1'])->group(function () {
+Route::middleware(['guest'])->group(function () {
         Route::get('/login', [PortalAuthController::class, 'showLogin'])->name('login');
         Route::post('/login', [PortalAuthController::class, 'login']);
     });
