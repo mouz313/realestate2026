@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\ClientPortalAuth;
 use App\Http\Middleware\EnsureActiveSubscription;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'portal.auth' => ClientPortalAuth::class,
             'role' => CheckRole::class,
+            'permission' => CheckPermission::class,
             'subscribed' => EnsureActiveSubscription::class,
         ]);
 

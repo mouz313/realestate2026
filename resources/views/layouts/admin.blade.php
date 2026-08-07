@@ -284,6 +284,8 @@
                 <li><a href="{{ route('settings.items') }}" class="nav-link {{ request()->routeIs('item-templates.*') || request()->routeIs('settings.items') ? 'active' : '' }}"><i class="ti ti-template"></i> Item Templates</a></li>
                 <li><a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') && !request()->routeIs('settings.items') ? 'active' : '' }}"><i class="ti ti-settings"></i> Settings</a></li>
                 <li><a href="{{ route('billing.index') }}" class="nav-link {{ request()->routeIs('billing.*') ? 'active' : '' }}"><i class="ti ti-currency-dollar"></i> Billing</a></li>
+                <li><a href="{{ route('roles.index') }}" class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}"><i class="ti ti-shield"></i> Roles</a></li>
+                <li><a href="{{ route('permissions.index') }}" class="nav-link {{ request()->routeIs('permissions.*') ? 'active' : '' }}"><i class="ti ti-key"></i> Permissions</a></li>
                 @endcan
             </ul>
         </div>

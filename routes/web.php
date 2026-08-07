@@ -20,6 +20,7 @@ use App\Http\Controllers\InstallmentController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ItemTemplateController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\Portal\AuthController as PortalAuthController;
 use App\Http\Controllers\Portal\DocumentController as PortalDocumentController;
 use App\Http\Controllers\Portal\OwnerRentController;
@@ -31,6 +32,7 @@ use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\PropertyVisitController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\QuotationController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RentAgreementController;
 use App\Http\Controllers\RentPaymentController;
 use App\Http\Controllers\ReportController;
@@ -120,6 +122,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings', [SettingsController::class, 'update']);
         Route::get('/settings/items', [ItemTemplateController::class, 'index'])->name('settings.items');
+
+        Route::resource('roles', RoleController::class)->except(['show']);
+        Route::get('/roles/{role}/permissions', [RoleController::class, 'assignPermissionsForm'])->name('roles.permissions');
+        Route::post('/roles/{role}/permissions', [RoleController::class, 'assignPermissions'])->name('roles.permissions.assign');
+        Route::resource('permissions', PermissionController::class)->except(['show']);
     });
 
     // Shared routes — /admin prefix (admin + agent)
