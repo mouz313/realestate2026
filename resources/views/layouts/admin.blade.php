@@ -138,7 +138,7 @@
             <ul class="nav nav-pills flex-column">
                 @if(auth()->user()->isSuperAdmin())
                 <li class="nav-item mt-3">
-                    <span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.1em;">Companies</span>
+                    <span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.1em;">Management</span>
                 </li>
                 <li>
                     <a href="{{ route('companies.index') }}" class="nav-link {{ request()->routeIs('companies.*') && !request()->routeIs('companies.create') ? 'active' : '' }}">
@@ -150,6 +150,24 @@
                     <a href="{{ route('companies.create') }}" class="nav-link {{ request()->routeIs('companies.create') ? 'active' : '' }}">
                         <i class="ti ti-building-plus"></i>
                         Add Company
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('packages.index') }}" class="nav-link {{ request()->routeIs('packages.*') && !request()->routeIs('packages.create') ? 'active' : '' }}">
+                        <i class="ti ti-ticket"></i>
+                        Packages
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('packages.create') }}" class="nav-link {{ request()->routeIs('packages.create') ? 'active' : '' }}">
+                        <i class="ti ti-plus"></i>
+                        Add Package
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('admin.subscriptions.index') }}" class="nav-link {{ request()->routeIs('subscriptions.*') ? 'active' : '' }}">
+                        <i class="ti ti-clock-dollar"></i>
+                        Subscriptions
                     </a>
                 </li>
                 <li><hr class="my-2 opacity-25"></li>
@@ -195,6 +213,12 @@
                     <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') && !request()->routeIs('settings.items') ? 'active' : '' }}">
                         <i class="ti ti-settings"></i>
                         Settings
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('billing.index') }}" class="nav-link {{ request()->routeIs('billing.*') ? 'active' : '' }}">
+                        <i class="ti ti-currency-dollar"></i>
+                        Billing
                     </a>
                 </li>
                 @endcan
@@ -243,9 +267,12 @@
             <hr>
             <ul class="nav nav-pills flex-column p-3">
                 @if(auth()->user()->isSuperAdmin())
-                <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Companies</span></li>
+                <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Management</span></li>
                 <li><a href="{{ route('companies.index') }}" class="nav-link {{ request()->routeIs('companies.*') && !request()->routeIs('companies.create') ? 'active' : '' }}"><i class="ti ti-building"></i> Companies</a></li>
                 <li><a href="{{ route('companies.create') }}" class="nav-link {{ request()->routeIs('companies.create') ? 'active' : '' }}"><i class="ti ti-building-plus"></i> Add Company</a></li>
+                <li><a href="{{ route('packages.index') }}" class="nav-link {{ request()->routeIs('packages.*') && !request()->routeIs('packages.create') ? 'active' : '' }}"><i class="ti ti-ticket"></i> Packages</a></li>
+                <li><a href="{{ route('packages.create') }}" class="nav-link {{ request()->routeIs('packages.create') ? 'active' : '' }}"><i class="ti ti-plus"></i> Add Package</a></li>
+                <li><a href="{{ route('admin.subscriptions.index') }}" class="nav-link {{ request()->routeIs('subscriptions.*') ? 'active' : '' }}"><i class="ti ti-clock-dollar"></i> Subscriptions</a></li>
                 <li><hr class="my-2 opacity-25"></li>
                 @endif
                 <li><a href="{{ route('home') }}" target="_blank" class="nav-link"><i class="ti ti-external-link"></i> Visit Website</a></li>
@@ -256,6 +283,7 @@
                 <li><a href="{{ route('admin.activity-log') }}" class="nav-link {{ request()->routeIs('admin.activity-log') ? 'active' : '' }}"><i class="ti ti-history"></i> Activity Log</a></li>
                 <li><a href="{{ route('settings.items') }}" class="nav-link {{ request()->routeIs('item-templates.*') || request()->routeIs('settings.items') ? 'active' : '' }}"><i class="ti ti-template"></i> Item Templates</a></li>
                 <li><a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') && !request()->routeIs('settings.items') ? 'active' : '' }}"><i class="ti ti-settings"></i> Settings</a></li>
+                <li><a href="{{ route('billing.index') }}" class="nav-link {{ request()->routeIs('billing.*') ? 'active' : '' }}"><i class="ti ti-currency-dollar"></i> Billing</a></li>
                 @endcan
             </ul>
         </div>

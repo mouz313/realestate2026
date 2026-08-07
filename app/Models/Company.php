@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
@@ -11,7 +12,7 @@ class Company extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['name', 'slug', 'email', 'phone', 'address', 'logo', 'is_active'];
+    protected $fillable = ['name', 'slug', 'email', 'phone', 'address', 'logo', 'is_active', 'current_subscription_id'];
 
     protected function casts(): array
     {
@@ -37,5 +38,34 @@ class Company extends Model
     public function settings(): HasMany
     {
         return $this->hasMany(Setting::class);
+    }
+
+    public function subscription(): BelongsTo
+    {
+        return $this->belongsTo(Subscription::class, 'current_subscription_id');
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function activeSubscription(): ?Subscription
+    {
+        $sub = $this->relationLoaded('subscription') ? $this->subscription : $this->subscription()->first();
+
+        if (! $sub) {
+            return null;
+        }
+
+        if (! $sub->isActive()) {
+            return null;
+        }
+
+        if ($sub->ends_at && $sub->ends_at->isPast()) {
+            return null;
+        }
+
+        return $sub;
     }
 }

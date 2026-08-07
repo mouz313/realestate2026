@@ -6,6 +6,7 @@ use App\Http\Controllers\AgentPayoutController;
 use App\Http\Controllers\AgreementPDFController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommissionController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\Portal\VisitController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\PropertyVisitController;
+use App\Http\Controllers\PackageController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\RentAgreementController;
 use App\Http\Controllers\RentPaymentController;
@@ -35,6 +37,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TokenController;
 use App\Http\Controllers\WebsiteController;
 use Illuminate\Http\Request;
@@ -77,6 +80,19 @@ Route::middleware('auth')->group(function () {
         Route::resource('companies', CompanyController::class)->except(['show']);
         Route::post('/companies/{company}/switch', [CompanyController::class, 'switch'])->name('companies.switch');
         Route::post('/companies/{company}/admins', [CompanyController::class, 'storeAdmin'])->name('companies.admins.store');
+        Route::resource('packages', PackageController::class)->except(['show']);
+        Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('admin.subscriptions.index');
+        Route::get('/subscriptions/pending', [SubscriptionController::class, 'pending'])->name('admin.subscriptions.pending');
+        Route::put('/subscriptions/{subscription}/approve', [SubscriptionController::class, 'approve'])->name('admin.subscriptions.approve');
+        Route::put('/subscriptions/{subscription}/block', [SubscriptionController::class, 'block'])->name('admin.subscriptions.block');
+        Route::put('/subscriptions/{subscription}/unblock', [SubscriptionController::class, 'unblock'])->name('admin.subscriptions.unblock');
+    });
+
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+        Route::get('/billing/checkout/{package:slug}', [BillingController::class, 'checkout'])->name('billing.checkout');
+        Route::post('/billing/checkout/{package:slug}', [BillingController::class, 'storeCheckout'])->name('billing.checkout.store');
+        Route::delete('/billing/subscriptions/{subscription}', [BillingController::class, 'cancelPending'])->name('billing.cancel');
     });
 
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
@@ -89,9 +105,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('item-templates', ItemTemplateController::class)->except(['show', 'create'])->middleware('role:admin');
     Route::get('/settings/items', [ItemTemplateController::class, 'index'])->name('settings.items')->middleware('role:admin');
 
-    Route::resource('clients', ClientController::class);
+    Route::resource('clients', ClientController::class)->middleware('subscribed');
 
-    Route::resource('quotations', QuotationController::class);
+    Route::resource('quotations', QuotationController::class)->middleware('subscribed');
     Route::get('/quotations/{quotation}/pdf', [QuotationController::class, 'pdf'])->name('quotations.pdf');
     Route::patch('/quotations/{quotation}/mark-sent', [QuotationController::class, 'markSent'])->name('quotations.mark-sent');
     Route::get('/quotations/{quotation}/versions', [QuotationController::class, 'versions'])->name('quotations.versions');
@@ -113,13 +129,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
     Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 
-    Route::resource('agents', AgentController::class)->middleware('role:admin');
+    Route::resource('agents', AgentController::class)->middleware(['role:admin', 'subscribed']);
     Route::resource('cities', CityController::class)->middleware('role:admin');
-    Route::resource('properties', PropertyController::class);
+    Route::resource('properties', PropertyController::class)->middleware('subscribed');
     Route::post('/properties/media/{media}/primary', [PropertyController::class, 'setPrimary'])->name('properties.media.primary');
     Route::delete('/properties/media/{media}', [PropertyController::class, 'destroyMedia'])->name('properties.media.destroy');
 
-    Route::resource('deals', DealController::class);
+    Route::resource('deals', DealController::class)->middleware('subscribed');
     Route::get('/deals/export', [DealController::class, 'export'])->name('deals.export');
     Route::get('/deals/trash', [DealController::class, 'trash'])->name('deals.trash');
     Route::patch('/deals/{deal}/restore', [DealController::class, 'restore'])->name('deals.restore');

@@ -4,6 +4,7 @@ use App\Helpers\Toastr;
 use App\Models\Company;
 use App\Models\Setting;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 if (! function_exists('current_company_id')) {
@@ -61,6 +62,49 @@ if (! function_exists('is_super_admin')) {
     function is_super_admin(): bool
     {
         return auth()->check() && auth()->user()->role === 'super_admin';
+    }
+}
+
+if (! function_exists('current_subscription')) {
+    function current_subscription(): ?\App\Models\Subscription
+    {
+        $company = current_company();
+
+        return $company ? $company->activeSubscription() : null;
+    }
+}
+
+if (! function_exists('has_active_subscription')) {
+    function has_active_subscription(): bool
+    {
+        return current_subscription() !== null;
+    }
+}
+
+if (! function_exists('subscription_limit')) {
+    function subscription_limit(string $key): int
+    {
+        return current_subscription()?->package?->{$key} ?? 0;
+    }
+}
+
+if (! function_exists('within_subscription_limit')) {
+    function within_subscription_limit(string $key): bool
+    {
+        $limit = subscription_limit($key);
+        if ($limit <= 0) {
+            return true;
+        }
+
+        $table = $key === 'max_employees' ? 'users'
+            : ($key === 'max_clients' ? 'clients'
+            : ($key === 'max_properties' ? 'properties' : null));
+
+        if (! $table) {
+            return true;
+        }
+
+        return DB::table($table)->where('company_id', current_company_id())->count() < $limit;
     }
 }
 
