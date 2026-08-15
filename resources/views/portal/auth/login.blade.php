@@ -21,6 +21,9 @@
                         <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" required>
                         @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
+                    <div class="text-end mb-2">
+                        <a href="{{ route('portal.password.request') }}" class="small text-decoration-none"><span class="urdu">(پاس ورڈ بھول گئے)</span> Forgot password?</a>
+                    </div>
                     <button type="submit" class="btn btn-dark w-100">Sign In</button>
                 </form>
             </div>

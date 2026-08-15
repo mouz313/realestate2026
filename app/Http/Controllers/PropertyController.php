@@ -7,6 +7,7 @@ use App\Models\City;
 use App\Models\Client;
 use App\Models\Property;
 use App\Models\PropertyMedia;
+use App\Notifications\PropertyStatusChanged;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -103,6 +104,10 @@ class PropertyController extends Controller
         $data['nearby_places'] = $request->has('nearby_places') ? $request->nearby_places : null;
         $data['utilities'] = $request->has('utilities') ? $request->utilities : null;
         $data['city_id'] = $request->city ? City::where('name', $request->city)->value('id') : null;
+
+        if (auth()->user()->isAgent() && ! $request->filled('assigned_agent_id')) {
+            $data['assigned_agent_id'] = auth()->user()->agent_id;
+        }
 
         $data['property_code'] = DB::transaction(function () {
             $last = Property::withTrashed()->lockForUpdate()->orderBy('id', 'desc')->first();
@@ -207,8 +212,18 @@ class PropertyController extends Controller
         $data['utilities'] = $request->has('utilities') ? $request->utilities : null;
         $data['city_id'] = $request->city ? City::where('name', $request->city)->value('id') : null;
 
+        $oldStatus = $property->status;
         $property->update($data);
         $this->handleMediaUploads($request, $property);
+
+        if ($oldStatus !== $property->status) {
+            $recipients = [];
+            if ($property->assignedAgent && $property->assignedAgent->user) {
+                $recipients[] = $property->assignedAgent->user;
+            }
+            notify_company($property->company_id, PropertyStatusChanged::class, [$property, $oldStatus], $recipients);
+        }
+
         toastr()->success('Property updated successfully.');
 
         return redirect()->route('properties.index');
@@ -265,6 +280,23 @@ class PropertyController extends Controller
             }
         }
 
+        if ($request->hasFile('images')) {
+            $sortOrder = $property->media()->max('sort_order') ?? 0;
+            $hasPrimary = $property->media()->where('type', 'image')->where('is_primary', true)->exists();
+
+            foreach ($request->file('images') as $file) {
+                $path = $file->store('property-media', 'public');
+                $sortOrder++;
+                PropertyMedia::create([
+                    'property_id' => $property->id,
+                    'type' => 'image',
+                    'file_path' => $path,
+                    'is_primary' => ! $hasPrimary && $sortOrder === 1,
+                    'sort_order' => $sortOrder,
+                ]);
+            }
+        }
+
         if ($request->hasFile('video')) {
             $hasVideo = $property->media()->where('type', 'video')->exists();
             if (! $hasVideo) {
@@ -279,5 +311,12 @@ class PropertyController extends Controller
                 ]);
             }
         }
+    }
+
+    public function exportExcel()
+    {
+        [$headers, $rows] = \App\Exports\PropertyExport::build();
+
+        return \App\Services\ExcelWriter::stream('properties-'.date('Y-m-d').'.xlsx', $headers, $rows);
     }
 }

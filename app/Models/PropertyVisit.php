@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\AgentScope;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PropertyVisit extends Model
 {
     use BelongsToCompany;
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new AgentScope('agent_id'));
+    }
 
     protected $fillable = [
         'company_id', 'property_id', 'client_id', 'agent_id', 'scheduled_date',

@@ -38,7 +38,7 @@ class PermissionController extends Controller
             'is_system' => false,
         ]);
 
-        return redirect()->route('admin.permissions.index')
+        return redirect()->route('permissions.index')
             ->with('success', 'Permission created successfully.');
     }
 
@@ -66,7 +66,7 @@ class PermissionController extends Controller
             'is_active' => $request->boolean('is_active'),
         ]);
 
-        return redirect()->route('admin.permissions.index')
+        return redirect()->route('permissions.index')
             ->with('success', 'Permission updated successfully.');
     }
 
@@ -82,7 +82,7 @@ class PermissionController extends Controller
         $permission->users()->detach();
         $permission->delete();
 
-        return redirect()->route('admin.permissions.index')
+        return redirect()->route('permissions.index')
             ->with('success', 'Permission deleted successfully.');
     }
 

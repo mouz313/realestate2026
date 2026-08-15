@@ -27,6 +27,11 @@
             <i class="ti ti-refresh"></i> Renew Agreement
         </button>
         @endif
+        @if(in_array($rentAgreement->status, ['active', 'expired']))
+        <button class="btn btn-danger me-2" data-bs-toggle="modal" data-bs-target="#moveOutModal">
+            <i class="ti ti-door-exit"></i> End Tenancy <span class="urdu">(کرایہ ختم)</span>
+        </button>
+        @endif
         <a href="{{ route('rent-agreements.edit', $rentAgreement) }}" class="btn btn-dark">
             <i class="ti ti-edit"></i> Edit Agreement <span class="urdu">(کرایہ نامہ میں ترمیم)</span>
         </a>
@@ -326,24 +331,85 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <h5 class="mb-0"><i class="ti ti-wallet me-1"></i> Security Deposit Settlement</h5>
-                @if($rentAgreement->deposit_received && !$rentAgreement->deposit_returned && ($rentAgreement->security_deposit ?? 0) > 0)
-                <button class="btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="#settleDepositModal">
-                    <i class="ti ti-check"></i> Settle Deposit
-                </button>
-                @endif
+                <h5 class="mb-0"><i class="ti ti-wallet me-1"></i> Security Deposit Settlement <span class="urdu">(سیکیورٹی ڈپازٹ کا تصفیہ)</span></h5>
+                <div class="action-btns flex-nowrap">
+                    @if(($rentAgreement->security_deposit ?? 0) > 0 && $rentAgreement->deposit_remaining > 0 && !$rentAgreement->deposit_returned)
+                    <button class="btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="#receiveDepositModal">
+                        <i class="ti ti-arrow-down"></i> Receive Deposit
+                    </button>
+                    @endif
+                    @if($rentAgreement->status === 'terminated' && $rentAgreement->net_deposit_return > 0 && !$rentAgreement->deposit_returned)
+                    <button class="btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="#returnDepositModal">
+                        <i class="ti ti-arrow-up"></i> Return Deposit to Tenant
+                    </button>
+                    @endif
+                </div>
             </div>
             <div class="card-body">
                 <table class="detail-table">
                     <tr><th>Security Deposit</th><td class="fw-bold">Rs. {{ number_format($rentAgreement->security_deposit ?? 0, 2) }}</td></tr>
-                    <tr><th>Deposit Received</th><td>@if($rentAgreement->deposit_received)<span class="badge bg-success">Yes</span>@else<span class="badge bg-warning text-dark">Not Received</span>@endif</td></tr>
-                    <tr><th>Deposit Returned</th><td>@if($rentAgreement->deposit_returned)<span class="badge bg-success">Yes &mdash; {{ $rentAgreement->deposit_returned_date ? $rentAgreement->deposit_returned_date->format('d M Y') : '-' }}</span>@else<span class="badge bg-secondary">Not Yet</span>@endif</td></tr>
-                    @if($rentAgreement->deposit_returned && ($rentAgreement->deposit_deductions ?? 0) > 0)
-                    <tr><th>Deductions</th><td class="text-danger fw-bold">- Rs. {{ number_format($rentAgreement->deposit_deductions, 2) }}</td></tr>
-                    <tr><th>Deduction Reason</th><td>{{ $rentAgreement->deposit_deduction_notes ?? '-' }}</td></tr>
-                    <tr><th>Net Return Amount</th><td class="fw-bold text-success">Rs. {{ number_format($rentAgreement->net_deposit_return, 2) }}</td></tr>
+                    <tr><th>Received</th><td class="fw-bold text-success">Rs. {{ number_format($rentAgreement->deposit_received_amount ?? 0, 2) }}</td></tr>
+                    @if($rentAgreement->deposit_received_date)
+                    <tr><th>Received Date</th><td>{{ $rentAgreement->deposit_received_date->format('d M Y') }}</td></tr>
                     @endif
+                    @if(($rentAgreement->security_deposit ?? 0) > $rentAgreement->deposit_received_amount && !$rentAgreement->deposit_returned)
+                    <tr><th>Remaining</th><td class="text-warning fw-semibold">Rs. {{ number_format($rentAgreement->deposit_remaining, 2) }}</td></tr>
+                    @endif
+                    <tr><th>Deposit Received</th><td>
+                        @if($rentAgreement->deposit_received)<span class="badge bg-success">Yes</span>
+                        @elseif(($rentAgreement->deposit_received_amount ?? 0) > 0)<span class="badge bg-warning text-dark">Partial</span>
+                        @else<span class="badge bg-secondary">Not Received</span>@endif
+                    </td></tr>
+                    @if($rentAgreement->deposit_deductions > 0)
+                    <tr><th>Deductions</th><td class="text-danger fw-bold">- Rs. {{ number_format($rentAgreement->deposit_deductions, 2) }}</td></tr>
+                    @endif
+                    <tr><th>Net Return</th><td class="fw-bold {{ $rentAgreement->net_deposit_return > 0 ? 'text-success' : 'text-muted' }}">Rs. {{ number_format($rentAgreement->net_deposit_return, 2) }}</td></tr>
+                    <tr><th>Deposit Returned</th><td>@if($rentAgreement->deposit_returned)<span class="badge bg-success">Yes &mdash; {{ $rentAgreement->deposit_returned_date ? $rentAgreement->deposit_returned_date->format('d M Y') : '-' }}</span>@else<span class="badge bg-secondary">Not Yet</span>@endif</td></tr>
                 </table>
+
+                @if($rentAgreement->status === 'terminated')
+                <hr class="my-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0"><i class="ti ti-list-details me-1"></i> Deductions <span class="urdu">(خرچ/نقصان)</span></h6>
+                    <button class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#addDeductionModal">
+                        <i class="ti ti-plus"></i> Add Deduction
+                    </button>
+                </div>
+                @if($rentAgreement->depositDeductions->count())
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Category <span class="urdu">(قسم)</span></th>
+                                <th>Title <span class="urdu">(عنوان)</span></th>
+                                <th class="text-end">Amount <span class="urdu">(رقم)</span></th>
+                                <th>Notes <span class="urdu">(نوٹس)</span></th>
+                                <th class="text-end"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($rentAgreement->depositDeductions as $deduction)
+                            <tr>
+                                <td><span class="badge bg-light text-dark">{{ ucfirst(str_replace('_', ' ', $deduction->category)) }}</span></td>
+                                <td>{{ $deduction->title }}</td>
+                                <td class="text-end text-danger fw-semibold">- Rs. {{ number_format($deduction->amount, 2) }}</td>
+                                <td class="text-secondary small">{{ $deduction->notes ?? '-' }}</td>
+                                <td class="text-end">
+                                    <form action="{{ route('rent-agreements.deductions.destroy', [$rentAgreement, $deduction]) }}" method="POST" class="d-inline" onsubmit="return confirm('Remove this deduction?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove"><i class="ti ti-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <p class="text-secondary small mb-0">No deductions recorded. <span class="urdu">(کوئی خرچ درج نہیں)</span></p>
+                @endif
+                @endif
             </div>
         </div>
     </div>
@@ -446,21 +512,161 @@
     </div>
 </div>
 
-@if($rentAgreement->deposit_received && !$rentAgreement->deposit_returned && ($rentAgreement->security_deposit ?? 0) > 0)
-<div class="modal fade" id="settleDepositModal" tabindex="-1">
+@if(in_array($rentAgreement->status, ['active', 'expired']))
+<div class="modal fade" id="moveOutModal" tabindex="-1">
     <div class="modal-dialog"><div class="modal-content">
-        <form action="{{ route('rent-agreements.settle-deposit', $rentAgreement) }}" method="POST">
+        <form action="{{ route('rent-agreements.move-out', $rentAgreement) }}" method="POST">
             @csrf
-            <div class="modal-header"><h5 class="modal-title">Settle Security Deposit</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header"><h5 class="modal-title">End Tenancy <span class="urdu">(کرایہ ختم)</span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
-                <div class="mb-3"><label class="form-label">Security Deposit</label><div class="fs-5 fw-bold">Rs. {{ number_format($rentAgreement->security_deposit, 2) }}</div></div>
-                <div class="mb-3"><label class="form-label">Deduction Amount</label><input type="number" step="0.01" name="deposit_deductions" id="deductionAmount" class="form-control" value="0" min="0" max="{{ $rentAgreement->security_deposit }}"></div>
-                <div class="mb-3"><label class="form-label">Deduction Reason</label><textarea name="deposit_deduction_notes" class="form-control" rows="2" placeholder="e.g. Damages, unpaid bills"></textarea></div>
-                <div class="alert alert-success mb-0">Net Return: <strong id="netReturn">Rs. {{ number_format($rentAgreement->security_deposit, 2) }}</strong></div>
+                <p>The agreement will be marked <strong>Terminated</strong>, property possession recorded, and pending installments after the possession date will be waived.</p>
+                <div class="mb-3">
+                    <label class="form-label">Possession Returned Date <span class="text-danger">*</span></label>
+                    <input type="date" name="possession_returned_date" class="form-control" value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}" min="{{ $rentAgreement->start_date ? $rentAgreement->start_date->toDateString() : '' }}" required>
+                    <div class="form-text">Property wapis hamesha aaj ya past date par hi ho sakti hai.</div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-dark"><i class="ti ti-check"></i> Settle & Return</button>
+                <button type="submit" class="btn btn-danger"><i class="ti ti-door-exit"></i> End Tenancy</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+@endif
+
+@if($rentAgreement->status === 'terminated')
+<div class="modal fade" id="addDeductionModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form action="{{ route('rent-agreements.deductions.store', $rentAgreement) }}" method="POST">
+            @csrf
+            <div class="modal-header"><h5 class="modal-title">Add Deduction <span class="urdu">(خرچ درج کریں)</span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Category <span class="text-danger">*</span></label>
+                    <select name="category" class="form-select" required>
+                        <option value="damage">Damage <span class="urdu">(نقصان)</span></option>
+                        <option value="unpaid_rent">Unpaid Rent <span class="urdu">(زیر التوا کرایہ)</span></option>
+                        <option value="utilities">Utilities <span class="urdu">(یوٹیلیٹیز)</span></option>
+                        <option value="other">Other <span class="urdu">(دیگر)</span></option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Title <span class="text-danger">*</span></label>
+                    <input type="text" name="title" class="form-control" maxlength="255" placeholder="e.g. Broken window, wall paint" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Amount <span class="text-danger">*</span></label>
+                    <input type="number" step="0.01" name="amount" class="form-control" min="0.01" placeholder="0.00" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" class="form-control" rows="2" maxlength="1000"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-dark"><i class="ti ti-plus"></i> Add Deduction</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+@endif
+
+@if($rentAgreement->status === 'terminated' && $rentAgreement->net_deposit_return > 0 && !$rentAgreement->deposit_returned)
+<div class="modal fade" id="returnDepositModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form action="{{ route('rent-agreements.return-deposit', $rentAgreement) }}" method="POST">
+            @csrf
+            <div class="modal-header"><h5 class="modal-title">Return Security Deposit <span class="urdu">(ڈپازٹ واپسی)</span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-secondary">Received</span><span>Rs. {{ number_format($rentAgreement->deposit_received_amount ?? 0, 2) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-secondary">Deductions</span><span class="text-danger">- Rs. {{ number_format($rentAgreement->deposit_deductions, 2) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-secondary fw-semibold">Net Return to Tenant</span><span class="fs-5 fw-bold text-success">Rs. {{ number_format($rentAgreement->net_deposit_return, 2) }}</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Payment Method <span class="text-danger">*</span></label>
+                    <select name="method" class="form-select" required>
+                        <option value="">Select Method</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="JazzCash">JazzCash</option>
+                        <option value="Easypaisa">Easypaisa</option>
+                        <option value="Cheque">Cheque</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Reference / Txn ID</label>
+                    <input type="text" name="reference" class="form-control" maxlength="255" placeholder="Optional">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Return Date <span class="text-danger">*</span></label>
+                    <input type="date" name="paid_date" class="form-control" value="{{ now()->toDateString() }}" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-dark"><i class="ti ti-arrow-up"></i> Return Rs. {{ number_format($rentAgreement->net_deposit_return, 0) }}</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+@endif
+
+@if(($rentAgreement->security_deposit ?? 0) > 0 && $rentAgreement->deposit_remaining > 0 && !$rentAgreement->deposit_returned)
+<div class="modal fade" id="receiveDepositModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form action="{{ route('rent-agreements.deposit-receive', $rentAgreement) }}" method="POST">
+            @csrf
+            <div class="modal-header"><h5 class="modal-title">Receive Security Deposit</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-secondary">Total Deposit</span><span class="fw-semibold">Rs. {{ number_format($rentAgreement->security_deposit, 2) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-secondary">Already Received</span><span>Rs. {{ number_format($rentAgreement->deposit_received_amount ?? 0, 2) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-secondary">Remaining</span><span class="fw-semibold text-warning">Rs. {{ number_format($rentAgreement->deposit_remaining, 2) }}</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Amount <span class="text-danger">*</span></label>
+                    <input type="number" step="0.01" name="amount" id="depositReceiveAmount" class="form-control" value="{{ $rentAgreement->deposit_remaining }}" min="0.01" max="{{ $rentAgreement->deposit_remaining }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Payment Method <span class="text-danger">*</span></label>
+                    <select name="method" class="form-select" required>
+                        <option value="">Select Method</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="JazzCash">JazzCash</option>
+                        <option value="Easypaisa">Easypaisa</option>
+                        <option value="Cheque">Cheque</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Reference / Txn ID</label>
+                    <input type="text" name="reference" class="form-control" maxlength="255" placeholder="Optional">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Receipt Date <span class="text-danger">*</span></label>
+                    <input type="date" name="paid_date" class="form-control" value="{{ now()->toDateString() }}" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-dark"><i class="ti ti-arrow-down"></i> Receive Deposit</button>
             </div>
         </form>
     </div></div>
@@ -489,14 +695,14 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var deductionInput = document.getElementById('deductionAmount');
-    var deposit = {{ $rentAgreement->security_deposit ?? 0 }};
-    var netReturnEl = document.getElementById('netReturn');
-    if (deductionInput && netReturnEl) {
-        deductionInput.addEventListener('input', function() {
-            var deduction = parseFloat(this.value) || 0;
-            var net = deposit - deduction;
-            netReturnEl.textContent = 'Rs. ' + net.toLocaleString('en', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    var receiveAmount = document.getElementById('depositReceiveAmount');
+    if (receiveAmount) {
+        var maxReceive = parseFloat(receiveAmount.max) || 0;
+        receiveAmount.addEventListener('input', function() {
+            var val = parseFloat(this.value) || 0;
+            if (val > maxReceive) {
+                this.value = maxReceive;
+            }
         });
     }
 });

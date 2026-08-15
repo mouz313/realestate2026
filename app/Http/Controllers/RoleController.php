@@ -2,19 +2,51 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Permission;
 use App\Models\Role;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
+use Illuminate\Support\Str;
 
 class RoleController extends Controller
 {
     public function index()
     {
-        $roles = Role::where(function ($q) {
-            $q->whereNull('company_id')->orWhere('company_id', current_company_id());
+        $companyId = current_company_id();
+
+        // Auto-create company-specific staff/client roles if they don't exist
+        $this->ensureCompanyRolesExist($companyId);
+
+        $roles = Role::where(function ($q) use ($companyId) {
+            $q->whereNull('company_id')->orWhere('company_id', $companyId);
         })->with('permissions')->orderBy('is_system', 'desc')->orderBy('name')->get();
 
         return view('admin.roles.index', compact('roles'));
+    }
+
+    protected function ensureCompanyRolesExist(int $companyId): void
+    {
+        $permissionIds = Permission::whereNull('company_id')->pluck('id')->all();
+
+        $descriptions = [
+            'staff' => 'Regular team member',
+            'client' => 'External client with limited access',
+        ];
+
+        foreach (['staff', 'client'] as $slug) {
+            if (! Role::where('slug', $slug)->where('company_id', $companyId)->exists()) {
+                $role = Role::create([
+                    'company_id' => $companyId,
+                    'name' => ucfirst($slug),
+                    'slug' => $slug,
+                    'description' => $descriptions[$slug] ?? '',
+                    'is_system' => false,
+                ]);
+
+                if ($slug === 'staff') {
+                    $role->permissions()->sync($permissionIds);
+                }
+            }
+        }
     }
 
     public function create()
@@ -29,15 +61,15 @@ class RoleController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $role = Role::create([
+        Role::create([
             'company_id' => current_company_id(),
             'name' => $request->name,
-            'slug' => \Illuminate\Support\Str::slug($request->name),
+            'slug' => Str::slug($request->name),
             'description' => $request->description,
             'is_system' => false,
         ]);
 
-        return redirect()->route('admin.roles.index')
+        return redirect()->route('roles.index')
             ->with('success', 'Role created successfully.');
     }
 
@@ -78,7 +110,7 @@ class RoleController extends Controller
             'is_active' => $request->boolean('is_active'),
         ]);
 
-        return redirect()->route('admin.roles.index')
+        return redirect()->route('roles.index')
             ->with('success', 'Role updated successfully.');
     }
 
@@ -86,15 +118,16 @@ class RoleController extends Controller
     {
         $this->authorizeRoleOwnership($role);
 
-        if ($role->is_system) {
-            return back()->with('error', 'Cannot delete a system role.');
+        // Only block deletion of system roles (e.g., owner)
+        if ($role->is_system && $role->slug === 'owner') {
+            return back()->with('error', 'Cannot delete the system owner role.');
         }
 
         $role->permissions()->detach();
         $role->users()->detach();
         $role->delete();
 
-        return redirect()->route('admin.roles.index')
+        return redirect()->route('roles.index')
             ->with('success', 'Role deleted successfully.');
     }
 
@@ -110,8 +143,9 @@ class RoleController extends Controller
 
     protected function authorizeRoleOwnership(Role $role): void
     {
-        if ($role->is_system) {
-            abort(403, 'Cannot modify a system role.');
+        // Only the owner role is truly immutable
+        if ($role->is_system && $role->slug === 'owner') {
+            abort(403, 'Cannot modify the system owner role.');
         }
 
         $companyId = current_company_id();

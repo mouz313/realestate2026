@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\AgentScope;
 use App\Traits\BelongsToCompany;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Deal extends Model
 {
     use LogsActivity, SoftDeletes, BelongsToCompany;
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new AgentScope('agent_id'));
+    }
 
     protected $fillable = [
         'company_id', 'deal_number', 'type', 'status', 'property_id', 'buyer_id', 'seller_id',

@@ -6,6 +6,8 @@ use App\Mail\RentExpiryReminder;
 use App\Mail\RentOverdueReminder;
 use App\Models\RentAgreement;
 use App\Models\RentPayment;
+use App\Notifications\RentDueReminder;
+use App\Notifications\RentExpiryReminder as RentExpiryReminderNotification;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
@@ -34,6 +36,9 @@ class SendRentNotifications extends Command
                 } catch (\Exception $e) {
                     $this->error("Failed to send overdue reminder for payment #{$payment->id}: {$e->getMessage()}");
                 }
+
+                $tenant->notify(new RentDueReminder($payment));
+                $sent++;
             }
         }
 
@@ -51,6 +56,9 @@ class SendRentNotifications extends Command
                 } catch (\Exception $e) {
                     $this->error("Failed to send expiry reminder to tenant for agreement #{$agreement->id}: {$e->getMessage()}");
                 }
+
+                $agreement->tenant->notify(new RentExpiryReminderNotification($agreement, 'tenant'));
+                $sent++;
             }
             if ($agreement->owner && $agreement->owner->email) {
                 try {
@@ -59,6 +67,9 @@ class SendRentNotifications extends Command
                 } catch (\Exception $e) {
                     $this->error("Failed to send expiry reminder to owner for agreement #{$agreement->id}: {$e->getMessage()}");
                 }
+
+                $agreement->owner->notify(new RentExpiryReminderNotification($agreement, 'owner'));
+                $sent++;
             }
         }
 

@@ -136,4 +136,11 @@ class InstallmentController extends Controller
 
         return redirect()->route('installments.index');
     }
+
+    public function exportExcel()
+    {
+        [$headers, $rows] = \App\Exports\InstallmentExport::build();
+
+        return \App\Services\ExcelWriter::stream('installments-'.date('Y-m-d').'.xlsx', $headers, $rows);
+    }
 }

@@ -22,17 +22,6 @@ class AdminSeeder extends Seeder
             ]);
         }
 
-        $superAdmin = User::where('email', 'superadmin@agency.com')->first();
-        if (! $superAdmin) {
-            User::create([
-                'name' => 'Super Admin',
-                'email' => 'superadmin@agency.com',
-                'password' => Hash::make('password'),
-                'role' => 'super_admin',
-            ]);
-        }
-
         $this->command->info('Admin user created: admin@agency.com / password');
-        $this->command->info('Super admin created: superadmin@agency.com / password');
     }
 }

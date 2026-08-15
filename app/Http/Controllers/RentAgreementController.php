@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\Deal;
+use App\Models\Payment;
 use App\Models\Property;
 use App\Models\RentAgreement;
+use App\Models\RentDepositDeduction;
 use App\Models\RentNotice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -70,7 +72,7 @@ class RentAgreementController extends Controller
     public function show(RentAgreement $rentAgreement)
     {
         $this->authorizeAgentAccess($rentAgreement, 'property');
-        $rentAgreement->load(['tenant', 'property', 'owner', 'deal', 'renewedFrom', 'renewals', 'rentNotices.tenant']);
+        $rentAgreement->load(['tenant', 'property', 'owner', 'deal', 'renewedFrom', 'renewals', 'rentNotices.tenant', 'depositDeductions']);
 
         $rentAgreement->rentPayments->each(function ($payment) {
             $payment->syncLateFee();
@@ -178,22 +180,173 @@ class RentAgreementController extends Controller
         return redirect()->route('rent-agreements.index');
     }
 
-    public function settleDeposit(Request $request, RentAgreement $rentAgreement)
+    public function moveOut(Request $request, RentAgreement $rentAgreement)
     {
         $this->authorizeAgentAccess($rentAgreement, 'property');
+
+        if ($rentAgreement->status === 'terminated') {
+            toastr()->warning('This agreement is already terminated.');
+
+            return back();
+        }
+
         $request->validate([
-            'deposit_deductions' => 'required|numeric|min:0|max:'.$rentAgreement->security_deposit,
-            'deposit_deduction_notes' => 'nullable|string|max:1000',
+            'possession_returned_date' => 'required|date|after_or_equal:'.$rentAgreement->start_date?->toDateString().'|before_or_equal:now',
+        ]);
+
+        $possessionDate = $request->possession_returned_date;
+
+        $rentAgreement->update([
+            'status' => 'terminated',
+            'possession_returned_date' => $possessionDate,
+            'end_date' => $rentAgreement->end_date && $rentAgreement->end_date->lt($possessionDate)
+                ? $rentAgreement->end_date->toDateString()
+                : $possessionDate,
+        ]);
+
+        $rentAgreement->rentPayments()
+            ->where('status', 'pending')
+            ->where('due_date', '>', $possessionDate)
+            ->update(['status' => 'waived']);
+
+        if ($rentAgreement->property) {
+            $rentAgreement->property()->update(['status' => 'available']);
+        }
+
+        toastr()->success('Tenancy ended. Property possession recorded for '.date('d M Y', strtotime($possessionDate)).'.');
+
+        return back();
+    }
+
+    public function storeDeduction(Request $request, RentAgreement $rentAgreement)
+    {
+        $this->authorizeAgentAccess($rentAgreement, 'property');
+
+        $request->validate([
+            'category' => 'required|in:damage,unpaid_rent,utilities,other',
+            'title' => 'required|string|max:255',
+            'amount' => 'required|numeric|min:0.01',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        RentDepositDeduction::create([
+            'rent_agreement_id' => $rentAgreement->id,
+            'category' => $request->category,
+            'title' => $request->title,
+            'amount' => $request->amount,
+            'notes' => $request->notes,
+            'created_by' => auth()->id(),
+        ]);
+
+        $rentAgreement->syncDepositDeductions();
+
+        toastr()->success('Deduction added.');
+
+        return back();
+    }
+
+    public function destroyDeduction(RentAgreement $rentAgreement, RentDepositDeduction $rentDepositDeduction)
+    {
+        $this->authorizeAgentAccess($rentAgreement, 'property');
+
+        abort_unless($rentDepositDeduction->rent_agreement_id === $rentAgreement->id, 404);
+
+        $rentDepositDeduction->delete();
+        $rentAgreement->syncDepositDeductions();
+
+        toastr()->success('Deduction removed.');
+
+        return back();
+    }
+
+    public function returnDeposit(Request $request, RentAgreement $rentAgreement)
+    {
+        $this->authorizeAgentAccess($rentAgreement, 'property');
+
+        if ($rentAgreement->deposit_returned) {
+            toastr()->info('Deposit has already been returned.');
+
+            return back();
+        }
+
+        $net = (float) $rentAgreement->net_deposit_return;
+
+        if ($net <= 0) {
+            toastr()->warning('No amount to return after deductions.');
+
+            return back();
+        }
+
+        $request->validate([
+            'method' => 'required|string|max:50',
+            'reference' => 'nullable|string|max:255',
+            'paid_date' => 'required|date',
+        ]);
+
+        Payment::create([
+            'rent_agreement_id' => $rentAgreement->id,
+            'payment_type' => 'security_deposit_return',
+            'amount' => $net,
+            'method' => $request->method,
+            'reference' => $request->reference,
+            'paid_date' => $request->paid_date,
+            'notes' => 'Security deposit returned to tenant',
         ]);
 
         $rentAgreement->update([
             'deposit_returned' => true,
-            'deposit_returned_date' => now()->toDateString(),
-            'deposit_deductions' => $request->deposit_deductions,
-            'deposit_deduction_notes' => $request->deposit_deduction_notes,
+            'deposit_returned_date' => $rentAgreement->deposit_returned_date ?: now()->toDateString(),
         ]);
 
-        toastr()->success('Security deposit settled successfully.');
+        toastr()->success('Rs. '.number_format($net, 2).' security deposit returned to tenant.');
+
+        return back();
+    }
+
+    public function receiveDeposit(Request $request, RentAgreement $rentAgreement)
+    {
+        $this->authorizeAgentAccess($rentAgreement, 'property');
+
+        $remaining = $rentAgreement->deposit_remaining;
+
+        if ($remaining <= 0) {
+            toastr()->warning('Security deposit is already fully received.');
+
+            return back();
+        }
+
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01|max:'.$remaining,
+            'method' => 'required|string|max:50',
+            'reference' => 'nullable|string|max:255',
+            'paid_date' => 'required|date',
+        ]);
+
+        Payment::create([
+            'rent_agreement_id' => $rentAgreement->id,
+            'payment_type' => 'security_deposit',
+            'amount' => $request->amount,
+            'method' => $request->method,
+            'reference' => $request->reference,
+            'paid_date' => $request->paid_date,
+            'notes' => 'Security deposit receipt',
+        ]);
+
+        $received = round((float) $rentAgreement->deposit_received_amount + (float) $request->amount, 2);
+
+        $rentAgreement->update([
+            'deposit_received_amount' => $received,
+            'deposit_received' => $received >= (float) $rentAgreement->security_deposit,
+            'deposit_received_date' => $rentAgreement->deposit_received_date
+                ?: now()->toDateString(),
+        ]);
+
+        $remainingAfter = round((float) $rentAgreement->security_deposit - $received, 2);
+        $message = $remainingAfter > 0
+            ? "Rs. ".number_format($request->amount, 2)." deposit received. Remaining: Rs. ".number_format($remainingAfter, 2).'.'
+            : 'Security deposit fully received.';
+
+        toastr()->success($message);
 
         return back();
     }

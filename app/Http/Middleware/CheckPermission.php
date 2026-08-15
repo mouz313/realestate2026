@@ -15,12 +15,19 @@ class CheckPermission
             return redirect()->route('login');
         }
 
-        if ($user->isSuperAdmin()) {
+        // "|" separates alternatives: permission:a|b passes if the user has a OR b.
+        // Note: Laravel splits middleware parameters on commas into separate
+        // invocations, so a plain comma-list would abort on the first check.
+        $permissions = array_filter(array_map('trim', explode('|', $permission)));
+
+        if (empty($permissions)) {
             return $next($request);
         }
 
-        if ($user->hasPermission($permission)) {
-            return $next($request);
+        foreach ($permissions as $perm) {
+            if ($user->hasPermission($perm)) {
+                return $next($request);
+            }
         }
 
         abort(403, 'You do not have permission to access this resource.');

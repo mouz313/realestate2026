@@ -21,20 +21,29 @@ class DashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $agentId = $user->isAgent() ? $user->agent_id : null;
+        $isAgent = $user->isAgent();
 
-        $totalRevenue = Payment::sum('amount');
-        $outstanding = Invoice::where('payment_status', '!=', 'paid')->sum(DB::raw('total - paid_amount'));
-        $totalExpenses = Expense::sum('amount');
+        $monthSql = DB::connection()->getDriverName() === 'sqlite'
+            ? "strftime('%Y-%m', created_at)"
+            : "DATE_FORMAT(created_at, '%Y-%m')";
+
+        // Financial aggregates: agents only see amounts tied to their own invoices/deals.
+        $invoiceScope = $isAgent
+            ? fn ($q) => $q->where('agent_id', $user->agent_id)
+            : fn ($q) => $q;
+
+        $totalRevenue = Payment::whereHas('invoice', $invoiceScope)->sum('amount');
+        $outstanding = Invoice::query()->tap($invoiceScope)->where('payment_status', '!=', 'paid')->sum(DB::raw('total - paid_amount'));
+        $totalExpenses = $isAgent ? 0 : Expense::sum('amount');
         $netProfit = $totalRevenue - $totalExpenses;
 
         $stats = [
             'total_clients' => Client::count(),
             'total_quotations' => Quotation::count(),
             'pending_quotations' => Quotation::whereIn('status', ['draft', 'sent'])->count(),
-            'total_invoices' => Invoice::count(),
-            'unpaid_invoices' => Invoice::where('payment_status', '!=', 'paid')->count(),
-            'overdue_invoices' => Invoice::overdue()->count(),
+            'total_invoices' => Invoice::query()->tap($invoiceScope)->count(),
+            'unpaid_invoices' => Invoice::query()->tap($invoiceScope)->where('payment_status', '!=', 'paid')->count(),
+            'overdue_invoices' => Invoice::query()->tap($invoiceScope)->overdue()->count(),
             'total_revenue' => $totalRevenue,
             'outstanding' => $outstanding,
             'total_expenses' => $totalExpenses,
@@ -42,50 +51,41 @@ class DashboardController extends Controller
             'conversion_rate' => Quotation::count() > 0
                 ? round((Quotation::where('status', 'invoiced')->count() / Quotation::count()) * 100, 1)
                 : 0,
-            'avg_deal_size' => round(Invoice::avg('total') ?? 0, 0),
+            'avg_deal_size' => round(Invoice::query()->tap($invoiceScope)->avg('total') ?? 0, 0),
             'monthly_quotations' => Quotation::where('created_at', '>=', now()->subMonths(6))
-                ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"), DB::raw('count(*) as total'))
+                ->select(DB::raw("{$monthSql} as month"), DB::raw('count(*) as total'))
                 ->groupBy('month')->orderBy('month')->pluck('total', 'month'),
-            'monthly_invoices' => Invoice::where('created_at', '>=', now()->subMonths(6))
-                ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"), DB::raw('count(*) as total'))
+            'monthly_invoices' => Invoice::query()->tap($invoiceScope)->where('created_at', '>=', now()->subMonths(6))
+                ->select(DB::raw("{$monthSql} as month"), DB::raw('count(*) as total'))
                 ->groupBy('month')->orderBy('month')->pluck('total', 'month'),
-            'monthly_revenue' => Payment::where('created_at', '>=', now()->subMonths(6))
-                ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"), DB::raw('sum(amount) as total'))
+            'monthly_revenue' => Payment::whereHas('invoice', $invoiceScope)->where('created_at', '>=', now()->subMonths(6))
+                ->select(DB::raw("{$monthSql} as month"), DB::raw('sum(amount) as total'))
                 ->groupBy('month')->orderBy('month')->pluck('total', 'month'),
-            'monthly_expenses' => Expense::where('created_at', '>=', now()->subMonths(6))
-                ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"), DB::raw('sum(amount) as total'))
+            'monthly_expenses' => $isAgent ? collect() : Expense::where('created_at', '>=', now()->subMonths(6))
+                ->select(DB::raw("{$monthSql} as month"), DB::raw('sum(amount) as total'))
                 ->groupBy('month')->orderBy('month')->pluck('total', 'month'),
-            'active_properties' => Property::when($agentId, fn ($q) => $q->where('assigned_agent_id', $agentId))
-                ->where('status', 'available')->count(),
-            'active_agents' => AgentModel::where('status', 'active')->count(),
-            'active_deals' => Deal::when($agentId, fn ($q) => $q->where('agent_id', $agentId))
-                ->whereNotIn('status', ['cancelled', 'completed'])->count(),
-            'pending_commissions' => Commission::when($agentId, fn ($q) => $q->where('agent_id', $agentId))
-                ->where('status', 'pending')->sum('amount'),
-            'total_commission_paid' => Commission::when($agentId, fn ($q) => $q->where('agent_id', $agentId))
-                ->where('status', 'paid')->sum('amount'),
-            'upcoming_visits' => PropertyVisit::when($agentId, fn ($q) => $q->where('agent_id', $agentId))
-                ->where('scheduled_date', '>=', now())->where('status', 'scheduled')->count(),
-            'active_rentals' => RentAgreement::when($agentId, fn ($q) => $q->whereHas('property', fn ($pq) => $pq->where('assigned_agent_id', $agentId)))
-                ->where('status', 'active')->count(),
+            'active_properties' => Property::where('status', 'available')->count(),
+            'active_agents' => $isAgent ? 0 : AgentModel::where('status', 'active')->count(),
+            'active_deals' => Deal::whereNotIn('status', ['cancelled', 'completed'])->count(),
+            'pending_commissions' => Commission::where('status', 'pending')->sum('amount'),
+            'total_commission_paid' => Commission::where('status', 'paid')->sum('amount'),
+            'upcoming_visits' => PropertyVisit::where('scheduled_date', '>=', now())->where('status', 'scheduled')->count(),
+            'active_rentals' => $isAgent ? 0 : RentAgreement::where('status', 'active')->count(),
             'properties_by_status' => Property::select('status', DB::raw('count(*) as total'))
                 ->groupBy('status')->pluck('total', 'status'),
-            'deals_by_status' => Deal::when($agentId, fn ($q) => $q->where('agent_id', $agentId))
-                ->select('status', DB::raw('count(*) as total'))
+            'deals_by_status' => Deal::select('status', DB::raw('count(*) as total'))
                 ->groupBy('status')->pluck('total', 'status'),
-            'total_deal_value' => Deal::when($agentId, fn ($q) => $q->where('agent_id', $agentId))
-                ->whereNotIn('status', ['cancelled'])->sum('sale_price'),
+            'total_deal_value' => Deal::whereNotIn('status', ['cancelled'])->sum('sale_price'),
         ];
 
-        $recentPayments = Payment::with('invoice.client')->latest()->take(5)->get();
-        $recentQuotations = Quotation::with('client')->latest()->take(5)->get();
-        $recentDeals = Deal::with(['property', 'buyer', 'agent'])
-            ->when($agentId, fn ($q) => $q->where('agent_id', $agentId))
+        $recentPayments = Payment::with('invoice.client', 'rentAgreement')
+            ->when($isAgent, fn ($q) => $q->whereHas('invoice', $invoiceScope))
             ->latest()->take(5)->get();
+        $recentQuotations = Quotation::with('client')->latest()->take(5)->get();
+        $recentDeals = Deal::with(['property', 'buyer', 'agent'])->latest()->take(5)->get();
         $upcomingVisits = PropertyVisit::with(['property', 'client', 'agent'])
-            ->when($agentId, fn ($q) => $q->where('agent_id', $agentId))
             ->where('scheduled_date', '>=', now())->where('status', 'scheduled')->orderBy('scheduled_date')->take(5)->get();
-        $recentActivities = Activity::with('causer')->latest()->take(8)->get();
+        $recentActivities = $isAgent ? collect() : Activity::with('causer')->latest()->take(8)->get();
 
         return view('dashboard.index', compact('stats', 'recentPayments', 'recentQuotations', 'recentDeals', 'upcomingVisits', 'recentActivities'));
     }

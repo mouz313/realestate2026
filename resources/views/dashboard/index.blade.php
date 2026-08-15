@@ -153,18 +153,30 @@
 </div>
 
 {{-- Monthly Trends --}}
-@if(isset($stats['monthly_quotations']) || isset($stats['monthly_invoices']))
 <div class="mt-3 mt-md-4">
-    <h5 class="mb-3 fw-semibold section-heading"><i class="ti ti-trending-up me-1"></i> Monthly Trends (6 Months) <span class="urdu">(ماہانہ رجحانات)</span></h5>
-    <div class="card">
-        <div class="card-body">
-            <div style="position:relative;height:250px;">
-                <canvas id="trendsChart"></canvas>
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <h5 class="mb-3 fw-semibold section-heading"><i class="ti ti-trending-up me-1"></i> Monthly Trends (6 Months) <span class="urdu">(ماہانہ رجحانات)</span></h5>
+            <div class="card">
+                <div class="card-body">
+                    <div style="position:relative;height:250px;">
+                        <canvas id="trendsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <h5 class="mb-3 fw-semibold section-heading"><i class="ti ti-cash me-1"></i> Revenue vs Expenses <span class="urdu">(آمدنی بمقابلہ اخراجات)</span></h5>
+            <div class="card">
+                <div class="card-body">
+                    <div style="position:relative;height:250px;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
-@endif
 
 {{-- Real Estate Stats --}}
 <div class="mt-3 mt-md-4">
@@ -185,7 +197,7 @@
                 <div class="card-body">
                     <div class="stat-label">Agents <span class="urdu">(ایجنٹس)</span></div>
                     <div class="stat-value" style="font-size:1.35rem;">{{ $stats['active_agents'] }}</div>
-                    <a href="{{ route('agents.index') }}" class="stat-link">View <i class="ti ti-arrow-right"></i></a>
+                    <a href="{{ route('team.index', ['type' => 'agents']) }}" class="stat-link">View <i class="ti ti-arrow-right"></i></a>
                 </div>
             </div>
         </div>
@@ -251,8 +263,16 @@
                         <tbody>
                             @forelse($recentPayments as $p)
                             <tr>
-                                <td><a href="{{ route('invoices.show', $p->invoice) }}" class="text-decoration-none fw-medium">{{ $p->invoice->invoice_number }}</a></td>
-                                <td class="text-success fw-semibold">{{ number_format($p->amount, 2) }}</td>
+                                <td>
+                                    @if($p->invoice && $p->invoice->invoice_number)
+                                        <a href="{{ route('invoices.show', $p->invoice) }}" class="text-decoration-none fw-medium">{{ $p->invoice->invoice_number }}</a>
+                                    @elseif($p->rentAgreement)
+                                        <a href="{{ route('rent-agreements.show', $p->rentAgreement) }}" class="text-decoration-none fw-medium">Agreement #{{ $p->rentAgreement->id }}</a>
+                                    @else
+                                        <span class="text-secondary">-</span>
+                                    @endif
+                                </td>
+                                <td class="{{ $p->payment_type === 'security_deposit_return' ? 'text-danger' : 'text-success' }} fw-semibold">{{ $p->payment_type === 'security_deposit_return' ? '- ' : '' }}{{ number_format($p->amount, 2) }}</td>
                                 <td class="d-none d-sm-table-cell">{{ $p->method ?: '-' }}</td>
                                 <td class="text-secondary">{{ $p->paid_date->format('d M Y') }}</td>
                             </tr>
@@ -502,9 +522,11 @@
 <script src="{{ asset('assets/chart.umd.min.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const months = @json(array_keys($stats['monthly_quotations']->union($stats['monthly_invoices'])->toArray()));
-    const qData = months.map(m => {{ $stats['monthly_quotations']->get('m', 0) }});
-    const iData = months.map(m => {{ $stats['monthly_invoices']->get('m', 0) }});
+    const qByMonth = @json($stats['monthly_quotations']->toArray());
+    const iByMonth = @json($stats['monthly_invoices']->toArray());
+    const months = [...new Set([...Object.keys(qByMonth), ...Object.keys(iByMonth)])].sort();
+    const qData = months.map(m => qByMonth[m] ?? 0);
+    const iData = months.map(m => iByMonth[m] ?? 0);
 
     new Chart(document.getElementById('trendsChart'), {
         type: 'bar',
@@ -525,17 +547,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    @if(isset($stats['monthly_revenue']) && $stats['monthly_revenue']->count())
-    const revMonths = @json($stats['monthly_revenue']->keys()->toArray());
-    const revData = @json($stats['monthly_revenue']->values()->toArray());
-    const expData = revMonths.map(m => {{ $stats['monthly_expenses'] ?? collect() }}.get(m, 0));
+    const revByMonth = @json($stats['monthly_revenue']->toArray());
+    const expByMonth = @json(($stats['monthly_expenses'] ?? collect())->toArray());
+    const revMonths = [...new Set([...Object.keys(revByMonth), ...Object.keys(expByMonth)])].sort();
+    const revData = revMonths.map(m => Number(revByMonth[m] ?? 0));
+    const expData = revMonths.map(m => Number(expByMonth[m] ?? 0));
+
     new Chart(document.getElementById('revenueChart'), {
         type: 'line',
         data: {
             labels: revMonths,
             datasets: [
-                { label: 'Revenue', data: revData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.3, borderRadius: 4 },
-                { label: 'Expenses', data: expData, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.3, borderRadius: 4 }
+                { label: 'Revenue', data: revData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.3 },
+                { label: 'Expenses', data: expData, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.3 }
             ]
         },
         options: {
@@ -545,7 +569,6 @@ document.addEventListener('DOMContentLoaded', function() {
             scales: { y: { beginAtZero: true } }
         }
     });
-    @endif
 });
 </script>
 @endif

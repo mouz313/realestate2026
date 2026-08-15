@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\AgentScope;
 use App\Traits\BelongsToCompany;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Commission extends Model
 {
     use LogsActivity, BelongsToCompany;
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new AgentScope('agent_id'));
+    }
 
     protected $fillable = [
         'company_id', 'deal_id', 'agent_id', 'type', 'percentage', 'amount',

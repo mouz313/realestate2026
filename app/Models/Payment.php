@@ -12,7 +12,7 @@ class Payment extends Model
     use LogsActivity, BelongsToCompany;
 
     protected $fillable = [
-        'company_id', 'invoice_id', 'amount', 'method', 'reference', 'paid_date', 'notes', 'payment_type',
+        'company_id', 'invoice_id', 'rent_agreement_id', 'amount', 'method', 'reference', 'paid_date', 'notes', 'payment_type',
     ];
 
     protected function casts(): array
@@ -26,5 +26,10 @@ class Payment extends Model
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    public function rentAgreement(): BelongsTo
+    {
+        return $this->belongsTo(RentAgreement::class);
     }
 }

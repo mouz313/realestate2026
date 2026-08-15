@@ -17,6 +17,7 @@
         <h3>Payments <span class="urdu">(ادائیگیاں)</span></h3>
         <div class="page-header-sub">{{ $payments->total() }} <span class="urdu">کل ادائیگیاں</span></div>
     </div>
+    <a href="{{ route('payments.export-excel') }}" class="btn btn-outline-success"><i class="ti ti-file-spreadsheet"></i> Export Excel <span class="urdu">(اکسل برآمد)</span></a>
 </div>
 
 <div class="card table-card">
@@ -38,17 +39,35 @@
                 @forelse($payments as $payment)
                 <tr>
                     <td class="fw-semibold">{{ $payment->id }}</td>
+                    @if($payment->invoice_id)
                     <td><a href="{{ route('invoices.show', $payment->invoice) }}" class="text-decoration-none fw-medium">{{ $payment->invoice->invoice_number }}</a></td>
                     <td>{{ $payment->invoice->client->name }}</td>
-                    <td class="fw-medium text-success">{{ number_format($payment->amount, 0) }}</td>
+                    @else
+                    <td>
+                        @if($payment->payment_type === 'security_deposit_return')
+                        <span class="badge bg-danger">Deposit Return <span class="urdu">(واپسی)</span></span>
+                        @else
+                        <span class="badge bg-info text-dark">Security Deposit</span>
+                        @endif
+                        <a href="{{ route('rent-agreements.show', $payment->rentAgreement) }}" class="text-decoration-none fw-medium">Agreement #{{ $payment->rentAgreement->id }}</a>
+                    </td>
+                    <td>{{ $payment->rentAgreement->tenant->name ?? '-' }}</td>
+                    @endif
+                    <td class="fw-medium {{ $payment->payment_type === 'security_deposit_return' ? 'text-danger' : 'text-success' }}">{{ $payment->payment_type === 'security_deposit_return' ? '- ' : '' }}{{ number_format($payment->amount, 0) }}</td>
                     <td class="d-none d-sm-table-cell">{{ $payment->method ?: '-' }}</td>
                     <td class="text-secondary d-none d-sm-table-cell">{{ $payment->reference ?: '-' }}</td>
                     <td class="text-secondary d-none d-sm-table-cell">{{ $payment->paid_date->format('d M Y') }}</td>
                     <td class="text-end">
                         <div class="action-btns flex-nowrap">
+                            @if($payment->invoice_id)
                             <a href="{{ route('invoices.show', $payment->invoice) }}" class="btn btn-sm btn-outline-secondary" title="View Invoice">
                                 <i class="ti ti-eye"></i>
                             </a>
+                            @else
+                            <a href="{{ route('rent-agreements.show', $payment->rentAgreement) }}" class="btn btn-sm btn-outline-secondary" title="View Agreement">
+                                <i class="ti ti-eye"></i>
+                            </a>
+                            @endif
                         </div>
                     </td>
                 </tr>

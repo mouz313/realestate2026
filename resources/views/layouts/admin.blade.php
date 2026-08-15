@@ -38,46 +38,128 @@
                     Dashboard
                 </a>
             </li>
-            @if(!request()->is('superadmin/*'))
+            <li class="nav-item mt-2">
+                <span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.1em;">Sales &amp; CRM</span>
+            </li>
             <li>
                 <a href="{{ route('clients.index') }}" class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}">
                     <i class="ti ti-users"></i>
                     Clients
                 </a>
             </li>
+            <li>
+                <a href="{{ route('quotations.index') }}" class="nav-link {{ request()->routeIs('quotations.*') ? 'active' : '' }}">
+                    <i class="ti ti-file-description"></i>
+                    Quotations
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('invoices.index') }}" class="nav-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}">
+                    <i class="ti ti-file-invoice"></i>
+                    Invoices
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('payments.index') }}" class="nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}">
+                    <i class="ti ti-currency-dollar"></i>
+                    Payments
+                </a>
+            </li>
+            <li class="nav-item mt-2">
+                <span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.1em;">Real Estate</span>
+            </li>
+            <li>
+                <a href="{{ route('properties.index') }}" class="nav-link {{ request()->routeIs('properties.*') ? 'active' : '' }}">
+                    <i class="ti ti-building"></i>
+                    Properties
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('deals.index') }}" class="nav-link {{ request()->routeIs('deals.*') ? 'active' : '' }}">
+                    <i class="ti ti-handshake"></i>
+                    Deals
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('tokens.index') }}" class="nav-link {{ request()->routeIs('tokens.*') ? 'active' : '' }}">
+                    <i class="ti ti-coin"></i>
+                    Tokens
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('installments.index') }}" class="nav-link {{ request()->routeIs('installments.*') ? 'active' : '' }}">
+                    <i class="ti ti-calendar-stats"></i>
+                    Installments
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('property-visits.index') }}" class="nav-link {{ request()->routeIs('property-visits.*') ? 'active' : '' }}">
+                    <i class="ti ti-calendar-event"></i>
+                    Visits
+                </a>
+            </li>
+            <li class="nav-item mt-2">
+                <span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.1em;">Rentals</span>
+            </li>
+            <li>
+                <a href="{{ route('rent-agreements.index') }}" class="nav-link {{ request()->routeIs('rent-agreements.*') ? 'active' : '' }}">
+                    <i class="ti ti-home-2"></i>
+                    Rent Agreements
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('rent-payments.index') }}" class="nav-link {{ request()->routeIs('rent-payments.*') ? 'active' : '' }}">
+                    <i class="ti ti-cash"></i>
+                    Rent Payments
+                </a>
+            </li>
+            <li class="nav-item mt-2">
+                <span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.1em;">Team &amp; Payouts</span>
+            </li>
+            @can('view_team')
+            <li>
+                <a href="{{ route('team.index') }}" class="nav-link {{ request()->routeIs('team.*') || request()->routeIs('agents.*') ? 'active' : '' }}">
+                    <i class="ti ti-users-group"></i>
+                    Team
+                </a>
+            </li>
+            @endcan
+            <li>
+                <a href="{{ route('commissions.index') }}" class="nav-link {{ request()->routeIs('commissions.*') ? 'active' : '' }}">
+                    <i class="ti ti-percentage"></i>
+                    Commissions
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('agent-payouts.index') }}" class="nav-link {{ request()->routeIs('agent-payouts.*') ? 'active' : '' }}">
+                    <i class="ti ti-cash"></i>
+                    Agent Payouts
+                </a>
+            </li>
+        </ul>
+            <hr>
+            <ul class="nav nav-pills flex-column">
                 <li>
-                    <a href="{{ route('quotations.index') }}" class="nav-link {{ request()->routeIs('quotations.*') ? 'active' : '' }}">
-                        <i class="ti ti-file-description"></i>
-                        Quotations
+                    <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
+                        <i class="ti ti-report"></i>
+                        Reports
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('invoices.index') }}" class="nav-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}">
-                        <i class="ti ti-file-invoice"></i>
-                        Invoices
+                    <a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}">
+                        <i class="ti ti-bell"></i>
+                        Notifications @php($unread = Auth::user()->unreadNotifications()->count()) @if($unread) <span class="badge rounded-pill bg-danger">{{$unread}}</span> @endif
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('payments.index') }}" class="nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}">
-                        <i class="ti ti-currency-dollar"></i>
-                        Payments
-                    </a>
-                </li>
-                <li class="nav-item mt-2">
-                    <span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.1em;">Real Estate</span>
-                </li>
-                <li>
-                    <a href="{{ route('properties.index') }}" class="nav-link {{ request()->routeIs('properties.*') ? 'active' : '' }}">
-                        <i class="ti ti-building"></i>
-                        Properties
+                    <a href="{{ route('home') }}" target="_blank" class="nav-link">
+                        <i class="ti ti-external-link"></i>
+                        Visit Website
                     </a>
                 </li>
                 @can('admin')
-                <li>
-                    <a href="{{ route('agents.index') }}" class="nav-link {{ request()->routeIs('agents.*') ? 'active' : '' }}">
-                        <i class="ti ti-users-group"></i>
-                        Team
-                    </a>
+                <li class="nav-item mt-2">
+                    <span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.1em;">Administration</span>
                 </li>
                 <li>
                     <a href="{{ route('cities.index') }}" class="nav-link {{ request()->routeIs('cities.*') ? 'active' : '' }}">
@@ -85,109 +167,6 @@
                         Cities
                     </a>
                 </li>
-                @endcan
-                <li>
-                    <a href="{{ route('deals.index') }}" class="nav-link {{ request()->routeIs('deals.*') ? 'active' : '' }}">
-                        <i class="ti ti-handshake"></i>
-                        Deals
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('tokens.index') }}" class="nav-link {{ request()->routeIs('tokens.*') ? 'active' : '' }}">
-                        <i class="ti ti-coin"></i>
-                        Tokens
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('installments.index') }}" class="nav-link {{ request()->routeIs('installments.*') ? 'active' : '' }}">
-                        <i class="ti ti-calendar-stats"></i>
-                        Installments
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('rent-agreements.index') }}" class="nav-link {{ request()->routeIs('rent-agreements.*') ? 'active' : '' }}">
-                        <i class="ti ti-home-2"></i>
-                        Rent Agreements
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('rent-payments.index') }}" class="nav-link {{ request()->routeIs('rent-payments.*') ? 'active' : '' }}">
-                        <i class="ti ti-cash"></i>
-                        Rent Payments
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('property-visits.index') }}" class="nav-link {{ request()->routeIs('property-visits.*') ? 'active' : '' }}">
-                        <i class="ti ti-calendar-event"></i>
-                        Visits
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('commissions.index') }}" class="nav-link {{ request()->routeIs('commissions.*') ? 'active' : '' }}">
-                        <i class="ti ti-percentage"></i>
-                        Commissions
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('agent-payouts.index') }}" class="nav-link {{ request()->routeIs('agent-payouts.*') ? 'active' : '' }}">
-                        <i class="ti ti-cash"></i>
-                        Agent Payouts
-                    </a>
-                </li>
-                @endif
-            </ul>
-            <hr>
-            <ul class="nav nav-pills flex-column">
-                @if(auth()->user()->isSuperAdmin())
-                <li class="nav-item mt-3">
-                    <span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.1em;">Management</span>
-                </li>
-                <li>
-                    <a href="{{ route('companies.index') }}" class="nav-link {{ request()->routeIs('companies.*') && !request()->routeIs('companies.create') ? 'active' : '' }}">
-                        <i class="ti ti-building"></i>
-                        Companies
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('companies.create') }}" class="nav-link {{ request()->routeIs('companies.create') ? 'active' : '' }}">
-                        <i class="ti ti-building-plus"></i>
-                        Add Company
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('packages.index') }}" class="nav-link {{ request()->routeIs('packages.*') && !request()->routeIs('packages.create') ? 'active' : '' }}">
-                        <i class="ti ti-ticket"></i>
-                        Packages
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('packages.create') }}" class="nav-link {{ request()->routeIs('packages.create') ? 'active' : '' }}">
-                        <i class="ti ti-plus"></i>
-                        Add Package
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('subscriptions.index') }}" class="nav-link {{ request()->routeIs('subscriptions.*') ? 'active' : '' }}">
-                        <i class="ti ti-clock-dollar"></i>
-                        Subscriptions
-                    </a>
-                </li>
-                <li><hr class="my-2 opacity-25"></li>
-                @endif
-                @if(!request()->is('superadmin/*'))
-                <li>
-                    <a href="{{ route('home') }}" target="_blank" class="nav-link">
-                        <i class="ti ti-external-link"></i>
-                        Visit Website
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
-                        <i class="ti ti-report"></i>
-                        Reports
-                    </a>
-                </li>
-                @can('admin')
                 <li>
                     <a href="{{ route('contacts.index') }}" class="nav-link {{ request()->routeIs('contacts.*') ? 'active' : '' }}">
                         <i class="ti ti-message-report"></i>
@@ -198,6 +177,18 @@
                     <a href="{{ route('expenses.index') }}" class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }}">
                         <i class="ti ti-receipt"></i>
                         Expenses
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('roles.index') }}" class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}">
+                        <i class="ti ti-shield"></i>
+                        Roles
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('permissions.index') }}" class="nav-link {{ request()->routeIs('permissions.*') ? 'active' : '' }}">
+                        <i class="ti ti-key"></i>
+                        Permissions
                     </a>
                 </li>
                 <li>
@@ -218,14 +209,7 @@
                         Settings
                     </a>
                 </li>
-                <li>
-                    <a href="{{ route('billing.index') }}" class="nav-link {{ request()->routeIs('billing.*') ? 'active' : '' }}">
-                        <i class="ti ti-currency-dollar"></i>
-                        Billing
-                    </a>
-                </li>
                 @endcan
-                @endif
             </ul>
         </div>
 
@@ -249,52 +233,43 @@
                         <i class="ti ti-home"></i> Dashboard
                     </a>
                 </li>
-                @if(!request()->is('superadmin/*'))
+                <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Sales &amp; CRM</span></li>
                 <li><a href="{{ route('clients.index') }}" class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}"><i class="ti ti-users"></i> Clients</a></li>
                 <li><a href="{{ route('quotations.index') }}" class="nav-link {{ request()->routeIs('quotations.*') ? 'active' : '' }}"><i class="ti ti-file-description"></i> Quotations</a></li>
                 <li><a href="{{ route('invoices.index') }}" class="nav-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}"><i class="ti ti-file-invoice"></i> Invoices</a></li>
                 <li><a href="{{ route('payments.index') }}" class="nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}"><i class="ti ti-currency-dollar"></i> Payments</a></li>
                 <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Real Estate</span></li>
                 <li><a href="{{ route('properties.index') }}" class="nav-link {{ request()->routeIs('properties.*') ? 'active' : '' }}"><i class="ti ti-building"></i> Properties</a></li>
-                @can('admin')
-                <li><a href="{{ route('agents.index') }}" class="nav-link {{ request()->routeIs('agents.*') ? 'active' : '' }}"><i class="ti ti-users-group"></i> Team</a></li>
-                <li><a href="{{ route('cities.index') }}" class="nav-link {{ request()->routeIs('cities.*') ? 'active' : '' }}"><i class="ti ti-building-community"></i> Cities</a></li>
-                @endcan
                 <li><a href="{{ route('deals.index') }}" class="nav-link {{ request()->routeIs('deals.*') ? 'active' : '' }}"><i class="ti ti-handshake"></i> Deals</a></li>
                 <li><a href="{{ route('tokens.index') }}" class="nav-link {{ request()->routeIs('tokens.*') ? 'active' : '' }}"><i class="ti ti-coin"></i> Tokens</a></li>
                 <li><a href="{{ route('installments.index') }}" class="nav-link {{ request()->routeIs('installments.*') ? 'active' : '' }}"><i class="ti ti-calendar-stats"></i> Installments</a></li>
+                <li><a href="{{ route('property-visits.index') }}" class="nav-link {{ request()->routeIs('property-visits.*') ? 'active' : '' }}"><i class="ti ti-calendar-event"></i> Visits</a></li>
+                <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Rentals</span></li>
                 <li><a href="{{ route('rent-agreements.index') }}" class="nav-link {{ request()->routeIs('rent-agreements.*') ? 'active' : '' }}"><i class="ti ti-home-2"></i> Rent Agreements</a></li>
                 <li><a href="{{ route('rent-payments.index') }}" class="nav-link {{ request()->routeIs('rent-payments.*') ? 'active' : '' }}"><i class="ti ti-cash"></i> Rent Payments</a></li>
-                <li><a href="{{ route('property-visits.index') }}" class="nav-link {{ request()->routeIs('property-visits.*') ? 'active' : '' }}"><i class="ti ti-calendar-event"></i> Visits</a></li>
+                <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Team &amp; Payouts</span></li>
+                @can('view_team')
+                <li><a href="{{ route('team.index') }}" class="nav-link {{ request()->routeIs('team.*') || request()->routeIs('agents.*') ? 'active' : '' }}"><i class="ti ti-users-group"></i> Team</a></li>
+                @endcan
                 <li><a href="{{ route('commissions.index') }}" class="nav-link {{ request()->routeIs('commissions.*') ? 'active' : '' }}"><i class="ti ti-percentage"></i> Commissions</a></li>
                 <li><a href="{{ route('agent-payouts.index') }}" class="nav-link {{ request()->routeIs('agent-payouts.*') ? 'active' : '' }}"><i class="ti ti-cash"></i> Agent Payouts</a></li>
-                @endif
             </ul>
             <hr>
             <ul class="nav nav-pills flex-column p-3">
-                @if(auth()->user()->isSuperAdmin())
-                <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Management</span></li>
-                <li><a href="{{ route('companies.index') }}" class="nav-link {{ request()->routeIs('companies.*') && !request()->routeIs('companies.create') ? 'active' : '' }}"><i class="ti ti-building"></i> Companies</a></li>
-                <li><a href="{{ route('companies.create') }}" class="nav-link {{ request()->routeIs('companies.create') ? 'active' : '' }}"><i class="ti ti-building-plus"></i> Add Company</a></li>
-                <li><a href="{{ route('packages.index') }}" class="nav-link {{ request()->routeIs('packages.*') && !request()->routeIs('packages.create') ? 'active' : '' }}"><i class="ti ti-ticket"></i> Packages</a></li>
-                <li><a href="{{ route('packages.create') }}" class="nav-link {{ request()->routeIs('packages.create') ? 'active' : '' }}"><i class="ti ti-plus"></i> Add Package</a></li>
-                <li><a href="{{ route('subscriptions.index') }}" class="nav-link {{ request()->routeIs('subscriptions.*') ? 'active' : '' }}"><i class="ti ti-clock-dollar"></i> Subscriptions</a></li>
-                <li><hr class="my-2 opacity-25"></li>
-                @endif
-                @if(!request()->is('superadmin/*'))
-                <li><a href="{{ route('home') }}" target="_blank" class="nav-link"><i class="ti ti-external-link"></i> Visit Website</a></li>
                 <li><a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}"><i class="ti ti-report"></i> Reports</a></li>
+                <li><a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}"><i class="ti ti-bell"></i> Notifications</a></li>
+                <li><a href="{{ route('home') }}" target="_blank" class="nav-link"><i class="ti ti-external-link"></i> Visit Website</a></li>
                 @can('admin')
+                <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Administration</span></li>
+                <li><a href="{{ route('cities.index') }}" class="nav-link {{ request()->routeIs('cities.*') ? 'active' : '' }}"><i class="ti ti-building-community"></i> Cities</a></li>
                 <li><a href="{{ route('contacts.index') }}" class="nav-link {{ request()->routeIs('contacts.*') ? 'active' : '' }}"><i class="ti ti-message-report"></i> Enquiries</a></li>
                 <li><a href="{{ route('expenses.index') }}" class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }}"><i class="ti ti-receipt"></i> Expenses</a></li>
+                <li><a href="{{ route('roles.index') }}" class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}"><i class="ti ti-shield"></i> Roles</a></li>
+                <li><a href="{{ route('permissions.index') }}" class="nav-link {{ request()->routeIs('permissions.*') ? 'active' : '' }}"><i class="ti ti-key"></i> Permissions</a></li>
                 <li><a href="{{ route('activity-log') }}" class="nav-link {{ request()->routeIs('activity-log') ? 'active' : '' }}"><i class="ti ti-history"></i> Activity Log</a></li>
                 <li><a href="{{ route('settings.items') }}" class="nav-link {{ request()->routeIs('item-templates.*') || request()->routeIs('settings.items') ? 'active' : '' }}"><i class="ti ti-template"></i> Item Templates</a></li>
                 <li><a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') && !request()->routeIs('settings.items') ? 'active' : '' }}"><i class="ti ti-settings"></i> Settings</a></li>
-                <li><a href="{{ route('billing.index') }}" class="nav-link {{ request()->routeIs('billing.*') ? 'active' : '' }}"><i class="ti ti-currency-dollar"></i> Billing</a></li>
-                <li><a href="{{ route('roles.index') }}" class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}"><i class="ti ti-shield"></i> Roles</a></li>
-                <li><a href="{{ route('permissions.index') }}" class="nav-link {{ request()->routeIs('permissions.*') ? 'active' : '' }}"><i class="ti ti-key"></i> Permissions</a></li>
                 @endcan
-                @endif
             </ul>
         </div>
     </div>
@@ -314,12 +289,21 @@
                             <input type="text" id="globalSearch" class="form-control nav-search-input" placeholder="Search anything..." autocomplete="off">
                             <div id="searchResults" class="search-dropdown"></div>
                         </div>
-                        <ul class="navbar-nav ms-auto align-items-center gap-2">
-                            <li class="nav-item">
-                                <button class="theme-toggle" id="themeToggle" title="Toggle theme">
-                                    <i class="ti ti-sun" id="themeIcon"></i>
-                                </button>
-                            </li>
+        <ul class="navbar-nav ms-auto align-items-center gap-2">
+            <li class="nav-item">
+                <a class="nav-link position-relative" href="{{ route('notifications.index') }}" title="Notifications">
+                    <i class="ti ti-bell"></i>
+                    @php $unread = Auth::user()->unreadNotifications()->count(); @endphp
+                    @if($unread)
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ $unread }}</span>
+                    @endif
+                </a>
+            </li>
+            <li class="nav-item">
+                <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                    <i class="ti ti-sun" id="themeIcon"></i>
+                </button>
+            </li>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
                                     @if(Auth::user()->avatar)

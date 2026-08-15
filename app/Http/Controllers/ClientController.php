@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Notifications\PortalAccessGranted;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -37,7 +38,16 @@ class ClientController extends Controller
             $data['password'] = Hash::make($request->password);
         }
 
-        Client::create($data);
+        if (auth()->user()->isAgent()) {
+            $data['created_by'] = auth()->id();
+        }
+
+        $client = Client::create($data);
+
+        if ($request->filled('password') && $client->email) {
+            notify_company($client, PortalAccessGranted::class, [$client], [$client]);
+        }
+
         toastr()->success('Client added successfully.');
 
         return redirect()->route('clients.index');
@@ -73,6 +83,11 @@ class ClientController extends Controller
         }
 
         $client->update($data);
+
+        if ($request->filled('password') && $client->email && $client->wasChanged('password')) {
+            notify_company($client, PortalAccessGranted::class, [$client], [$client]);
+        }
+
         toastr()->success('Client updated successfully.');
 
         return redirect()->route('clients.index');
@@ -84,5 +99,12 @@ class ClientController extends Controller
         toastr()->success('Client deleted successfully.');
 
         return redirect()->route('clients.index');
+    }
+
+    public function exportExcel()
+    {
+        [$headers, $rows] = \App\Exports\ClientExport::build();
+
+        return \App\Services\ExcelWriter::stream('clients-'.date('Y-m-d').'.xlsx', $headers, $rows);
     }
 }

@@ -74,8 +74,10 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'admin',
+            'role' => 'owner',
         ]);
+
+        $user->assignRole('owner');
 
         session(['company_id' => $company->id]);
 

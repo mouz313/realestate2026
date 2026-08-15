@@ -118,6 +118,7 @@ class QuotationController extends Controller
             'tax_amount' => $taxAmount,
             'total' => $total,
             'notes' => $request->notes,
+            'created_by' => auth()->id(),
         ]);
 
         $quotation->items()->createMany($quotationItems);

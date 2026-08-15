@@ -3,7 +3,6 @@
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\ClientPortalAuth;
-use App\Http\Middleware\EnsureActiveSubscription;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,7 +19,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'portal.auth' => ClientPortalAuth::class,
             'role' => CheckRole::class,
             'permission' => CheckPermission::class,
-            'subscribed' => EnsureActiveSubscription::class,
         ]);
 
         $middleware->trustProxies(at: '*');

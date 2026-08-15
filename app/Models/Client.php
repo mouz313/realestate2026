@@ -2,14 +2,22 @@
 
 namespace App\Models;
 
+use App\Scopes\AgentScope;
 use App\Traits\BelongsToCompany;
 use App\Traits\LogsActivity;
+use App\Traits\HasNotificationPrefs;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Client extends Model
 {
-    use LogsActivity, BelongsToCompany;
+    use LogsActivity, BelongsToCompany, HasNotificationPrefs, Notifiable;
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new AgentScope('created_by'));
+    }
 
     protected $fillable = [
         'company_id', 'name', 'company', 'email', 'phone', 'address', 'notes', 'password',

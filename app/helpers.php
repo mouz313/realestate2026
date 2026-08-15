@@ -3,8 +3,10 @@
 use App\Helpers\Toastr;
 use App\Models\Company;
 use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 if (! function_exists('current_company_id')) {
@@ -19,10 +21,6 @@ if (! function_exists('current_company_id')) {
         }
 
         if ($user = auth()->user()) {
-            if ($user->isSuperAdmin() && session()->has('company_id')) {
-                return (int) session('company_id');
-            }
-
             if ($user->company_id) {
                 return (int) $user->company_id;
             }
@@ -55,56 +53,6 @@ if (! function_exists('company_settings')) {
     function company_settings(): array
     {
         return Setting::pluck('value', 'key')->toArray();
-    }
-}
-
-if (! function_exists('is_super_admin')) {
-    function is_super_admin(): bool
-    {
-        return auth()->check() && auth()->user()->role === 'super_admin';
-    }
-}
-
-if (! function_exists('current_subscription')) {
-    function current_subscription(): ?\App\Models\Subscription
-    {
-        $company = current_company();
-
-        return $company ? $company->activeSubscription() : null;
-    }
-}
-
-if (! function_exists('has_active_subscription')) {
-    function has_active_subscription(): bool
-    {
-        return current_subscription() !== null;
-    }
-}
-
-if (! function_exists('subscription_limit')) {
-    function subscription_limit(string $key): int
-    {
-        return current_subscription()?->package?->{$key} ?? 0;
-    }
-}
-
-if (! function_exists('within_subscription_limit')) {
-    function within_subscription_limit(string $key): bool
-    {
-        $limit = subscription_limit($key);
-        if ($limit <= 0) {
-            return true;
-        }
-
-        $table = $key === 'max_employees' ? 'users'
-            : ($key === 'max_clients' ? 'clients'
-            : ($key === 'max_properties' ? 'properties' : null));
-
-        if (! $table) {
-            return true;
-        }
-
-        return DB::table($table)->where('company_id', current_company_id())->count() < $limit;
     }
 }
 
@@ -166,12 +114,6 @@ if (! function_exists('crop_and_save')) {
 if (! function_exists('dashboard_route')) {
     function dashboard_route(): string
     {
-        $user = auth()->user();
-
-        if ($user && $user->isSuperAdmin()) {
-            return 'superadmin.dashboard';
-        }
-
         return 'admin.dashboard';
     }
 }
@@ -180,5 +122,53 @@ if (! function_exists('dashboard_url')) {
     function dashboard_url(): string
     {
         return route(dashboard_route());
+    }
+}
+
+if (! function_exists('company_users')) {
+    function company_users(?int $companyId = null): Collection
+    {
+        $companyId = $companyId ?? current_company_id();
+
+        return User::where('company_id', $companyId)
+            ->whereIn('role', ['admin', 'staff'])
+            ->get();
+    }
+}
+
+if (! function_exists('notify_company')) {
+    /**
+     * @param  object|int  $company  Company model, model with company_id, or raw id.
+     * @param  string  $class  Fully-qualified notification class name.
+     * @param  array  $args  Constructor arguments for the notification.
+     * @param  array  $extra  Additional notifiables (recipients) to notify.
+     */
+    function notify_company($company, string $class, array $args = [], array $extra = []): void
+    {
+        $companyId = $company instanceof Company
+            ? $company->id
+            : (is_object($company) ? ($company->company_id ?? null) : (int) $company);
+
+        $recipients = collect();
+
+        if ($companyId) {
+            $recipients = company_users((int) $companyId);
+        }
+
+        foreach ($extra as $notifiable) {
+            if ($notifiable instanceof Notifiable || in_array(Notifiable::class, class_uses_recursive($notifiable), true)) {
+                $recipients->push($notifiable);
+            }
+        }
+
+        $recipients = $recipients->unique(function ($r) {
+            return get_class($r).':'.$r->getKey();
+        });
+
+        $instance = $args ? new $class(...$args) : new $class;
+
+        foreach ($recipients as $notifiable) {
+            $notifiable->notify($instance);
+        }
     }
 }

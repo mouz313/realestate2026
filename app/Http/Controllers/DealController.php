@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\DealExport;
 use App\Models\Agent;
 use App\Models\Client;
 use App\Models\Deal;
 use App\Models\Property;
+use App\Notifications\DealStatusChanged;
+use App\Notifications\TokenReceived;
+use App\Services\ExcelWriter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 
@@ -65,6 +69,10 @@ class DealController extends Controller
 
         $data = $request->all();
 
+        if (auth()->user()->isAgent() && empty($data['agent_id'])) {
+            $data['agent_id'] = auth()->user()->agent_id;
+        }
+
         $lastDeal = Deal::withTrashed()->orderBy('id', 'desc')->first();
         $nextId = $lastDeal ? $lastDeal->id + 1 : 1;
         $data['deal_number'] = 'DL-'.str_pad($nextId, 5, '0', STR_PAD_LEFT);
@@ -123,7 +131,17 @@ class DealController extends Controller
             $data['commission_amount'] = $data['sale_price'] * $data['commission_percentage'] / 100;
         }
 
+        $oldStatus = $deal->status;
         $deal->update($data);
+
+        if ($oldStatus !== $deal->status) {
+            $recipients = [];
+            if ($deal->agent && $deal->agent->user) {
+                $recipients[] = $deal->agent->user;
+            }
+            notify_company($deal->company_id, DealStatusChanged::class, [$deal, $oldStatus], $recipients);
+        }
+
         toastr()->success('Deal updated successfully.');
 
         return redirect()->route('deals.index');
@@ -140,42 +158,31 @@ class DealController extends Controller
 
     public function export(Request $request)
     {
-        $agentId = auth()->user()->isAgent() ? auth()->user()->agent_id : null;
-        $deals = Deal::with(['property', 'buyer', 'seller', 'agent'])
-            ->when($agentId, fn ($q) => $q->where('agent_id', $agentId))
-            ->latest()
-            ->get();
+        [$headers, $rows] = DealExport::build();
 
-        $headers = [
-            'Content-type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename=deals-export-'.date('Y-m-d').'.csv',
-        ];
-
-        $callback = function () use ($deals) {
+        $headers = [$headers];
+        $callback = function () use ($rows, $headers) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Deal #', 'Type', 'Status', 'Property', 'Buyer', 'Seller', 'Agent', 'Sale Price', 'Commission %', 'Commission Amount', 'Agreement Date', 'Possession Date']);
-
-            foreach ($deals as $deal) {
-                fputcsv($handle, [
-                    $deal->deal_number,
-                    $deal->type,
-                    str_replace('_', ' ', $deal->status),
-                    $deal->property?->title ?? '',
-                    $deal->buyer?->name ?? '',
-                    $deal->seller?->name ?? '',
-                    $deal->agent?->name ?? '',
-                    $deal->sale_price,
-                    $deal->commission_percentage ?? '',
-                    $deal->commission_amount ?? '',
-                    $deal->agreement_date?->format('Y-m-d') ?? '',
-                    $deal->possession_date?->format('Y-m-d') ?? '',
-                ]);
+            foreach ($headers as $header) {
+                fputcsv($handle, $header);
             }
-
+            foreach ($rows as $row) {
+                fputcsv($handle, $row);
+            }
             fclose($handle);
         };
 
-        return Response::stream($callback, 200, $headers);
+        return Response::stream($callback, 200, [
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename=deals-export-'.date('Y-m-d').'.csv',
+        ]);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        [$headers, $rows] = DealExport::build();
+
+        return ExcelWriter::stream('deals-'.date('Y-m-d').'.xlsx', $headers, $rows);
     }
 
     public function trash()

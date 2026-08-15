@@ -6,6 +6,7 @@ use App\Mail\RentPaymentConfirmation;
 use App\Models\RentAgreement;
 use App\Models\RentPayment;
 use App\Models\Setting;
+use App\Notifications\RentPaymentReceived;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -142,6 +143,13 @@ class RentPaymentController extends Controller
             } catch (\Exception $e) {
                 // Silently fail — don't block payment recording
             }
+
+            notify_company(
+                $rentPayment->rentAgreement->company_id,
+                RentPaymentReceived::class,
+                [$rentPayment],
+                [$rentPayment->rentAgreement->tenant],
+            );
         }
 
         toastr()->success('Rent payment marked as paid.');
@@ -184,5 +192,12 @@ class RentPaymentController extends Controller
         $pdf = Pdf::loadView('pdf.rent-receipt', compact('rentPayment', 'settings'));
 
         return $pdf->stream("rent-receipt-{$rentPayment->id}.pdf");
+    }
+
+    public function exportExcel()
+    {
+        [$headers, $rows] = \App\Exports\RentPaymentExport::build();
+
+        return \App\Services\ExcelWriter::stream('rent-payments-'.date('Y-m-d').'.xlsx', $headers, $rows);
     }
 }

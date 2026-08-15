@@ -6,7 +6,7 @@
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{{ route(dashboard_route()) }}" class="text-decoration-none">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{{ route('agents.index') }}" class="text-decoration-none">Agents</a></li>
+        <li class="breadcrumb-item"><a href="{{ route('team.index', ['type' => 'agents']) }}" class="text-decoration-none">Team</a></li>
         <li class="breadcrumb-item active">Add Agent</li>
     </ol>
 </nav>
@@ -162,10 +162,37 @@
                     </div>
                 </div>
             </div>
+            <hr>
+            <h5 class="mb-3"><i class="ti ti-key"></i> Login Account <span class="badge bg-info ms-1">Optional</span></h5>
+            <p class="text-secondary small mb-3">Create a login account so this agent can sign in to the back-office. Login email and password are separate from the agent's public contact email above.</p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="create_login" value="1" id="createLogin" {{ old('create_login') ? 'checked' : '' }}>
+                        <label class="form-check-label" for="createLogin">Create login account</label>
+                        @error('create_login') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Login Email</label>
+                        <input type="email" class="form-control @error('login_email') is-invalid @enderror" name="login_email" value="{{ old('login_email') }}" placeholder="agent@example.com">
+                        @error('login_email') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Temporary Password</label>
+                        <input type="password" class="form-control @error('login_password') is-invalid @enderror" name="login_password" placeholder="Min 8 characters">
+                        <small class="text-secondary">Agent can change it from their Profile.</small>
+                        @error('login_password') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="card-footer d-flex flex-wrap gap-2">
             <button type="submit" class="btn btn-dark"><i class="ti ti-device-floppy"></i> Save Agent</button>
-            <a href="{{ route('agents.index') }}" class="btn btn-link text-secondary text-decoration-none">Cancel</a>
+            <a href="{{ route('team.index', ['type' => 'agents']) }}" class="btn btn-link text-secondary text-decoration-none">Cancel</a>
         </div>
     </form>
 </div>

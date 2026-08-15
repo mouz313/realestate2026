@@ -19,7 +19,10 @@
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <a href="{{ route('deals.export', request()->query()) }}" class="btn btn-outline-dark">
-            <i class="ti ti-download"></i> Export
+            <i class="ti ti-download"></i> Export CSV
+        </a>
+        <a href="{{ route('deals.export-excel', request()->query()) }}" class="btn btn-outline-success">
+            <i class="ti ti-file-spreadsheet"></i> Export Excel <span class="urdu">(اکسل برآمد)</span>
         </a>
         <a href="{{ route('deals.trash') }}" class="btn btn-outline-danger">
             <i class="ti ti-trash"></i> Trash

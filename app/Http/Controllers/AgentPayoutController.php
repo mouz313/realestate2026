@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Agent;
 use App\Models\AgentPayout;
+use App\Notifications\CommissionPayoutMade;
 use Illuminate\Http\Request;
 
 class AgentPayoutController extends Controller
@@ -39,7 +40,15 @@ class AgentPayoutController extends Controller
         $data = $request->all();
         $data['commission_ids'] = $request->has('commission_ids') ? json_encode($request->commission_ids) : null;
 
-        AgentPayout::create($data);
+        $payout = AgentPayout::create($data);
+
+        $payout->load('agent');
+        $recipients = [];
+        if ($payout->agent && $payout->agent->user) {
+            $recipients[] = $payout->agent->user;
+        }
+        notify_company($payout->company_id, CommissionPayoutMade::class, [$payout], $recipients);
+
         toastr()->success('Agent payout added successfully.');
 
         return redirect()->route('agent-payouts.index');

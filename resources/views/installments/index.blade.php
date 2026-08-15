@@ -20,6 +20,9 @@
     <a href="{{ route('installments.create') }}" class="btn btn-dark">
         <i class="ti ti-plus"></i> <span class="urdu">(قسط کا منصوبہ شامل کریں)</span>
     </a>
+    <a href="{{ route('installments.export-excel') }}" class="btn btn-outline-success">
+        <i class="ti ti-file-spreadsheet"></i> Export Excel <span class="urdu">(اکسل برآمد)</span>
+    </a>
 </div>
 
 <div class="card table-card">

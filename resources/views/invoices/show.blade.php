@@ -203,17 +203,38 @@
                         $upiString = $settings['bank_iban'] . '@raast';
                         $qrData = "upi://pay?pa={$upiString}&am=" . number_format($invoice->total - $invoice->paid_amount, 2, '.', '') . "&tn=" . urlencode($invoice->invoice_number) . "&cu=PKR";
                     ?>
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ urlencode($qrData) }}" alt="Raast QR" class="img-fluid border rounded" style="max-width:150px;">
+                    <img src="{{ \App\Helpers\QrHelper::pngDataUri($qrData) }}" alt="Raast QR" class="img-fluid border rounded" style="max-width:150px;">
                     <div class="mt-1 small">
                         <strong>IBAN:</strong> {{ $settings['bank_iban'] }}<br>
                         <strong>Amount:</strong> {{ number_format($invoice->total - $invoice->paid_amount, 2) }}<br>
                         <strong>Reference:</strong> {{ $invoice->invoice_number }}
                     </div>
-                    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $settings['business_phone'] ?? '') }}?text={{ urlencode('I have made a payment of PKR ' . number_format($invoice->total - $invoice->paid_amount, 2) . ' for invoice ' . $invoice->invoice_number . '. Please confirm.') }}" target="_blank" class="btn btn-success btn-sm mt-2 w-100">
+                     <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $settings['business_phone'] ?? '') }}?text={{ urlencode('I have made a payment of PKR ' . number_format($invoice->total - $invoice->paid_amount, 2) . ' for invoice ' . $invoice->invoice_number . '. Please confirm.') }}" target="_blank" class="btn btn-success btn-sm mt-2 w-100">
                         <i class="ti ti-brand-whatsapp"></i> Confirm Payment via WhatsApp <span class="urdu">(واٹس ایپ سے تصدیق)</span>
                     </a>
-                </div>
-                @endif
+                 </div>
+                 @endif
+                 @endif
+
+                 @if(($invoice->total - $invoice->paid_amount) > 0)
+                 <hr>
+                 <h6 class="mb-2">Online Payment <span class="urdu">(آن لائن ادائیگی)</span></h6>
+                 <form action="{{ route('gateway.create', 'jazzcash') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="gateway" value="jazzcash">
+                    <input type="hidden" name="payable_type" value="invoice">
+                    <input type="hidden" name="payable_id" value="{{ $invoice->id }}">
+                    <input type="hidden" name="amount" value="{{ number_format($invoice->total - $invoice->paid_amount, 2, '.', '') }}">
+                    <button type="submit" class="btn btn-sm btn-outline-dark w-100 mb-1">Pay via JazzCash <span class="urdu">(جازکیش پر ادا کریں)</span></button>
+                </form>
+                <form action="{{ route('gateway.create', 'easypaisa') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="gateway" value="easypaisa">
+                    <input type="hidden" name="payable_type" value="invoice">
+                    <input type="hidden" name="payable_id" value="{{ $invoice->id }}">
+                    <input type="hidden" name="amount" value="{{ number_format($invoice->total - $invoice->paid_amount, 2, '.', '') }}">
+                    <button type="submit" class="btn btn-sm btn-outline-dark w-100 mb-1">Pay via EasyPaisa <span class="urdu">(ایزی پیسا پر ادا کریں)</span></button>
+                </form>
                 @endif
             </div>
         </div>

@@ -17,8 +17,9 @@
         <h3>Invoices <span class="urdu">(انوائسز)</span></h3>
         <div class="page-header-sub">{{ $invoices->total() }} <span class="urdu">کل انوائسز</span></div>
     </div>
-    <a href="{{ route('invoices.create') }}" class="btn btn-dark"><i class="ti ti-plus"></i> Add Invoice <span class="urdu">(انوائس شامل)</span></a>
-</div>
+        <a href="{{ route('invoices.create') }}" class="btn btn-dark"><i class="ti ti-plus"></i> Add Invoice <span class="urdu">(انوائس شامل)</span></a>
+        <a href="{{ route('invoices.export-excel') }}" class="btn btn-outline-success"><i class="ti ti-file-spreadsheet"></i> Export Excel <span class="urdu">(اکسل برآمد)</span></a>
+    </div>
 
 {{-- Filters --}}
 <div class="card mb-3">

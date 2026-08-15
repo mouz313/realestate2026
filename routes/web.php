@@ -6,23 +6,24 @@ use App\Http\Controllers\AgentPayoutController;
 use App\Http\Controllers\AgreementPDFController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommissionController;
-use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\GatewayPaymentController;
 use App\Http\Controllers\InstallmentController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ItemTemplateController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\Portal\AuthController as PortalAuthController;
 use App\Http\Controllers\Portal\DocumentController as PortalDocumentController;
+use App\Http\Controllers\Portal\ForgotPasswordController as PortalForgotPasswordController;
 use App\Http\Controllers\Portal\OwnerRentController;
 use App\Http\Controllers\Portal\QuotationController as PortalQuotationController;
 use App\Http\Controllers\Portal\TenantRentController;
@@ -30,17 +31,17 @@ use App\Http\Controllers\Portal\VisitController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\PropertyVisitController;
-use App\Http\Controllers\PackageController;
 use App\Http\Controllers\QuotationController;
-use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RentAgreementController;
 use App\Http\Controllers\RentPaymentController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TokenController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebsiteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -81,35 +82,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile', [ProfileController::class, 'update']);
     Route::post('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
 
-    // Super Admin routes — /superadmin prefix
-    Route::prefix('superadmin')->middleware('role:super_admin')->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('superadmin.dashboard');
-
-        Route::resource('companies', CompanyController::class)->except(['show']);
-        Route::post('/companies/{company}/switch', [CompanyController::class, 'switch'])->name('companies.switch');
-        Route::post('/companies/{company}/admins', [CompanyController::class, 'storeAdmin'])->name('companies.admins.store');
-
-        Route::resource('packages', PackageController::class)->except(['show']);
-
-        Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
-        Route::get('/subscriptions/pending', [SubscriptionController::class, 'pending'])->name('subscriptions.pending');
-        Route::put('/subscriptions/{subscription}/approve', [SubscriptionController::class, 'approve'])->name('subscriptions.approve');
-        Route::put('/subscriptions/{subscription}/block', [SubscriptionController::class, 'block'])->name('subscriptions.block');
-        Route::put('/subscriptions/{subscription}/unblock', [SubscriptionController::class, 'unblock'])->name('subscriptions.unblock');
-    });
-
-    // Admin routes — /admin prefix (admin + super_admin)
+    // Admin routes — /admin prefix (admin + staff + agent shared)
     Route::prefix('admin')->middleware('role:admin')->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
-
-        // Billing
-        Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
-        Route::get('/billing/checkout/{package:slug}', [BillingController::class, 'checkout'])->name('billing.checkout');
-        Route::post('/billing/checkout/{package:slug}', [BillingController::class, 'storeCheckout'])->name('billing.checkout.store');
-        Route::delete('/billing/subscriptions/{subscription}', [BillingController::class, 'cancelPending'])->name('billing.cancel');
-
         // Admin-only features
-        Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log');
+        Route::middleware('permission:view_activity_log')->group(function () {
+            Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log');
+        });
 
         Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
         Route::get('/contacts/{contact}', [ContactController::class, 'show'])->name('contacts.show');
@@ -117,94 +95,135 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('expenses', ExpenseController::class)->except(['show']);
         Route::resource('cities', CityController::class);
-        Route::resource('agents', AgentController::class)->middleware('subscribed');
+
         Route::resource('item-templates', ItemTemplateController::class)->except(['show', 'create']);
-        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-        Route::post('/settings', [SettingsController::class, 'update']);
+        Route::get('/settings', [SettingsController::class, 'index'])->middleware('permission:view_settings')->name('settings.index');
+        Route::post('/settings', [SettingsController::class, 'update'])->middleware('permission:edit_settings');
         Route::get('/settings/items', [ItemTemplateController::class, 'index'])->name('settings.items');
 
-        Route::resource('roles', RoleController::class)->except(['show']);
-        Route::get('/roles/{role}/permissions', [RoleController::class, 'assignPermissionsForm'])->name('roles.permissions');
-        Route::post('/roles/{role}/permissions', [RoleController::class, 'assignPermissions'])->name('roles.permissions.assign');
-        Route::resource('permissions', PermissionController::class)->except(['show']);
+        Route::middleware('permission:manage_roles')->group(function () {
+            Route::resource('roles', RoleController::class)->except(['show']);
+            Route::get('/roles/{role}/permissions', [RoleController::class, 'assignPermissionsForm'])->name('roles.permissions');
+            Route::post('/roles/{role}/permissions', [RoleController::class, 'assignPermissions'])->name('roles.permissions.assign');
+        });
+
+        Route::middleware('permission:manage_permissions')->group(function () {
+            Route::resource('permissions', PermissionController::class)->except(['show']);
+        });
+
+        Route::middleware('permission:assign_user_roles')->group(function () {
+            Route::resource('users', UserController::class)->only(['index', 'create', 'store', 'edit', 'update']);
+        });
     });
 
-    // Shared routes — /admin prefix (admin + agent)
+    // Shared routes — /admin prefix (admin + staff + agent)
     Route::prefix('admin')->group(function () {
-        Route::resource('clients', ClientController::class)->middleware('subscribed');
-        Route::resource('properties', PropertyController::class)->middleware('subscribed');
-        Route::post('/properties/media/{media}/primary', [PropertyController::class, 'setPrimary'])->name('properties.media.primary');
-        Route::delete('/properties/media/{media}', [PropertyController::class, 'destroyMedia'])->name('properties.media.destroy');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 
-        Route::resource('quotations', QuotationController::class)->middleware('subscribed');
-        Route::get('/quotations/{quotation}/pdf', [QuotationController::class, 'pdf'])->name('quotations.pdf');
-        Route::patch('/quotations/{quotation}/mark-sent', [QuotationController::class, 'markSent'])->name('quotations.mark-sent');
-        Route::get('/quotations/{quotation}/versions', [QuotationController::class, 'versions'])->name('quotations.versions');
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/mark-read', [NotificationController::class, 'markRead'])->name('notifications.mark-read');
 
-        Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
-        Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoices.create');
-        Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
-        Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
-        Route::get('/invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
-        Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
-        Route::get('/invoices/convert/{quotation}', [InvoiceController::class, 'convertFromQuotation'])->name('invoices.convert');
-        Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
-        Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'addPayment'])->name('invoices.payments.store');
-        Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
+        Route::get('/team', [TeamController::class, 'index'])->middleware('permission:view_agents|view_staff')->name('team.index');
+        Route::resource('agents', AgentController::class)->except(['index', 'show'])->middleware('permission:manage_agents');
+        Route::get('/agents/{agent}', [AgentController::class, 'show'])->middleware('permission:view_agents')->name('agents.show');
+        Route::resource('clients', ClientController::class)->middleware('permission:view_clients');
+        Route::get('/clients/export-excel', [ClientController::class, 'exportExcel'])->middleware('permission:export_reports')->name('clients.export-excel');
+        Route::resource('properties', PropertyController::class)->middleware('permission:view_properties|view_own_properties');
+        Route::get('/properties/export', [PropertyController::class, 'exportExcel'])->middleware('permission:export_reports')->name('properties.export-excel');
+        Route::post('/properties/media/{media}/primary', [PropertyController::class, 'setPrimary'])->middleware('permission:manage_property_media')->name('properties.media.primary');
+        Route::delete('/properties/media/{media}', [PropertyController::class, 'destroyMedia'])->middleware('permission:manage_property_media')->name('properties.media.destroy');
 
-        Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
-        Route::get('/payments/{payment}/edit', [PaymentController::class, 'edit'])->name('payments.edit');
-        Route::put('/payments/{payment}', [PaymentController::class, 'update'])->name('payments.update');
-        Route::delete('/payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
+        Route::resource('quotations', QuotationController::class)->middleware('permission:view_quotations');
+        Route::get('/quotations/{quotation}/pdf', [QuotationController::class, 'pdf'])->middleware('permission:view_quotations')->name('quotations.pdf');
+        Route::patch('/quotations/{quotation}/mark-sent', [QuotationController::class, 'markSent'])->middleware('permission:send_quotations')->name('quotations.mark-sent');
+        Route::get('/quotations/{quotation}/versions', [QuotationController::class, 'versions'])->middleware('permission:view_quotations')->name('quotations.versions');
 
-        Route::get('/installments', [InstallmentController::class, 'index'])->name('installments.index');
-        Route::get('/installments/create/{deal?}', [InstallmentController::class, 'create'])->name('installments.create');
-        Route::post('/installments', [InstallmentController::class, 'store'])->name('installments.store');
-        Route::get('/installments/{installmentPlan}/edit', [InstallmentController::class, 'edit'])->name('installments.edit');
-        Route::put('/installments/{installmentPlan}', [InstallmentController::class, 'update'])->name('installments.update');
-        Route::delete('/installments/{installmentPlan}', [InstallmentController::class, 'destroy'])->name('installments.destroy');
-        Route::patch('/installments/{installment}/pay', [InstallmentController::class, 'markPaid'])->name('installments.pay');
+        Route::middleware('permission:view_invoices')->group(function () {
+            Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+            Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoices.create');
+            Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
+            Route::get('/invoices/export-excel', [InvoiceController::class, 'exportExcel'])->name('invoices.export-excel');
+            Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+            Route::get('/invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
+            Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
+            Route::get('/invoices/convert/{quotation}', [InvoiceController::class, 'convertFromQuotation'])->name('invoices.convert');
+            Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
+            Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'addPayment'])->name('invoices.payments.store');
+            Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
+        });
 
-        Route::resource('deals', DealController::class)->middleware('subscribed');
-        Route::get('/deals/export', [DealController::class, 'export'])->name('deals.export');
-        Route::get('/deals/trash', [DealController::class, 'trash'])->name('deals.trash');
-        Route::patch('/deals/{deal}/restore', [DealController::class, 'restore'])->name('deals.restore');
-        Route::delete('/deals/{deal}/force-delete', [DealController::class, 'forceDelete'])->name('deals.force-delete');
+        Route::middleware('permission:view_all_payments')->group(function () {
+            Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
+            Route::get('/payments/{payment}/edit', [PaymentController::class, 'edit'])->name('payments.edit');
+            Route::put('/payments/{payment}', [PaymentController::class, 'update'])->name('payments.update');
+            Route::delete('/payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
+            Route::get('/payments/export-excel', [PaymentController::class, 'exportExcel'])->name('payments.export-excel');
+        });
 
-        Route::resource('tokens', TokenController::class);
-        Route::resource('rent-agreements', RentAgreementController::class);
-        Route::post('/rent-agreements/{rent_agreement}/regenerate-schedule', [RentPaymentController::class, 'regenerateSchedule'])->name('rent-agreements.regenerate-schedule');
-        Route::post('/rent-agreements/{rent_agreement}/generate-next-month', [RentPaymentController::class, 'generateNextMonth'])->name('rent-agreements.generate-next-month');
-        Route::post('/rent-agreements/{rent_agreement}/renew', [RentAgreementController::class, 'renew'])->name('rent-agreements.renew');
-        Route::post('/rent-agreements/{rent_agreement}/settle-deposit', [RentAgreementController::class, 'settleDeposit'])->name('rent-agreements.settle-deposit');
-        Route::post('/rent-agreements/{rent_agreement}/notices/{rentNotice}/respond', [RentAgreementController::class, 'respondNotice'])->name('rent-agreements.notices.respond');
+        Route::middleware('permission:view_installments')->group(function () {
+            Route::get('/installments', [InstallmentController::class, 'index'])->name('installments.index');
+            Route::get('/installments/create/{deal?}', [InstallmentController::class, 'create'])->name('installments.create');
+            Route::post('/installments', [InstallmentController::class, 'store'])->name('installments.store');
+            Route::get('/installments/{installmentPlan}/edit', [InstallmentController::class, 'edit'])->name('installments.edit');
+            Route::put('/installments/{installmentPlan}', [InstallmentController::class, 'update'])->name('installments.update');
+            Route::delete('/installments/{installmentPlan}', [InstallmentController::class, 'destroy'])->name('installments.destroy');
+            Route::patch('/installments/{installment}/pay', [InstallmentController::class, 'markPaid'])->name('installments.pay');
+            Route::get('/installments/export-excel', [InstallmentController::class, 'exportExcel'])->name('installments.export-excel');
+        });
 
-        Route::resource('rent-payments', RentPaymentController::class)->except(['create', 'store']);
-        Route::patch('/rent-payments/{rentPayment}/pay', [RentPaymentController::class, 'updateStatus'])->name('rent-payments.pay');
-        Route::patch('/rent-payments/{rentPayment}/waive', [RentPaymentController::class, 'waive'])->name('rent-payments.waive');
-        Route::get('/rent-payments/{rentPayment}/receipt', [RentPaymentController::class, 'receipt'])->name('rent-payments.receipt');
+        Route::get('/deals/export', [DealController::class, 'export'])->middleware('permission:export_reports')->name('deals.export');
+        Route::get('/deals/export-excel', [DealController::class, 'exportExcel'])->middleware('permission:export_reports')->name('deals.export-excel');
+        Route::get('/deals/trash', [DealController::class, 'trash'])->middleware('permission:view_deals')->name('deals.trash');
+        Route::patch('/deals/{deal}/restore', [DealController::class, 'restore'])->middleware('permission:view_deals')->name('deals.restore');
+        Route::delete('/deals/{deal}/force-delete', [DealController::class, 'forceDelete'])->middleware('permission:delete_deals')->name('deals.force-delete');
+        Route::resource('deals', DealController::class)->middleware('permission:view_deals|view_own_deals');
 
-        Route::resource('property-visits', PropertyVisitController::class);
-        Route::resource('commissions', CommissionController::class);
-        Route::patch('/commissions/{commission}/mark-paid', [CommissionController::class, 'markPaid'])->name('commissions.mark-paid');
-        Route::resource('agent-payouts', AgentPayoutController::class);
+        Route::resource('tokens', TokenController::class)->middleware('permission:view_deals');
+        Route::resource('rent-agreements', RentAgreementController::class)->middleware('permission:view_rent_agreements');
+        Route::post('/rent-agreements/{rent_agreement}/regenerate-schedule', [RentPaymentController::class, 'regenerateSchedule'])->middleware('permission:record_rent_payments')->name('rent-agreements.regenerate-schedule');
+        Route::post('/rent-agreements/{rent_agreement}/generate-next-month', [RentPaymentController::class, 'generateNextMonth'])->middleware('permission:record_rent_payments')->name('rent-agreements.generate-next-month');
+        Route::post('/rent-agreements/{rent_agreement}/renew', [RentAgreementController::class, 'renew'])->middleware('permission:edit_rent_agreements')->name('rent-agreements.renew');
+        Route::post('/rent-agreements/{rent_agreement}/deposit-receive', [RentAgreementController::class, 'receiveDeposit'])->middleware('permission:record_rent_payments')->name('rent-agreements.deposit-receive');
+
+        Route::middleware('permission:settle_deposits')->group(function () {
+            Route::post('/rent-agreements/{rent_agreement}/move-out', [RentAgreementController::class, 'moveOut'])->name('rent-agreements.move-out');
+            Route::post('/rent-agreements/{rent_agreement}/deductions', [RentAgreementController::class, 'storeDeduction'])->name('rent-agreements.deductions.store');
+            Route::delete('/rent-agreements/{rent_agreement}/deductions/{rentDepositDeduction}', [RentAgreementController::class, 'destroyDeduction'])->name('rent-agreements.deductions.destroy');
+            Route::post('/rent-agreements/{rent_agreement}/return-deposit', [RentAgreementController::class, 'returnDeposit'])->name('rent-agreements.return-deposit');
+        });
+        Route::post('/rent-agreements/{rent_agreement}/notices/{rentNotice}/respond', [RentAgreementController::class, 'respondNotice'])->middleware('permission:generate_rent_notices')->name('rent-agreements.notices.respond');
+
+        Route::middleware('permission:view_rent_agreements')->group(function () {
+            Route::resource('rent-payments', RentPaymentController::class)->except(['create', 'store']);
+            Route::patch('/rent-payments/{rentPayment}/pay', [RentPaymentController::class, 'updateStatus'])->middleware('permission:record_rent_payments')->name('rent-payments.pay');
+            Route::patch('/rent-payments/{rentPayment}/waive', [RentPaymentController::class, 'waive'])->middleware('permission:waive_rent')->name('rent-payments.waive');
+            Route::get('/rent-payments/{rentPayment}/receipt', [RentPaymentController::class, 'receipt'])->name('rent-payments.receipt');
+            Route::get('/rent-payments/export-excel', [RentPaymentController::class, 'exportExcel'])->name('rent-payments.export-excel');
+        });
+
+        Route::resource('property-visits', PropertyVisitController::class)->middleware('permission:view_visits');
+        Route::resource('commissions', CommissionController::class)->middleware('permission:view_all_commissions|view_own_commissions');
+        Route::patch('/commissions/{commission}/mark-paid', [CommissionController::class, 'markPaid'])->middleware('permission:mark_commission_paid')->name('commissions.mark-paid');
+        Route::resource('agent-payouts', AgentPayoutController::class)->middleware('permission:view_payouts');
 
         Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 
-        Route::prefix('reports')->name('reports.')->group(function () {
+        Route::prefix('reports')->name('reports.')->middleware('permission:view_reports')->group(function () {
             Route::get('/', [ReportController::class, 'index'])->name('index');
             Route::get('/sales', [ReportController::class, 'salesReport'])->name('sales');
             Route::get('/agent-performance', [ReportController::class, 'agentPerformance'])->name('agent-performance');
             Route::get('/commissions', [ReportController::class, 'commissionReport'])->name('commissions');
             Route::get('/rent-roll', [ReportController::class, 'rentRoll'])->name('rent-roll');
-            Route::get('/sales/pdf', [ReportController::class, 'exportSalesPdf'])->name('sales.pdf');
+            Route::get('/sales/pdf', [ReportController::class, 'exportSalesPdf'])->middleware('permission:export_reports')->name('sales.pdf');
         });
 
-        Route::get('/pdf/sale-agreement/{deal}', [AgreementPDFController::class, 'saleAgreement'])->name('pdf.sale-agreement');
-        Route::get('/pdf/rent-agreement/{rentAgreement}', [AgreementPDFController::class, 'rentAgreement'])->name('pdf.rent-agreement');
-        Route::get('/pdf/token-receipt/{deal}', [AgreementPDFController::class, 'tokenReceipt'])->name('pdf.token-receipt');
-        Route::get('/pdf/commission-invoice/{commission}', [AgreementPDFController::class, 'commissionInvoice'])->name('pdf.commission-invoice');
-        Route::get('/pdf/possession-letter/{deal}', [AgreementPDFController::class, 'possessionLetter'])->name('pdf.possession-letter');
+        Route::middleware('permission:view_deals')->group(function () {
+            Route::get('/pdf/sale-agreement/{deal}', [AgreementPDFController::class, 'saleAgreement'])->name('pdf.sale-agreement');
+            Route::get('/pdf/token-receipt/{deal}', [AgreementPDFController::class, 'tokenReceipt'])->name('pdf.token-receipt');
+            Route::get('/pdf/possession-letter/{deal}', [AgreementPDFController::class, 'possessionLetter'])->name('pdf.possession-letter');
+        });
+        Route::get('/pdf/rent-agreement/{rentAgreement}', [AgreementPDFController::class, 'rentAgreement'])->middleware('permission:view_rent_agreements')->name('pdf.rent-agreement');
+        Route::get('/pdf/commission-invoice/{commission}', [AgreementPDFController::class, 'commissionInvoice'])->middleware('permission:view_all_commissions')->name('pdf.commission-invoice');
 
         Route::get('/payments/raast-redirect', function (Request $request) {
             $amount = $request->amount;
@@ -213,13 +232,30 @@ Route::middleware('auth')->group(function () {
 
             return view('payments.raast-redirect', compact('amount', 'reference', 'iban'));
         })->name('payments.raast.redirect');
+
+        Route::post('/payments/gateway/{gateway}', [GatewayPaymentController::class, 'create'])
+            ->middleware('permission:record_rent_payments')
+            ->name('gateway.create');
     });
 });
 
+// Gateway callback/return are reached via server-to-server traffic (callback)
+// and browser redirect (return). Verification happens via order_id lookup +
+// driver::verify() so these stay unauthenticated but must match a pending order.
+Route::group(['prefix' => 'gateway'], function () {
+    Route::post('/{gateway}/callback', [GatewayPaymentController::class, 'callback'])->name('gateway.callback');
+    Route::get('/{gateway}/return', [GatewayPaymentController::class, 'return'])->name('gateway.return');
+});
+
 Route::prefix('portal')->name('portal.')->group(function () {
-Route::middleware(['guest'])->group(function () {
+    Route::middleware(['guest'])->group(function () {
         Route::get('/login', [PortalAuthController::class, 'showLogin'])->name('login');
         Route::post('/login', [PortalAuthController::class, 'login']);
+
+        Route::get('/forgot-password', [PortalForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+        Route::post('/forgot-password', [PortalForgotPasswordController::class, 'sendResetLinkEmail'])->middleware('throttle:5,1')->name('password.email');
+        Route::get('/reset-password/{token}', [PortalForgotPasswordController::class, 'showResetForm'])->name('password.reset');
+        Route::post('/reset-password', [PortalForgotPasswordController::class, 'reset'])->middleware('throttle:5,1')->name('password.update');
     });
     Route::post('/logout', [PortalAuthController::class, 'logout'])->name('logout');
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Deal;
 use App\Models\Token;
+use App\Notifications\TokenReceived;
 use Illuminate\Http\Request;
 
 class TokenController extends Controller
@@ -38,7 +39,14 @@ class TokenController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        Token::create($request->all());
+        $token = Token::create($request->all());
+
+        $recipients = [];
+        if ($token->deal && $token->deal->agent && $token->deal->agent->user) {
+            $recipients[] = $token->deal->agent->user;
+        }
+        notify_company($token->company_id ?? current_company_id(), TokenReceived::class, [$token], $recipients);
+
         toastr()->success('Token added successfully.');
 
         return redirect()->route('tokens.index');

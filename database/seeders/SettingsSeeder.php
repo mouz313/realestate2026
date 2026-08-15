@@ -45,6 +45,18 @@ class SettingsSeeder extends Seeder
                 ['year' => 2023, 'title' => 'Digital Transformation', 'desc' => 'Launched our online platform with virtual tours and digital documentation.'],
                 ['year' => 2024, 'title' => 'Industry Leader', 'desc' => 'Recognized as one of Pakistan\'s top real estate agencies with 500+ properties sold.'],
             ])],
+            ['key' => 'currency', 'value' => 'PKR'],
+            ['key' => 'bank_name', 'value' => ''],
+            ['key' => 'bank_account_title', 'value' => ''],
+            ['key' => 'bank_iban', 'value' => ''],
+            ['key' => 'raast_iban', 'value' => ''],
+            ['key' => 'jazzcash_merchant_id', 'value' => ''],
+            ['key' => 'jazzcash_password', 'value' => ''],
+            ['key' => 'jazzcash_secret_salt', 'value' => ''],
+            ['key' => 'jazzcash_sandbox', 'value' => '1'],
+            ['key' => 'easypaisa_merchant_id', 'value' => ''],
+            ['key' => 'easypaisa_secret_key', 'value' => ''],
+            ['key' => 'easypaisa_sandbox', 'value' => '1'],
         ];
 
         foreach ($settings as $s) {

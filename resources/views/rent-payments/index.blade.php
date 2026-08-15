@@ -7,13 +7,18 @@
     <h4 class="mb-0"><i class="ti ti-cash me-1"></i> Rent Overview <span class="urdu">(کرایہ کا جائزہ)</span></h4>
 </div>
 
-<div class="row g-2 mb-3">
-    <div class="col-md-4">
-        <div class="card shadow-sm text-center p-3">
-            <div class="small text-secondary">Pending Collection</div>
-            <div class="fs-4 fw-bold text-warning">Rs. {{ number_format($totalPending, 0) }}</div>
+    <div class="row g-2 mb-3">
+        <div class="col-md-4 d-flex align-items-center">
+            <a href="{{ route('rent-payments.export-excel') }}" class="btn btn-outline-success">
+                <i class="ti ti-file-spreadsheet"></i> Export Excel <span class="urdu">(اکسل برآمد)</span>
+            </a>
         </div>
-    </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm text-center p-3">
+                <div class="small text-secondary">Pending Collection</div>
+                <div class="fs-4 fw-bold text-warning">Rs. {{ number_format($totalPending, 0) }}</div>
+            </div>
+        </div>
     <div class="col-md-4">
         <div class="card shadow-sm text-center p-3">
             <div class="small text-secondary">Overdue</div>

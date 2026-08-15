@@ -11,6 +11,7 @@ use App\Models\InvoiceItem;
 use App\Models\ItemTemplate;
 use App\Models\Quotation;
 use App\Models\Setting;
+use App\Notifications\InvoiceGenerated;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -271,6 +272,13 @@ class InvoiceController extends Controller
             } catch (\Exception $e) {
                 // Email failure shouldn't block the conversion
             }
+
+            notify_company(
+                $invoice->company_id ?? $invoice->client->company_id ?? current_company_id(),
+                InvoiceGenerated::class,
+                [$invoice],
+                [$invoice->client],
+            );
         }
 
         toastr()->success('Invoice created from quotation.');
@@ -345,5 +353,12 @@ class InvoiceController extends Controller
         $number = $last ? intval(substr($last->invoice_number, 4)) + 1 : 1;
 
         return $prefix.str_pad($number, 5, '0', STR_PAD_LEFT);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        [$headers, $rows] = \App\Exports\InvoiceExport::build();
+
+        return \App\Services\ExcelWriter::stream('invoices-'.date('Y-m-d').'.xlsx', $headers, $rows);
     }
 }

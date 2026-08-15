@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\AgentScope;
 use App\Traits\BelongsToCompany;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Quotation extends Model
 {
     use LogsActivity, BelongsToCompany;
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new AgentScope('created_by'));
+    }
 
     protected $fillable = [
         'company_id', 'client_id', 'property_id', 'deal_id', 'quote_number', 'status', 'expiry_date',

@@ -18,7 +18,9 @@ class RentAgreement extends Model
 
     protected $fillable = [
         'company_id', 'deal_id', 'renewed_from_id', 'property_id', 'tenant_id', 'owner_id', 'start_date', 'end_date',
+        'possession_returned_date',
         'rent_amount', 'security_deposit', 'deposit_received', 'deposit_returned',
+        'deposit_received_amount', 'deposit_received_date',
         'deposit_deductions', 'deposit_deduction_notes', 'deposit_returned_date',
         'notice_period_days', 'late_fee_per_day', 'rent_increase_percent',
         'rent_increase_frequency', 'payment_frequency', 'agreement_doc', 'status', 'notes', 'terms',
@@ -29,9 +31,12 @@ class RentAgreement extends Model
         return [
             'start_date' => 'date',
             'end_date' => 'date',
+            'possession_returned_date' => 'date',
             'rent_amount' => 'decimal:2',
             'security_deposit' => 'decimal:2',
             'deposit_received' => 'boolean',
+            'deposit_received_amount' => 'decimal:2',
+            'deposit_received_date' => 'date',
             'deposit_returned' => 'boolean',
             'notice_period_days' => 'integer',
             'late_fee_per_day' => 'decimal:2',
@@ -79,6 +84,11 @@ class RentAgreement extends Model
     public function rentNotices(): HasMany
     {
         return $this->hasMany(RentNotice::class);
+    }
+
+    public function depositDeductions(): HasMany
+    {
+        return $this->hasMany(RentDepositDeduction::class);
     }
 
     public function generateSchedule(): void
@@ -195,6 +205,20 @@ class RentAgreement extends Model
 
     public function getNetDepositReturnAttribute(): float
     {
-        return (float) $this->security_deposit - (float) $this->deposit_deductions;
+        return max(0, round((float) $this->deposit_received_amount - (float) $this->deposit_deductions, 2));
+    }
+
+    public function getDepositRemainingAttribute(): float
+    {
+        return max(0, round((float) $this->security_deposit - (float) $this->deposit_received_amount, 2));
+    }
+
+    public function syncDepositDeductions(): void
+    {
+        $total = (float) $this->depositDeductions()->sum('amount');
+
+        if ($total !== (float) $this->deposit_deductions) {
+            $this->update(['deposit_deductions' => round($total, 2)]);
+        }
     }
 }

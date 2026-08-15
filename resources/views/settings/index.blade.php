@@ -248,6 +248,43 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-12">
+                            <hr class="my-2">
+                            <h6 class="mb-2"><i class="ti ti-wallet me-1"></i> Online Payment Gateways <span class="urdu">(آن لائن ادائیگی گیٹ وے)</span></h6>
+                            <div class="form-text mb-2">Configure JazzCash / EasyPaisa credentials fetched from the gateway dashboard. Sandobox defaults ON for testing. <span class="urdu">(ٹیسٹنگ کے لئے سینڈ باکس ڈیفالٹ رہتا ہے)</span></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Raast IBAN <span class="urdu">(راٹ ای بی این)</span></label>
+                            <input type="text" class="form-control" name="raast_iban" value="{{ $settings['raast_iban'] ?? '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-4 pt-1">
+                                <label class="form-label fw-semibold mb-0 me-2">JazzCash Sandbox</label>
+                                <select class="form-select d-inline-block w-auto" name="jazzcash_sandbox" style="max-width:160px;">
+                                    <option value="1" {{ ($settings['jazzcash_sandbox'] ?? '1') === '1' ? 'selected' : '' }}>Sandbox</option>
+                                    <option value="0" {{ ($settings['jazzcash_sandbox'] ?? '') === '0' ? 'selected' : '' }}>Live</option>
+                                </select>
+                            </div>
+                            <input type="text" class="form-control mt-2" name="jazzcash_merchant_id" value="{{ $settings['jazzcash_merchant_id'] ?? '' }}" placeholder="Merchant ID">
+                            <input type="password" class="form-control mt-2" name="jazzcash_password" value="{{ $settings['jazzcash_password'] ?? '' }}" placeholder="Password">
+                            <input type="password" class="form-control mt-2" name="jazzcash_secret_salt" value="{{ $settings['jazzcash_secret_salt'] ?? '' }}" placeholder="Secret Salt">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">EasyPaisa Merchant ID <span class="urdu">(ایزی پیسا مرچنٹ آئی ڈی)</span></label>
+                            <input type="text" class="form-control" name="easypaisa_merchant_id" value="{{ $settings['easypaisa_merchant_id'] ?? '' }}">
+                            <label class="form-label fw-semibold mt-2">Secret Key</label>
+                            <input type="password" class="form-control" name="easypaisa_secret_key" value="{{ $settings['easypaisa_secret_key'] ?? '' }}">
+                            <div class="form-check mt-2">
+                                <label class="form-label fw-semibold mb-0 me-2">EasyPaisa Sandbox</label>
+                                <select class="form-select d-inline-block w-auto" name="easypaisa_sandbox" style="max-width:160px;">
+                                    <option value="1" {{ ($settings['easypaisa_sandbox'] ?? '1') === '1' ? 'selected' : '' }}>Sandbox</option>
+                                    <option value="0" {{ ($settings['easypaisa_sandbox'] ?? '') === '0' ? 'selected' : '' }}>Live</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

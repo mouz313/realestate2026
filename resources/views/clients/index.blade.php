@@ -20,6 +20,9 @@
     <a href="{{ route('clients.create') }}" class="btn btn-dark">
         <i class="ti ti-plus"></i> Add Client <span class="urdu">(نیا گاہک)</span>
     </a>
+    <a href="{{ route('clients.export-excel') }}" class="btn btn-outline-success">
+        <i class="ti ti-file-spreadsheet"></i> Export Excel <span class="urdu">(اکسل برآمد)</span>
+    </a>
 </div>
 
 <div class="card table-card">

@@ -66,18 +66,6 @@ class PermissionSeeder extends Seeder
 
         $ownerPermissions = $allPermissions->pluck('id')->all();
 
-        $staffRole = Role::firstOrCreate(
-            ['slug' => 'staff', 'company_id' => null],
-            ['name' => 'Staff', 'description' => 'Regular team member', 'is_system' => true]
-        );
-        $staffRole->permissions()->sync($ownerPermissions);
-
-        $clientRole = Role::firstOrCreate(
-            ['slug' => 'client', 'company_id' => null],
-            ['name' => 'Client', 'description' => 'External client with limited access', 'is_system' => true]
-        );
-        $clientRole->permissions()->sync([]);
-
         foreach (['owner'] as $slug) {
             $role = Role::firstOrCreate(
                 ['slug' => $slug, 'company_id' => null],
@@ -85,5 +73,8 @@ class PermissionSeeder extends Seeder
             );
             $role->permissions()->sync($ownerPermissions);
         }
+
+        // Staff and client roles are created per-company on demand (see RoleController::index)
+        // This allows company admins to customize permissions for their own staff/client roles
     }
 }

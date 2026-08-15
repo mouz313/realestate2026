@@ -3,24 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Agent;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class AgentController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(fn ($req, $next) => Gate::authorize('admin') ? $next($req) : abort(403));
-    }
-
-    public function index()
-    {
-        $agents = Agent::latest()->paginate(15);
-
-        return view('agents.index', compact('agents'));
-    }
-
     public function create()
     {
         return view('agents.create');
@@ -49,9 +37,12 @@ class AgentController extends Controller
             'website' => 'nullable|string|max:500',
             'specializations' => 'nullable|array',
             'specializations.*' => 'string|max:100',
+            'create_login' => 'nullable|boolean',
+            'login_email' => 'nullable|email|max:255|required_if:create_login,1|unique:users,email',
+            'login_password' => 'nullable|string|min:8|required_if:create_login,1',
         ]);
 
-        $data = $request->except('photo');
+        $data = $request->except(['photo', 'create_login', 'login_email', 'login_password']);
         $data['commission_rate'] = $request->filled('commission_rate') ? $request->commission_rate : 2.50;
         $data['type'] = $request->filled('type') ? $request->type : 'in_house';
         $data['specializations'] = $request->filled('specializations') ? $request->specializations : null;
@@ -60,10 +51,17 @@ class AgentController extends Controller
             $data['photo'] = $request->file('photo')->store('agents', 'public');
         }
 
-        Agent::create($data);
+        $agent = Agent::create($data);
+
+        if ($request->boolean('create_login')) {
+            $user = $this->createAgentLogin($agent, $request->login_email, $request->login_password);
+            $agent->user_id = $user->id;
+            $agent->save();
+        }
+
         toastr()->success('Agent added successfully.');
 
-        return redirect()->route('agents.index');
+        return redirect()->route('team.index', ['type' => 'agents']);
     }
 
     public function show(Agent $agent)
@@ -101,9 +99,12 @@ class AgentController extends Controller
             'website' => 'nullable|string|max:500',
             'specializations' => 'nullable|array',
             'specializations.*' => 'string|max:100',
+            'create_login' => 'nullable|boolean',
+            'login_email' => 'nullable|email|max:255|unique:users,email,'.($agent->user_id ?? 'NULL').',id',
+            'login_password' => 'nullable|string|min:8',
         ]);
 
-        $data = $request->except('photo');
+        $data = $request->except(['photo', 'create_login', 'login_email', 'login_password']);
         $data['commission_rate'] = $request->filled('commission_rate') ? $request->commission_rate : 2.50;
         $data['type'] = $request->filled('type') ? $request->type : 'in_house';
         $data['specializations'] = $request->filled('specializations') ? $request->specializations : null;
@@ -116,9 +117,33 @@ class AgentController extends Controller
         }
 
         $agent->update($data);
+
+        if ($agent->user) {
+            $user = $agent->user;
+            $changed = false;
+
+            if ($request->filled('login_email') && $request->login_email !== $user->email) {
+                $user->email = $request->login_email;
+                $changed = true;
+            }
+
+            if ($request->filled('login_password')) {
+                $user->password = $request->login_password;
+                $changed = true;
+            }
+
+            if ($changed) {
+                $user->save();
+            }
+        } elseif ($request->boolean('create_login')) {
+            $user = $this->createAgentLogin($agent, $request->login_email, $request->login_password);
+            $agent->user_id = $user->id;
+            $agent->save();
+        }
+
         toastr()->success('Agent updated successfully.');
 
-        return redirect()->route('agents.index');
+        return redirect()->route('team.index', ['type' => 'agents']);
     }
 
     public function destroy(Agent $agent)
@@ -126,6 +151,24 @@ class AgentController extends Controller
         $agent->delete();
         toastr()->success('Agent deleted successfully.');
 
-        return redirect()->route('agents.index');
+        return redirect()->route('team.index', ['type' => 'agents']);
+    }
+
+    protected function createAgentLogin(Agent $agent, string $email, string $password): User
+    {
+        $user = User::create([
+            'company_id' => $agent->company_id,
+            'name' => $agent->name,
+            'email' => $email,
+            'password' => $password,
+            'role' => 'agent',
+            'is_active' => true,
+            'email_verified_at' => now(),
+            'agent_id' => $agent->id,
+        ]);
+
+        $user->assignRole('agent');
+
+        return $user;
     }
 }

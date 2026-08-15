@@ -980,6 +980,9 @@ hr {
 .status-token_received { background: #8b5cf6 !important; color: #fff !important; }
 .status-agreement_signed { background: #06b6d4 !important; color: #fff !important; }
 .status-in_progress { background: var(--accent-invoices) !important; color: #fff !important; }
+.status-terminated { background: #ef4444 !important; color: #fff !important; }
+.status-expired { background: var(--text-muted) !important; color: #fff !important; }
+.status-renewed { background: var(--accent-quotations) !important; color: #fff !important; }
 
 /* Detail table for show pages */
 .detail-table th {

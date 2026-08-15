@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Role;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -16,33 +15,12 @@ class CheckRole
             abort(403);
         }
 
-        if ($role === 'super_admin' && ! $user->isSuperAdmin()) {
+        if (! method_exists($user, 'hasRoleAccess')) {
             abort(403);
         }
 
-        if ($role === 'admin' && ! $user->isAdmin() && ! $user->isSuperAdmin()) {
-            abort(403);
-        }
-
-        if ($role === 'agent' && ! $user->isAgent() && ! $user->isAdmin() && ! $user->isSuperAdmin()) {
-            abort(403);
-        }
-
-        if (in_array($role, ['staff', 'client', 'owner'])) {
-            $companyId = current_company_id();
-            $hasRole = Role::where('slug', $role)
-                ->where(function ($q) use ($companyId) {
-                    $q->whereNull('company_id')->orWhere('company_id', $companyId);
-                })
-                ->exists();
-
-            if (! $hasRole) {
-                abort(403, "Role '{$role}' not found for this company.");
-            }
-
-            if (! $user->isSuperAdmin() && ! $user->isAdmin() && ! $user->hasRole($role)) {
-                abort(403);
-            }
+        if (! $user->hasRoleAccess($role)) {
+            abort(403, "You do not have the '{$role}' role.");
         }
 
         return $next($request);
