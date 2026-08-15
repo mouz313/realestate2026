@@ -24,10 +24,10 @@
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label class="form-label">Property <span class="urdu">(جائیداد)</span> <span class="text-danger">*</span></label>
-                        <select class="form-select @error('property_id') is-invalid @enderror" name="property_id" required>
+                        <select id="property_id" class="form-select @error('property_id') is-invalid @enderror" name="property_id" required>
                             <option value="">Select Property <span class="urdu">(جائیداد منتخب)</span></option>
                             @foreach($properties ?? [] as $property)
-                                <option value="{{ $property->id }}" {{ old('property_id') == $property->id ? 'selected' : '' }}>{{ $property->title }} ({{ $property->property_code ?? $property->id }})</option>
+                                <option value="{{ $property->id }}" {{ old('property_id') == $property->id ? 'selected' : '' }} data-owner-id="{{ $property->owner_id ?? '' }}" data-owner-name="{{ optional($property->owner)->name ?? '' }}">{{ $property->title }} ({{ $property->property_code ?? $property->id }})</option>
                             @endforeach
                         </select>
                         @error('property_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -44,12 +44,8 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Owner <span class="urdu">(مالک)</span> <span class="text-danger">*</span></label>
-                        <select class="form-select @error('owner_id') is-invalid @enderror" name="owner_id" required>
-                            <option value="">Select Owner <span class="urdu">(مالک منتخب)</span></option>
-                            @foreach($clients ?? [] as $client)
-                                <option value="{{ $client->id }}" {{ old('owner_id') == $client->id ? 'selected' : '' }}>{{ $client->name }}</option>
-                            @endforeach
-                        </select>
+                        <input type="text" id="owner_display" class="form-control" placeholder="Auto-filled from property" readonly>
+                        <input type="hidden" name="owner_id" id="owner_id" value="{{ old('owner_id') }}">
                         @error('owner_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="row">
@@ -149,3 +145,28 @@
     </form>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    (function() {
+        const propertySelect = document.getElementById('property_id');
+        const ownerDisplay = document.getElementById('owner_display');
+        const ownerInput = document.getElementById('owner_id');
+
+        function updateOwner() {
+            const option = propertySelect.options[propertySelect.selectedIndex];
+            const ownerId = option ? option.getAttribute('data-owner-id') : '';
+            const ownerName = option ? option.getAttribute('data-owner-name') : '';
+
+            ownerInput.value = ownerId || '';
+            ownerDisplay.value = ownerName ? ownerName : (propertySelect.value ? 'No owner assigned' : '');
+        }
+
+        if (propertySelect) {
+            propertySelect.addEventListener('change', updateOwner);
+            updateOwner();
+        }
+    })();
+</script>
+@endpush
+

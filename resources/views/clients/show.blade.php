@@ -71,7 +71,7 @@
                                 <td class="text-secondary d-none d-sm-table-cell">{{ $q->created_at->format('d M Y') }}</td>
                                 <td class="fw-medium d-none d-sm-table-cell">{{ number_format($q->total, 2) }}</td>
                                 <td>
-                                    @php $sc = ['draft'=>'status-draft','sent'=>'status-sent','approved'=>'status-approved','rejected'=>'status-rejected','invoiced'=>'status-invoiced']; @endphp
+                                    @php $sc = \App\Helpers\Status::classes('invoice'); @endphp
                                     <span class="badge {{ $sc[$q->status] ?? 'status-draft' }}">{{ ucfirst($q->status) }}</span>
                                 </td>
                             </tr>

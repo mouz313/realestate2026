@@ -13,7 +13,6 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             CitySeeder::class,
             DummyDataSeeder::class,
-            PermissionSeeder::class,
         ]);
     }
 }

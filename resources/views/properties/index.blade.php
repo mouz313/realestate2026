@@ -50,7 +50,7 @@
                     <td class="fw-medium">{{ number_format($property->price, 0) }}</td>
                     <td>{{ $property->city ?? '-' }}</td>
                     <td>
-                        @php $sc = ['available' => 'status-available', 'sold' => 'status-sold', 'rented' => 'status-rented', 'under_offer' => 'status-under_offer', 'pending' => 'status-pending', 'reserved' => 'status-reserved']; @endphp
+                        @php $sc = \App\Helpers\Status::classes('property'); @endphp
                         <span class="badge {{ $sc[$property->status] ?? 'status-pending' }}">{{ ucfirst(str_replace('_', ' ', $property->status ?? 'available')) }}</span>
                     </td>
                     <td class="d-none d-md-table-cell">{{ $property->owner->name ?? '-' }}</td>

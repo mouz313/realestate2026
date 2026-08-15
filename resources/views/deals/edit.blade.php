@@ -95,6 +95,16 @@
                         @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Lead Source <span class="urdu">(لیڈ کا ذریعہ)</span></label>
+                        <select class="form-select @error('lead_source') is-invalid @enderror" name="lead_source">
+                            <option value=""><span class="urdu">(ذریعہ منتخب کریں)</span></option>
+                            @foreach($leadSources ?? [] as $key => $label)
+                                <option value="{{ $key }}" {{ old('lead_source', $deal->lead_source) == $key ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        @error('lead_source') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Sale Price <span class="urdu">(فروخت قیمت)</span> <span class="text-danger">*</span></label>
                         <input type="number" step="0.01" class="form-control @error('sale_price') is-invalid @enderror" name="sale_price" value="{{ old('sale_price', $deal->sale_price) }}" required>
                         @error('sale_price') <div class="invalid-feedback">{{ $message }}</div> @enderror

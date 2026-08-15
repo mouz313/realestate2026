@@ -5,6 +5,28 @@
 @section('content')
 <h4 class="mb-4">Available Properties</h4>
 
+<div class="card shadow-sm border-success mb-4">
+    <div class="card-body">
+        <h6 class="mb-2"><i class="ti ti-gift me-1 text-success"></i> Refer a Friend</h6>
+        <p class="text-secondary small mb-3">Know someone looking for a property? Refer them and we'll get in touch.</p>
+        <form action="{{ route('portal.referrals.store') }}" method="POST" class="row g-2 align-items-end">
+            @csrf
+            <div class="col-md-3">
+                <input type="text" name="referred_name" class="form-control form-control-sm" placeholder="Friend's name" required>
+            </div>
+            <div class="col-md-3">
+                <input type="text" name="referred_phone" class="form-control form-control-sm" placeholder="Phone (optional)">
+            </div>
+            <div class="col-md-3">
+                <input type="email" name="referred_email" class="form-control form-control-sm" placeholder="Email (optional)">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-success btn-sm w-100"><i class="ti ti-send"></i> Send Referral</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @if($properties->isEmpty())
 <div class="card shadow">
     <div class="card-body text-center text-secondary py-5">

@@ -91,7 +91,7 @@
                     <td class="text-secondary d-none d-sm-table-cell">{{ $q->created_at->format('d M Y') }}</td>
                     <td class="fw-medium">{{ number_format($q->total, 0) }}</td>
                     <td>
-                        @php $sc = ['draft' => 'status-draft', 'sent' => 'status-sent', 'approved' => 'status-approved', 'rejected' => 'status-rejected', 'invoiced' => 'status-invoiced']; @endphp
+                        @php $sc = \App\Helpers\Status::classes('quotation'); @endphp
                         <span class="badge {{ $sc[$q->status] ?? 'status-draft' }}">{{ ucfirst($q->status) }}</span>
                     </td>
                     <td class="text-end">

@@ -55,10 +55,18 @@
                     @endforeach
                 </select>
             </div>
+            <div class="col-md-2 col-sm-6">
+                <select name="lead_source" class="form-select form-select-sm">
+                    <option value="">All Sources</option>
+                    @foreach($leadSources ?? [] as $key => $label)
+                        <option value="{{ $key }}" {{ request('lead_source') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
             <div class="col-md-1 col-sm-6">
                 <button type="submit" class="btn btn-sm btn-dark w-100"><i class="ti ti-search"></i> Filter</button>
             </div>
-            @if(request()->hasAny(['search', 'status', 'type']))
+            @if(request()->hasAny(['search', 'status', 'type', 'lead_source']))
             <div class="col-md-1 col-sm-6">
                 <a href="{{ route('deals.index') }}" class="btn btn-sm btn-outline-secondary w-100"><i class="ti ti-x"></i> Clear</a>
             </div>
@@ -75,6 +83,7 @@
                     <th>Deal # <span class="urdu">(ڈیل نمبر)</span></th>
                     <th>Type <span class="urdu">(قسم)</span></th>
                     <th>Status <span class="urdu">(کیفیت)</span></th>
+                    <th class="d-none d-md-table-cell">Source <span class="urdu">(ذریعہ)</span></th>
                     <th>Property <span class="urdu">(جائیداد)</span></th>
                     <th>Buyer <span class="urdu">(خریدار)</span></th>
                     <th class="d-none d-md-table-cell">Seller <span class="urdu">(فروخت کنندہ)</span></th>
@@ -90,9 +99,10 @@
                     <td class="fw-semibold">{{ $deal->deal_number }}</td>
                     <td>{{ ucfirst($deal->type ?? '-') }}</td>
                     <td>
-                        @php $sc = ['inquiry' => 'status-inquiry', 'visit_scheduled' => 'status-visit_scheduled', 'offer_made' => 'status-offer_made', 'token_received' => 'status-token_received', 'agreement_signed' => 'status-agreement_signed', 'in_progress' => 'status-in_progress', 'completed' => 'status-completed', 'cancelled' => 'status-cancelled']; @endphp
+                        @php $sc = \App\Helpers\Status::classes('deal'); @endphp
                         <span class="badge {{ $sc[$deal->status] ?? 'status-pending' }}">{{ ucfirst(str_replace('_', ' ', $deal->status ?? 'pending')) }}</span>
                     </td>
+                    <td class="d-none d-md-table-cell">{{ \App\Helpers\Status::leadSourceLabel($deal->lead_source) }}</td>
                     <td>{{ $deal->property->title ?? '-' }}</td>
                     <td>{{ $deal->buyer->name ?? '-' }}</td>
                     <td class="d-none d-md-table-cell">{{ $deal->seller->name ?? '-' }}</td>
@@ -118,7 +128,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="10">
+                    <td colspan="11">
                         <div class="empty-state">
                             <i class="ti ti-handshake"></i>
                             <p>No deals found. <span class="urdu">(کوئی ڈیل نہیں ملی)</span></p>

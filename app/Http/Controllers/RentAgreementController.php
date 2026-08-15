@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Activity;
 use App\Models\Client;
 use App\Models\Deal;
 use App\Models\Payment;
@@ -9,6 +10,8 @@ use App\Models\Property;
 use App\Models\RentAgreement;
 use App\Models\RentDepositDeduction;
 use App\Models\RentNotice;
+use App\Models\Setting;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -26,7 +29,7 @@ class RentAgreementController extends Controller
 
     public function create()
     {
-        $properties = Property::where('transaction_type', 'rent')->orderBy('title')->get();
+        $properties = Property::with('owner')->where('transaction_type', 'rent')->orderBy('title')->get();
         $clients = Client::orderBy('name')->get();
         $deals = Deal::orderBy('deal_number')->get();
 
@@ -343,10 +346,120 @@ class RentAgreementController extends Controller
 
         $remainingAfter = round((float) $rentAgreement->security_deposit - $received, 2);
         $message = $remainingAfter > 0
-            ? "Rs. ".number_format($request->amount, 2)." deposit received. Remaining: Rs. ".number_format($remainingAfter, 2).'.'
+            ? 'Rs. '.number_format($request->amount, 2).' deposit received. Remaining: Rs. '.number_format($remainingAfter, 2).'.'
             : 'Security deposit fully received.';
 
         toastr()->success($message);
+
+        return back();
+    }
+
+    public function storeNotice(Request $request, RentAgreement $rentAgreement)
+    {
+        $this->authorizeAgentAccess($rentAgreement, 'property');
+
+        if ($rentAgreement->status !== 'active') {
+            toastr()->error('Notice can only be submitted for active agreements.');
+
+            return back();
+        }
+
+        $noticePeriodDays = $rentAgreement->notice_period_days ?? 30;
+        $minMoveOutDate = now()->addDays($noticePeriodDays)->toDateString();
+
+        $request->validate([
+            'notice_type' => 'required|in:owner,tenant',
+            'move_out_date' => "required|date|after_or_equal:{$minMoveOutDate}",
+            'reason' => 'nullable|string|max:1000',
+            'admin_notes' => 'nullable|string|max:1000',
+        ]);
+
+        $hasPending = RentNotice::where('rent_agreement_id', $rentAgreement->id)
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($hasPending) {
+            toastr()->error('A pending notice already exists for this agreement.');
+
+            return back();
+        }
+
+        RentNotice::create([
+            'company_id' => $rentAgreement->company_id,
+            'rent_agreement_id' => $rentAgreement->id,
+            'tenant_id' => $rentAgreement->tenant_id,
+            'notice_date' => now()->toDateString(),
+            'move_out_date' => $request->move_out_date,
+            'notice_type' => $request->notice_type,
+            'reason' => $request->reason,
+            'admin_notes' => $request->admin_notes,
+            'status' => 'pending',
+        ]);
+
+        toastr()->success('Notice submitted successfully.');
+
+        return back();
+    }
+
+    public function sendReminder(Request $request, RentAgreement $rentAgreement)
+    {
+        $this->authorizeAgentAccess($rentAgreement, 'property');
+
+        $tenant = $rentAgreement->tenant;
+
+        if (! $tenant || ! $tenant->phone) {
+            toastr()->error('No tenant phone number on this agreement.');
+
+            return back();
+        }
+
+        $pending = $rentAgreement->rentPayments()
+            ->where('status', 'pending')
+            ->where('due_date', '<=', now()->addDays(7)->endOfDay())
+            ->orderBy('due_date')
+            ->get();
+
+        if ($pending->isEmpty()) {
+            toastr()->info('No pending rent payments to remind.');
+
+            return back();
+        }
+
+        $sms = new SmsService;
+
+        if (! $sms->isConfigured()) {
+            toastr()->error('SMS is not configured. Add SMS settings under Settings.');
+
+            return back();
+        }
+
+        $agency = Setting::where('key', 'brand_name')->value('value') ?: config('app.name');
+        $sent = 0;
+
+        foreach ($pending as $payment) {
+            $message = sprintf(
+                'Dear %s, your rent for %s of Rs %s is due on %s. Please pay promptly to avoid late fees. -%s',
+                $tenant->name,
+                $payment->month_name,
+                number_format($payment->total_due, 0),
+                $payment->due_date->format('d M Y'),
+                $agency
+            );
+
+            if ($sms->send($tenant->phone, $message)) {
+                $sent++;
+                Activity::create([
+                    'description' => 'Rent reminder SMS sent to '.$tenant->name.' for '.$payment->month_name,
+                    'log_name' => 'rent_reminder',
+                ]);
+            }
+        }
+
+        if ($sent > 0) {
+            toastr()->success("Rent reminder sent to {$tenant->name} ({$sent} payment(s)).");
+        } else {
+            toastr()->error('Could not send SMS. Check SMS settings.');
+        }
 
         return back();
     }

@@ -52,7 +52,7 @@
                     <td class="d-none d-sm-table-cell">{{ $commission->percentage ? $commission->percentage . '%' : '-' }}</td>
                     <td class="fw-semibold">{{ number_format($commission->amount, 0) }}</td>
                     <td>
-                        @php $sc = ['pending' => 'status-pending', 'approved' => 'status-active', 'paid' => 'status-paid', 'cancelled' => 'status-cancelled']; @endphp
+                        @php $sc = \App\Helpers\Status::classes('commission'); @endphp
                         <span class="badge {{ $sc[$commission->status] ?? 'status-pending' }}">{{ ucfirst($commission->status ?? 'pending') }}</span>
                     </td>
                     <td class="text-secondary d-none d-md-table-cell">{{ $commission->paid_date ? $commission->paid_date->format('d M Y') : '-' }}</td>
@@ -62,7 +62,7 @@
                                 <i class="ti ti-file-download"></i>
                             </a>
                             @if(in_array($commission->status, ['pending', 'approved']))
-                            <form action="{{ route('commissions.markPaid', $commission) }}" method="POST">
+                            <form action="{{ route('commissions.mark-paid', $commission) }}" method="POST">
                                 @csrf @method('PATCH')
                                 <button type="submit" class="btn btn-sm btn-outline-success" title="Mark Paid" onclick="return confirm('Mark this commission as paid?')">
                                     <i class="ti ti-check"></i>

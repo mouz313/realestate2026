@@ -3,30 +3,28 @@
 @section('title', 'Rent Payments')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <h4 class="mb-0"><i class="ti ti-cash me-1"></i> Rent Overview <span class="urdu">(کرایہ کا جائزہ)</span></h4>
+    <a href="{{ route('rent-payments.export-excel') }}" class="btn btn-outline-success">
+        <i class="ti ti-file-spreadsheet"></i> Export Excel <span class="urdu">(اکسل برآمد)</span>
+    </a>
 </div>
 
-    <div class="row g-2 mb-3">
-        <div class="col-md-4 d-flex align-items-center">
-            <a href="{{ route('rent-payments.export-excel') }}" class="btn btn-outline-success">
-                <i class="ti ti-file-spreadsheet"></i> Export Excel <span class="urdu">(اکسل برآمد)</span>
-            </a>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm text-center p-3">
-                <div class="small text-secondary">Pending Collection</div>
-                <div class="fs-4 fw-bold text-warning">Rs. {{ number_format($totalPending, 0) }}</div>
-            </div>
-        </div>
+<div class="row g-3 mb-3">
     <div class="col-md-4">
-        <div class="card shadow-sm text-center p-3">
+        <div class="card shadow-sm text-center p-3 h-100">
+            <div class="small text-secondary">Pending Collection</div>
+            <div class="fs-4 fw-bold text-warning">Rs. {{ number_format($totalPending, 0) }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm text-center p-3 h-100">
             <div class="small text-secondary">Overdue</div>
             <div class="fs-4 fw-bold text-danger">Rs. {{ number_format($totalOverdue, 0) }}</div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card shadow-sm text-center p-3">
+        <div class="card shadow-sm text-center p-3 h-100">
             <div class="small text-secondary">Collected This Month</div>
             <div class="fs-4 fw-bold text-success">Rs. {{ number_format($collectedThisMonth, 0) }}</div>
         </div>

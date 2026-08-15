@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\GatewayPayment;
-use App\Models\Invoice;
 use App\Models\Installment;
+use App\Models\Invoice;
 use App\Models\RentPayment;
 use App\Models\Token;
 use App\Services\PaymentGateway;
@@ -210,7 +210,7 @@ class GatewayPaymentController extends Controller
         }
 
         if ($recipient instanceof RentPayment) {
-            return redirect()->route('rent-payments.show', $recipient->rent_agreement_id)->with('success', $message);
+            return redirect()->route('rent-agreements.show', $recipient->rent_agreement_id)->with('success', $message);
         }
 
         return redirect()->route('admin.dashboard')->with('success', $message);

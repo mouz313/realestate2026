@@ -10,26 +10,26 @@
 @php $primaryImg = $property->media->sortByDesc('is_primary')->first(); @endphp
 <script type="application/ld+json">
 {
-  "@context": "https://schema.org/",
-  "@type": "RealEstateListing",
+  "@@context": "https://schema.org/",
+  "@@type": "RealEstateListing",
   "name": {{ json_encode($property->title) }},
   "description": {{ json_encode(Str::limit(strip_tags($property->description ?? ''), 300)) }},
   "url": {{ json_encode(route('website.property', $property)) }},
   "image": {{ json_encode($primaryImg ? asset('storage/' . $primaryImg->file_path) : null) }},
   "offers": {
-    "@type": "Offer",
+    "@@type": "Offer",
     "price": {{ json_encode((string) $property->price) }},
     "priceCurrency": {{ json_encode($property->currency ?? 'PKR') }}
   },
   "address": {
-    "@type": "PostalAddress",
+    "@@type": "PostalAddress",
     "streetAddress": {{ json_encode($property->location_address) }},
     "addressLocality": {{ json_encode($property->city) }},
     "addressRegion": {{ json_encode($property->sector_town) }}
   }
   @if($property->latitude && $property->longitude)
   ,"geo": {
-    "@type": "GeoCoordinates",
+    "@@type": "GeoCoordinates",
     "latitude": {{ json_encode((string) $property->latitude) }},
     "longitude": {{ json_encode((string) $property->longitude) }}
   }
@@ -65,7 +65,11 @@
                         <div class="carousel-inner rounded">
                             @foreach($images as $idx => $img)
                             <div class="carousel-item {{ $idx === 0 ? 'active' : '' }}">
-                                <img src="{{ asset('storage/' . $img->file_path) }}" class="d-block w-100" alt="{{ $img->caption ?? $property->title }}">
+                                @if($img->type === 'video')
+                                    <video class="d-block w-100" controls style="height:450px;object-fit:cover;background:#000;" src="{{ asset('storage/' . $img->file_path) }}"></video>
+                                @else
+                                    <img src="{{ asset('storage/' . $img->file_path) }}" class="d-block w-100" alt="{{ $img->caption ?? $property->title }}">
+                                @endif
                             </div>
                             @endforeach
                         </div>
@@ -89,6 +93,65 @@
                 <div class="mt-4">
                     <h4>About This Property</h4>
                     <p class="text-secondary" style="line-height:1.8;">{{ $property->description ?? 'No description available for this property.' }}</p>
+                </div>
+
+                {{-- Reviews --}}
+                <div class="mt-4">
+                    <h4>Reviews <span class="urdu">(رائے)</span>
+                        @if($reviewCount > 0)
+                            <span class="text-warning ms-1">
+                                @for($i = 1; $i <= 5; $i++)<i class="ti ti-star{{ $i <= round($reviewAvg) ? '-filled' : '' }}"></i>@endfor
+                            </span>
+                            <small class="text-secondary">({{ $reviewCount }})</small>
+                        @endif
+                    </h4>
+
+                    @if($reviewCount > 0)
+                        <div class="d-flex flex-column gap-3 mt-3">
+                            @foreach($property->approvedReviews as $review)
+                                <div class="border rounded p-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <div class="fw-semibold">{{ $review->name }}</div>
+                                        <div class="text-warning small">
+                                            @for($i = 1; $i <= 5; $i++)<i class="ti ti-star{{ $i <= $review->rating ? '-filled' : '' }}"></i>@endfor
+                                        </div>
+                                    </div>
+                                    <p class="text-secondary mb-0">{{ $review->comment }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-secondary">No reviews yet. <span class="urdu">(ابھی تک کوئی رائے نہیں)</span></p>
+                    @endif
+
+                    <div class="glass-card-static mt-3 p-3">
+                        <h6 class="mb-2">Write a Review <span class="urdu">(اپنی رائے دیں)</span></h6>
+                        <form action="{{ route('website.property.review', $property) }}" method="POST">
+                            @csrf
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <input type="text" name="name" class="form-control form-control-sm" placeholder="Your name" value="{{ old('name') }}" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="email" name="email" class="form-control form-control-sm" placeholder="Email (optional)" value="{{ old('email') }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <select name="rating" class="form-control form-control-sm" required>
+                                        <option value="">Rating</option>
+                                        @for($i = 5; $i >= 1; $i--)
+                                            <option value="{{ $i }}" {{ old('rating') == $i ? 'selected' : '' }}>{{ $i }} Star{{ $i > 1 ? 's' : '' }}</option>
+                                        @endfor
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <textarea name="comment" class="form-control form-control-sm" rows="2" placeholder="Your review..." required>{{ old('comment') }}</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-amber btn-sm"><i class="ti ti-send"></i> Submit Review</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
 
                 {{-- Specs Grid --}}
@@ -248,7 +311,7 @@
                         </div>
                     </div>
                     @if($property->assignedAgent->whatsapp)
-                        <a href="https://wa.me/{{ ltrim($property->assignedAgent->whatsapp, '+') }}" class="btn btn-amber w-100 mb-2" target="_blank">
+                        <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $property->assignedAgent->whatsapp) }}" class="btn btn-amber w-100 mb-2" target="_blank">
                             <i class="ti ti-brand-whatsapp me-1"></i> WhatsApp
                         </a>
                     @endif
@@ -258,13 +321,25 @@
                         </a>
                     @endif
                     @else
-                    <a href="https://wa.me/{{ ltrim($contactInfo['phone'] ?? '923001234567', '+') }}" class="btn btn-amber w-100 mb-2" target="_blank">
+                    <a href="https://wa.me/{{ $contactInfo['wa_phone'] ?? '923001234567' }}" class="btn btn-amber w-100 mb-2" target="_blank">
                         <i class="ti ti-brand-whatsapp me-1"></i> WhatsApp Us
                     </a>
-                    <a href="tel:{{ $contactInfo['phone'] ?? '+923001234567' }}" class="btn btn-outline-amber w-100">
+                    <a href="tel:{{ $contactInfo['wa_phone'] ?? '923001234567' }}" class="btn btn-outline-amber w-100">
                         <i class="ti ti-phone me-1"></i> Call Now
                     </a>
                     @endif
+                    <a href="{{ route('website.compare.add', $property) }}" class="btn btn-outline-secondary w-100 mt-2"><i class="ti ti-git-compare"></i> Add to Compare</a>
+                    <div class="d-flex gap-2 mt-3">
+                        @if(($social['facebook'] ?? '#') !== '#')
+                            <a href="{{ $social['facebook'] }}" target="_blank" class="btn btn-outline-amber btn-sm" title="Facebook"><i class="ti ti-brand-facebook"></i></a>
+                        @endif
+                        @if(($social['instagram'] ?? '#') !== '#')
+                            <a href="{{ $social['instagram'] }}" target="_blank" class="btn btn-outline-amber btn-sm" title="Instagram"><i class="ti ti-brand-instagram"></i></a>
+                        @endif
+                        @if(($social['youtube'] ?? '#') !== '#')
+                            <a href="{{ $social['youtube'] }}" target="_blank" class="btn btn-outline-amber btn-sm" title="YouTube"><i class="ti ti-brand-youtube"></i></a>
+                        @endif
+                    </div>
                 </div>
 
                 {{-- Enquiry Form --}}
@@ -321,6 +396,23 @@
                         </li>
                     </ul>
                 </div>
+
+                {{-- Documents --}}
+                @if($property->documents->count())
+                <div class="filter-sidebar">
+                    <h5><i class="ti ti-file-text me-1"></i> Documents <span class="urdu">(دستاویزات)</span></h5>
+                    <ul class="list-unstyled mb-0">
+                        @foreach($property->documents as $doc)
+                        <li class="py-2 border-bottom" style="border-color:rgba(212,162,78,0.1) !important;">
+                            <a href="{{ asset('storage/' . $doc->file_path) }}" target="_blank" class="text-decoration-none" download>
+                                <i class="ti ti-file-text text-amber me-1"></i>
+                                {{ $doc->title ?? ucfirst(str_replace('_', ' ', $doc->document_type)) }}
+                            </a>
+                        </li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
             </div>
         </div>
 
@@ -358,10 +450,10 @@
 
 {{-- Sticky Mobile CTA --}}
 <div class="sticky-cta">
-    <a href="https://wa.me/{{ ltrim($contactInfo['phone'] ?? '923001234567', '+') }}" class="btn btn-amber flex-fill" target="_blank">
+    <a href="https://wa.me/{{ $contactInfo['wa_phone'] ?? '923001234567' }}" class="btn btn-amber flex-fill" target="_blank">
         <i class="ti ti-brand-whatsapp me-1"></i> WhatsApp
     </a>
-    <a href="tel:{{ $contactInfo['phone'] ?? '+923001234567' }}" class="btn btn-outline-amber flex-fill">
+    <a href="tel:{{ $contactInfo['wa_phone'] ?? '923001234567' }}" class="btn btn-outline-amber flex-fill">
         <i class="ti ti-phone me-1"></i> Call Now
     </a>
 </div>

@@ -7,6 +7,7 @@ use App\Models\City;
 use App\Models\Client;
 use App\Models\Property;
 use App\Models\PropertyMedia;
+use App\Models\Setting;
 use App\Notifications\PropertyStatusChanged;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -127,8 +128,9 @@ class PropertyController extends Controller
     {
         $this->authorizePropertyAccess($property);
         $property->load(['owner', 'assignedAgent', 'media', 'documents']);
+        $settings = Setting::pluck('value', 'key')->toArray();
 
-        return view('properties.show', compact('property'));
+        return view('properties.show', compact('property', 'settings'));
     }
 
     public function edit(Property $property)

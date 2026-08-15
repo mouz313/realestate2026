@@ -108,43 +108,8 @@
                             @endif
                         </td>
                     </tr>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header flex-wrap gap-2">
-                <h5><i class="ti ti-building me-1"></i> Property <span class="urdu">(جائیداد)</span></h5>
-            </div>
-            <div class="card-body">
-                @if($rentAgreement->property)
-                <table class="detail-table">
-                    <tr>
-                        <th>Title <span class="urdu">(عنوان)</span></th>
-                        <td><a href="{{ route('properties.show', $rentAgreement->property) }}" class="text-decoration-none">{{ $rentAgreement->property->title }}</a></td>
-                    </tr>
-                    <tr>
-                        <th>Code <span class="urdu">(کوڈ)</span></th>
-                        <td>{{ $rentAgreement->property->property_code ?? $rentAgreement->property->id }}</td>
-                    </tr>
-                    <tr>
-                        <th>Type <span class="urdu">(قسم)</span></th>
-                        <td>{{ ucfirst($rentAgreement->property->type ?? '-') }}</td>
-                    </tr>
-                    <tr>
-                        <th>City <span class="urdu">(شہر)</span></th>
-                        <td>{{ $rentAgreement->property->city ?? '-' }}</td>
-                    </tr>
-                </table>
-                @else
-                <div class="empty-state">
-                    <i class="ti ti-building"></i>
-                    <span>No property linked. <span class="urdu">(کوئی جائیداد منسلک نہیں)</span></span>
+                    </table>
                 </div>
-                @endif
-            </div>
         </div>
 
         <div class="card mt-4">
@@ -188,6 +153,10 @@
                 <form action="{{ route('rent-agreements.regenerate-schedule', $rentAgreement) }}" method="POST" onsubmit="return confirm('Regenerate schedule? Existing paid records will be kept.')">
                     @csrf
                     <button type="submit" class="btn btn-sm btn-outline-dark"><i class="ti ti-refresh"></i> Regenerate</button>
+                </form>
+                <form action="{{ route('rent-agreements.remind', $rentAgreement) }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-success"><i class="ti ti-bell"></i> Send Reminder</button>
                 </form>
             </div>
             <div class="card-body p-0">
@@ -233,7 +202,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($rentAgreement->rentPayments->sortBy('year')->sortBy('month') as $rp)
+                            @foreach($rentAgreement->rentPayments->sortBy(fn ($p) => $p->year * 12 + ($p->month - 1)) as $rp)
                             @php
                                 $isOverdue = $rp->status === 'pending' && $rp->due_date->isPast();
                             @endphp
@@ -447,30 +416,34 @@
                                     @endif
                                 </td>
                             </tr>
-                            @if($notice->status === 'pending')
-                            <div class="modal fade" id="respondNotice{{ $notice->id }}" tabindex="-1">
-                                <div class="modal-dialog"><div class="modal-content">
-                                    <form action="{{ route('rent-agreements.notices.respond', [$rentAgreement, $notice]) }}" method="POST">
-                                        @csrf
-                                        <div class="modal-header"><h5 class="modal-title">Respond to Notice</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                                        <div class="modal-body">
-                                            <p>Move-out date: <strong>{{ $notice->move_out_date ? $notice->move_out_date->format('d M Y') : '-' }}</strong></p>
-                                            @if($notice->reason)<p>Reason: {{ $notice->reason }}</p>@endif
-                                            <div class="mb-3"><label class="form-label">Admin Notes</label><textarea name="admin_notes" class="form-control" rows="2" placeholder="Optional"></textarea></div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" name="status" value="rejected" class="btn btn-danger"><i class="ti ti-x"></i> Reject</button>
-                                            <button type="submit" name="status" value="accepted" class="btn btn-success"><i class="ti ti-check"></i> Accept</button>
-                                        </div>
-                                    </form>
-                                </div></div>
-                            </div>
-                            @endif
                             @endforeach
                         </tbody>
                     </table>
                 </div>
+
+                @foreach($rentAgreement->rentNotices as $notice)
+                    @if($notice->status === 'pending')
+                    <div class="modal fade" id="respondNotice{{ $notice->id }}" tabindex="-1">
+                        <div class="modal-dialog"><div class="modal-content">
+                            <form action="{{ route('rent-agreements.notices.respond', [$rentAgreement, $notice]) }}" method="POST">
+                                @csrf
+                                <div class="modal-header"><h5 class="modal-title">Respond to Notice</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                                <div class="modal-body">
+                                    <p>Move-out date: <strong>{{ $notice->move_out_date ? $notice->move_out_date->format('d M Y') : '-' }}</strong></p>
+                                    @if($notice->reason)<p>Reason: {{ $notice->reason }}</p>@endif
+                                    <div class="mb-3"><label class="form-label">Admin Notes</label><textarea name="admin_notes" class="form-control" rows="2" placeholder="Optional"></textarea></div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" name="status" value="rejected" class="btn btn-danger"><i class="ti ti-x"></i> Reject</button>
+                                    <button type="submit" name="status" value="accepted" class="btn btn-success"><i class="ti ti-check"></i> Accept</button>
+                                </div>
+                            </form>
+                        </div></div>
+                    </div>
+                    @endif
+                @endforeach
+
                 @else
                 <div class="text-center text-secondary py-4"><i class="ti ti-bell-off" style="font-size:2rem;display:block;margin-bottom:8px;"></i>No notices recorded.</div>
                 @endif
@@ -676,13 +649,21 @@
 @if($rentAgreement->status === 'active' && !$rentAgreement->rentNotices->contains('status', 'pending'))
 <div class="modal fade" id="addNoticeModal" tabindex="-1">
     <div class="modal-dialog"><div class="modal-content">
-        <form action="{{ route('portal.rent.notice', $rentAgreement) }}" method="POST">
+        <form action="{{ route('rent-agreements.notices.store', $rentAgreement) }}" method="POST">
             @csrf
             <div class="modal-header"><h5 class="modal-title">Submit Notice</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <p>Notice period: <strong>{{ $rentAgreement->notice_period_days ?? 30 }} days</strong>. Minimum move-out date: <strong>{{ \Carbon\Carbon::today()->addDays($rentAgreement->notice_period_days ?? 30)->format('d M Y') }}</strong></p>
+                <div class="mb-3">
+                    <label class="form-label">Notice From <span class="text-danger">*</span></label>
+                    <select name="notice_type" class="form-control" required>
+                        <option value="owner">Owner / Landlord</option>
+                        <option value="tenant">Tenant</option>
+                    </select>
+                </div>
                 <div class="mb-3"><label class="form-label">Move Out Date <span class="text-danger">*</span></label><input type="date" name="move_out_date" class="form-control" required min="{{ \Carbon\Carbon::today()->addDays($rentAgreement->notice_period_days ?? 30)->format('Y-m-d') }}"></div>
                 <div class="mb-3"><label class="form-label">Reason</label><textarea name="reason" class="form-control" rows="2" placeholder="Optional"></textarea></div>
+                <div class="mb-3"><label class="form-label">Admin Notes</label><textarea name="admin_notes" class="form-control" rows="2" placeholder="Optional"></textarea></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>

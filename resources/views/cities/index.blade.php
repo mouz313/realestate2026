@@ -39,7 +39,7 @@
                     <td class="fw-semibold">{{ $city->name }}</td>
                     <td class="d-none d-md-table-cell">{{ $city->province ?? '-' }}</td>
                     <td>
-                        @php $sc = [1 => 'status-active', 0 => 'status-draft']; @endphp
+                        @php $sc = \App\Helpers\Status::classes('city'); @endphp
                         <span class="badge {{ $sc[(int)$city->is_active] ?? 'status-draft' }}">{{ $city->is_active ? 'Active' : 'Inactive' }}</span>
                     </td>
                     <td class="text-end">

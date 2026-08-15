@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Status;
 use App\Models\Agent;
 use App\Models\Client;
 use App\Models\Contact;
+use App\Models\Post;
 use App\Models\Property;
+use App\Models\Review;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -44,6 +47,12 @@ class WebsiteController extends Controller
         $testimonials = json_decode($settings['testimonials'] ?? '[]', true);
         $features = json_decode($settings['features'] ?? '[]', true);
         $brands = json_decode($settings['brands'] ?? '[]', true);
+
+        $reviews = Review::approved()
+            ->with('property')
+            ->latest()
+            ->take(10)
+            ->get();
         $social = [
             'facebook' => $settings['social_facebook'] ?? '#',
             'instagram' => $settings['social_instagram'] ?? '#',
@@ -60,7 +69,7 @@ class WebsiteController extends Controller
         return view('website.home', compact(
             'featuredProperties', 'stats', 'cities',
             'typeCounts', 'sliderImages', 'testimonials', 'features',
-            'brands', 'social', 'contactInfo'
+            'brands', 'social', 'contactInfo', 'reviews'
         ));
     }
 
@@ -92,7 +101,14 @@ class WebsiteController extends Controller
 
         $totalSold = Property::where('status', 'sold')->count();
 
-        return view('website.about', compact('team', 'milestones', 'social', 'contactInfo', 'totalSold'));
+        $stats = [
+            'properties' => Property::count(),
+            'sold' => $totalSold,
+            'agents' => Agent::count(),
+            'clients' => Client::count(),
+        ];
+
+        return view('website.about', compact('team', 'milestones', 'social', 'contactInfo', 'totalSold', 'stats'));
     }
 
     public function contact()
@@ -126,6 +142,8 @@ class WebsiteController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
+        $validated['lead_source'] = $this->resolveLeadSource($request);
+
         Contact::create($validated);
 
         \Mail::raw(
@@ -137,6 +155,14 @@ class WebsiteController extends Controller
         toastr()->success('Thank you! We will get back to you soon.');
 
         return back();
+    }
+
+    protected function resolveLeadSource(Request $request): string
+    {
+        $allowed = array_keys(Status::leadSources());
+        $source = $request->input('source');
+
+        return in_array($source, $allowed, true) ? $source : 'website';
     }
 
     public function submitEnquiry(Request $request, Property $property)
@@ -151,6 +177,7 @@ class WebsiteController extends Controller
         $validated['property_id'] = $property->id;
         $validated['property_title'] = $property->title;
         $validated['subject'] = 'Property Enquiry: '.$property->property_code;
+        $validated['lead_source'] = $this->resolveLeadSource($request);
 
         Contact::create($validated);
 
@@ -209,10 +236,16 @@ class WebsiteController extends Controller
             ['loc' => url('/'), 'freq' => 'daily', 'priority' => '1.0'],
             ['loc' => url('/listings'), 'freq' => 'daily', 'priority' => '0.9'],
             ['loc' => url('/about'), 'freq' => 'monthly', 'priority' => '0.7'],
+            ['loc' => url('/blog'), 'freq' => 'daily', 'priority' => '0.6'],
             ['loc' => url('/contact'), 'freq' => 'monthly', 'priority' => '0.6'],
             ['loc' => url('/privacy'), 'freq' => 'yearly', 'priority' => '0.3'],
             ['loc' => url('/terms'), 'freq' => 'yearly', 'priority' => '0.3'],
         ];
+
+        $posts = Post::published()->get(['slug']);
+        foreach ($posts as $post) {
+            $urls[] = ['loc' => route('website.blog.show', $post), 'freq' => 'weekly', 'priority' => '0.5'];
+        }
 
         $properties = Property::where('status', 'available')->get(['id']);
         foreach ($properties as $property) {
@@ -287,7 +320,9 @@ class WebsiteController extends Controller
             abort(404);
         }
         $property->increment('views_count');
-        $property->load(['owner', 'assignedAgent', 'media', 'documents']);
+        $property->load(['owner', 'assignedAgent', 'media', 'documents', 'approvedReviews']);
+        $reviewAvg = $property->approvedReviews->avg('rating');
+        $reviewCount = $property->approvedReviews->count();
         $related = Property::with('primaryMedia')
             ->where('id', '!=', $property->id)
             ->where(function ($q) use ($property) {
@@ -308,10 +343,123 @@ class WebsiteController extends Controller
         $contactInfo = [
             'address' => $settings['address'] ?? 'Islamabad, Pakistan',
             'phone' => $settings['phone'] ?? '+92 300 1234567',
+            'wa_phone' => preg_replace('/[^0-9]/', '', $settings['phone'] ?? '+92 300 1234567'),
             'email' => $settings['email'] ?? 'info@example.com',
             'hours' => $settings['working_hours'] ?? 'Mon-Sat: 9AM - 7PM',
         ];
 
-        return view('website.property-show', compact('property', 'related', 'social', 'contactInfo'));
+        return view('website.property-show', compact('property', 'related', 'social', 'contactInfo', 'reviewAvg', 'reviewCount'));
+    }
+
+    public function blog()
+    {
+        $posts = Post::published()->paginate(9);
+
+        $settings = Setting::pluck('value', 'key');
+        $social = [
+            'facebook' => $settings['social_facebook'] ?? '#',
+            'instagram' => $settings['social_instagram'] ?? '#',
+            'whatsapp' => $settings['social_whatsapp'] ?? '#',
+            'youtube' => $settings['social_youtube'] ?? '#',
+        ];
+        $contactInfo = [
+            'address' => $settings['address'] ?? 'Islamabad, Pakistan',
+            'phone' => $settings['phone'] ?? '+92 300 1234567',
+            'email' => $settings['email'] ?? 'info@example.com',
+            'hours' => $settings['working_hours'] ?? 'Mon-Sat: 9AM - 7PM',
+        ];
+
+        return view('website.blog', compact('posts', 'social', 'contactInfo'));
+    }
+
+    public function post(Post $post)
+    {
+        if (! $post->is_published || ! $post->published_at || $post->published_at->gt(now())) {
+            abort(404);
+        }
+
+        $related = Post::published()->where('id', '!=', $post->id)->take(3)->get();
+
+        $settings = Setting::pluck('value', 'key');
+        $social = [
+            'facebook' => $settings['social_facebook'] ?? '#',
+            'instagram' => $settings['social_instagram'] ?? '#',
+            'whatsapp' => $settings['social_whatsapp'] ?? '#',
+            'youtube' => $settings['social_youtube'] ?? '#',
+        ];
+        $contactInfo = [
+            'address' => $settings['address'] ?? 'Islamabad, Pakistan',
+            'phone' => $settings['phone'] ?? '+92 300 1234567',
+            'email' => $settings['email'] ?? 'info@example.com',
+            'hours' => $settings['working_hours'] ?? 'Mon-Sat: 9AM - 7PM',
+        ];
+
+        return view('website.blog-show', compact('post', 'related', 'social', 'contactInfo'));
+    }
+
+    public function compare()
+    {
+        $ids = session()->get('compare', []);
+
+        $properties = Property::with(['primaryMedia', 'owner', 'assignedAgent'])
+            ->whereIn('id', $ids)
+            ->where('status', 'available')
+            ->get();
+
+        $settings = Setting::pluck('value', 'key');
+        $social = [
+            'facebook' => $settings['social_facebook'] ?? '#',
+            'instagram' => $settings['social_instagram'] ?? '#',
+            'whatsapp' => $settings['social_whatsapp'] ?? '#',
+            'youtube' => $settings['social_youtube'] ?? '#',
+        ];
+        $contactInfo = [
+            'address' => $settings['address'] ?? 'Islamabad, Pakistan',
+            'phone' => $settings['phone'] ?? '+92 300 1234567',
+            'email' => $settings['email'] ?? 'info@example.com',
+            'hours' => $settings['working_hours'] ?? 'Mon-Sat: 9AM - 7PM',
+        ];
+
+        return view('website.compare', compact('properties', 'social', 'contactInfo'));
+    }
+
+    public function compareAdd(Property $property)
+    {
+        $compare = session()->get('compare', []);
+
+        if (! in_array($property->id, $compare, true)) {
+            $compare[] = $property->id;
+            session(['compare' => array_slice($compare, -4)]);
+            toastr()->success('Added to compare.');
+        }
+
+        return redirect()->route('website.compare');
+    }
+
+    public function compareRemove(Property $property)
+    {
+        $compare = array_values(array_filter(session()->get('compare', []), fn ($id) => $id != $property->id));
+        session(['compare' => $compare]);
+
+        return redirect()->route('website.compare');
+    }
+
+    public function storeReview(Request $request, Property $property)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:120',
+            'email' => 'nullable|email|max:255',
+            'rating' => 'required|integer|min:1|max:5',
+            'comment' => 'required|string|max:1000',
+        ]);
+
+        $data['property_id'] = $property->id;
+        $data['approved'] = false;
+
+        Review::create($data);
+
+        toastr()->success('Review submitted. It will appear after moderation.');
+
+        return back();
     }
 }

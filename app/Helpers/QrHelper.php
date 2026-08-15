@@ -42,4 +42,12 @@ class QrHelper
 
         return 'data:image/png;base64,'.base64_encode($png);
     }
+
+    public static function raastDataUri(string $iban, float $amount, string $reference, int $size = 140): string
+    {
+        $upi = $iban.'@raast';
+        $qrData = 'upi://pay?pa='.$upi.'&am='.number_format($amount, 2, '.', '').'&tn='.urlencode($reference).'&cu=PKR';
+
+        return self::pngDataUri($qrData, $size);
+    }
 }

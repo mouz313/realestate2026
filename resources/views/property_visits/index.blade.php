@@ -44,7 +44,7 @@
                     <td class="d-none d-sm-table-cell">{{ $visit->agent->name ?? '-' }}</td>
                     <td class="text-secondary">{{ $visit->scheduled_date ? $visit->scheduled_date->format('d M Y h:i A') : '-' }}</td>
                     <td>
-                        @php $sc = ['scheduled' => 'status-active', 'completed' => 'status-completed', 'cancelled' => 'status-cancelled', 'rescheduled' => 'status-pending', 'no_show' => 'status-draft']; @endphp
+                        @php $sc = \App\Helpers\Status::classes('property_visit'); @endphp
                         <span class="badge {{ $sc[$visit->status] ?? 'status-active' }}">{{ ucfirst(str_replace('_', ' ', $visit->status ?? 'scheduled')) }}</span>
                     </td>
                     <td class="d-none d-md-table-cell">{{ $visit->rating ? $visit->rating . ' / 5' : '-' }}</td>

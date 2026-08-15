@@ -19,7 +19,7 @@
         <div class="page-header-sub"><span class="urdu">(کوڈ)</span>: {{ $property->property_code ?? $property->id }}</div>
     </div>
     <div>
-        @php $sc = ['available' => 'status-available', 'sold' => 'status-sold', 'rented' => 'status-rented', 'under_offer' => 'status-under_offer', 'pending' => 'status-pending', 'reserved' => 'status-reserved']; @endphp
+        @php $sc = \App\Helpers\Status::classes('property'); @endphp
         <span class="badge {{ $sc[$property->status] ?? 'status-pending' }}" style="font-size:0.8rem;">{{ ucfirst(str_replace('_', ' ', $property->status ?? 'available')) }}</span>
         <a href="{{ route('properties.edit', $property) }}" class="btn btn-dark ms-2">
             <i class="ti ti-edit"></i> <span class="urdu">(ترمیم)</span>
@@ -58,7 +58,7 @@
                         <tr><th>Building Features <span class="urdu">(عمارت کی خصوصیات)</span></th><td>@if(!empty($property->building_features)) @foreach($property->building_features as $f) <span class="badge bg-light text-dark me-1"><i class="ti ti-building-skyscraper me-1"></i>{{ $f }}</span> @endforeach @else - @endif</td></tr>
                         <tr><th>Community Amenities <span class="urdu">(کمیونٹی سہولیات)</span></th><td>@if(!empty($property->community_amenities)) @foreach($property->community_amenities as $a) <span class="badge bg-light text-dark me-1"><i class="ti ti-users me-1"></i>{{ $a }}</span> @endforeach @else - @endif</td></tr>
                         <tr><th>Communication <span class="urdu">(مواصلات)</span></th><td>@if(!empty($property->communication_features)) @foreach($property->communication_features as $c) <span class="badge bg-light text-dark me-1"><i class="ti ti-antenna me-1"></i>{{ $c }}</span> @endforeach @else - @endif</td></tr>
-                        <tr><th>Features <span class="urdu">(خصوصیات)</span></th><td>{{ $property->features ?? '-' }}</td></tr>
+                        <tr><th>Features <span class="urdu">(خصوصیات)</span></th><td>@if(!empty($property->features))@if(is_array($property->features))@foreach($property->features as $f) <span class="badge bg-light text-dark me-1"><i class="ti ti-check me-1"></i>{{ $f }}</span> @endforeach @else{{ $property->features }}@endif @else - @endif</td></tr>
                         <tr><th>Nearby Landmarks <span class="urdu">(قریبی نشانات)</span></th><td>{{ $property->nearby_landmarks ?? '-' }}</td></tr>
                         <tr><th>Nearby Places <span class="urdu">(قریبی مقامات)</span></th><td>@if(!empty($property->nearby_places)) @foreach($property->nearby_places as $place) <span class="badge bg-light text-dark me-1"><i class="ti ti-map-pin me-1"></i>{{ $place }}</span> @endforeach @else - @endif</td></tr>
                         <tr><th>Utilities <span class="urdu">(یوٹیلیٹیز)</span></th><td>@if(!empty($property->utilities)) @foreach($property->utilities as $util) <span class="badge bg-light text-dark me-1"><i class="ti ti-bolt me-1"></i>{{ $util }}</span> @endforeach @else - @endif</td></tr>
@@ -144,7 +144,7 @@
                                 <td>{{ ucfirst($deal->type) }}</td>
                                 <td class="fw-medium">{{ number_format($deal->sale_price, 0) }}</td>
                                 <td>
-                                    @php $sc = ['pending' => 'status-pending', 'active' => 'status-active', 'completed' => 'status-completed', 'cancelled' => 'status-cancelled']; @endphp
+                                    @php $sc = \App\Helpers\Status::classes('deal_status'); @endphp
                                     <span class="badge {{ $sc[$deal->status] ?? 'status-pending' }}">{{ ucfirst($deal->status ?? 'pending') }}</span>
                                 </td>
                             </tr>

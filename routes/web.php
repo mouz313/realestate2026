@@ -10,6 +10,7 @@ use App\Http\Controllers\CityController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommissionController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CronController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\ExpenseController;
@@ -29,7 +30,10 @@ use App\Http\Controllers\Portal\QuotationController as PortalQuotationController
 use App\Http\Controllers\Portal\TenantRentController;
 use App\Http\Controllers\Portal\VisitController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PostController;
 use App\Http\Controllers\PropertyController;
+use App\Http\Controllers\ReferralController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\PropertyVisitController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\RentAgreementController;
@@ -54,9 +58,17 @@ Route::post('/contact', [WebsiteController::class, 'submitContact'])->middleware
 Route::get('/listings', [WebsiteController::class, 'properties'])->name('website.properties');
 Route::get('/listings/{property}', [WebsiteController::class, 'property'])->name('website.property');
 Route::post('/listings/{property}/enquiry', [WebsiteController::class, 'submitEnquiry'])->middleware('throttle:5,1')->name('website.property.enquiry');
+Route::get('/blog', [WebsiteController::class, 'blog'])->name('website.blog');
+Route::get('/blog/{post}', [WebsiteController::class, 'post'])->name('website.blog.show');
+Route::get('/compare', [WebsiteController::class, 'compare'])->name('website.compare');
+Route::get('/compare/add/{property}', [WebsiteController::class, 'compareAdd'])->name('website.compare.add');
+Route::get('/compare/remove/{property}', [WebsiteController::class, 'compareRemove'])->name('website.compare.remove');
+Route::post('/listings/{property}/review', [WebsiteController::class, 'storeReview'])->middleware('throttle:5,1')->name('website.property.review');
 Route::get('/privacy', [WebsiteController::class, 'privacy'])->name('website.privacy');
 Route::get('/terms', [WebsiteController::class, 'terms'])->name('website.terms');
 Route::get('/sitemap.xml', [WebsiteController::class, 'sitemap'])->name('website.sitemap');
+
+Route::get('/cron/{job}', [CronController::class, 'run'])->name('cron.run');
 
 Route::middleware(['guest', 'throttle:5,1'])->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -90,15 +102,25 @@ Route::middleware('auth')->group(function () {
         });
 
         Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
+        Route::get('/contacts/create', [ContactController::class, 'create'])->name('contacts.create');
+        Route::post('/contacts', [ContactController::class, 'store'])->name('contacts.store');
+        Route::get('/contacts/{contact}/edit', [ContactController::class, 'edit'])->name('contacts.edit');
+        Route::put('/contacts/{contact}', [ContactController::class, 'update'])->name('contacts.update');
         Route::get('/contacts/{contact}', [ContactController::class, 'show'])->name('contacts.show');
         Route::delete('/contacts/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
 
         Route::resource('expenses', ExpenseController::class)->except(['show']);
         Route::resource('cities', CityController::class);
+        Route::resource('posts', PostController::class)->except(['show']);
+        Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
+        Route::post('/reviews/{review}/approve', [ReviewController::class, 'approve'])->name('reviews.approve');
+        Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
+        Route::get('/referrals', [ReferralController::class, 'index'])->name('referrals.index');
 
         Route::resource('item-templates', ItemTemplateController::class)->except(['show', 'create']);
         Route::get('/settings', [SettingsController::class, 'index'])->middleware('permission:view_settings')->name('settings.index');
         Route::post('/settings', [SettingsController::class, 'update'])->middleware('permission:edit_settings');
+        Route::post('/settings/cron/{job}/run', [SettingsController::class, 'runCron'])->middleware('permission:edit_settings')->name('settings.cron.run');
         Route::get('/settings/items', [ItemTemplateController::class, 'index'])->name('settings.items');
 
         Route::middleware('permission:manage_roles')->group(function () {
@@ -181,6 +203,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('tokens', TokenController::class)->middleware('permission:view_deals');
         Route::resource('rent-agreements', RentAgreementController::class)->middleware('permission:view_rent_agreements');
         Route::post('/rent-agreements/{rent_agreement}/regenerate-schedule', [RentPaymentController::class, 'regenerateSchedule'])->middleware('permission:record_rent_payments')->name('rent-agreements.regenerate-schedule');
+        Route::post('/rent-agreements/{rent_agreement}/remind', [RentAgreementController::class, 'sendReminder'])->middleware('permission:record_rent_payments')->name('rent-agreements.remind');
         Route::post('/rent-agreements/{rent_agreement}/generate-next-month', [RentPaymentController::class, 'generateNextMonth'])->middleware('permission:record_rent_payments')->name('rent-agreements.generate-next-month');
         Route::post('/rent-agreements/{rent_agreement}/renew', [RentAgreementController::class, 'renew'])->middleware('permission:edit_rent_agreements')->name('rent-agreements.renew');
         Route::post('/rent-agreements/{rent_agreement}/deposit-receive', [RentAgreementController::class, 'receiveDeposit'])->middleware('permission:record_rent_payments')->name('rent-agreements.deposit-receive');
@@ -191,6 +214,7 @@ Route::middleware('auth')->group(function () {
             Route::delete('/rent-agreements/{rent_agreement}/deductions/{rentDepositDeduction}', [RentAgreementController::class, 'destroyDeduction'])->name('rent-agreements.deductions.destroy');
             Route::post('/rent-agreements/{rent_agreement}/return-deposit', [RentAgreementController::class, 'returnDeposit'])->name('rent-agreements.return-deposit');
         });
+        Route::post('/rent-agreements/{rent_agreement}/notices', [RentAgreementController::class, 'storeNotice'])->middleware('permission:generate_rent_notices')->name('rent-agreements.notices.store');
         Route::post('/rent-agreements/{rent_agreement}/notices/{rentNotice}/respond', [RentAgreementController::class, 'respondNotice'])->middleware('permission:generate_rent_notices')->name('rent-agreements.notices.respond');
 
         Route::middleware('permission:view_rent_agreements')->group(function () {
@@ -278,6 +302,8 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::get('/deals', [App\Http\Controllers\Portal\DealController::class, 'index'])->name('deals');
         Route::get('/deals/{deal}', [App\Http\Controllers\Portal\DealController::class, 'show'])->name('deals.show');
         Route::resource('documents', PortalDocumentController::class)->only(['index', 'create', 'store', 'destroy']);
+
+        Route::post('/referrals', [ReferralController::class, 'store'])->name('portal.referrals.store');
 
         Route::prefix('rent')->name('rent.')->group(function () {
             Route::get('/dashboard', [TenantRentController::class, 'dashboard'])->name('dashboard');

@@ -6,14 +6,19 @@ use App\Models\Activity;
 use App\Models\Agent as AgentModel;
 use App\Models\Client;
 use App\Models\Commission;
+use App\Models\Contact;
 use App\Models\Deal;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Models\Post;
 use App\Models\Property;
 use App\Models\PropertyVisit;
 use App\Models\Quotation;
+use App\Models\Referral;
 use App\Models\RentAgreement;
+use App\Models\RentPayment;
+use App\Models\Review;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -71,6 +76,9 @@ class DashboardController extends Controller
             'total_commission_paid' => Commission::where('status', 'paid')->sum('amount'),
             'upcoming_visits' => PropertyVisit::where('scheduled_date', '>=', now())->where('status', 'scheduled')->count(),
             'active_rentals' => $isAgent ? 0 : RentAgreement::where('status', 'active')->count(),
+            'new_enquiries' => Contact::whereNull('read_at')->count(),
+            'lead_sources' => Contact::select('lead_source', DB::raw('count(*) as total'))
+                ->groupBy('lead_source')->orderByDesc('total')->pluck('total', 'lead_source'),
             'properties_by_status' => Property::select('status', DB::raw('count(*) as total'))
                 ->groupBy('status')->pluck('total', 'status'),
             'deals_by_status' => Deal::select('status', DB::raw('count(*) as total'))
@@ -87,6 +95,20 @@ class DashboardController extends Controller
             ->where('scheduled_date', '>=', now())->where('status', 'scheduled')->orderBy('scheduled_date')->take(5)->get();
         $recentActivities = $isAgent ? collect() : Activity::with('causer')->latest()->take(8)->get();
 
-        return view('dashboard.index', compact('stats', 'recentPayments', 'recentQuotations', 'recentDeals', 'upcomingVisits', 'recentActivities'));
+        $newEnquiries = Contact::with('property')->latest()->take(6)->get();
+        $pendingReviews = Review::where('approved', false)->with('property')->latest()->take(5)->get();
+        $recentReferrals = Referral::latest()->take(5)->get();
+        $postsPublished = Post::whereNotNull('published_at')->where('published_at', '<=', now())->count();
+        $postsDraft = Post::where(function ($q) {
+            $q->whereNull('published_at')->orWhere('published_at', '>', now());
+        })->count();
+        $rentDueSoon = $isAgent ? 0 : RentPayment::where('status', 'pending')
+            ->whereBetween('due_date', [now(), now()->addDays(7)])
+            ->count();
+
+        return view('dashboard.index', compact(
+            'stats', 'recentPayments', 'recentQuotations', 'recentDeals', 'upcomingVisits', 'recentActivities',
+            'newEnquiries', 'pendingReviews', 'recentReferrals', 'postsPublished', 'postsDraft', 'rentDueSoon'
+        ));
     }
 }

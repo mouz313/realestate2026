@@ -12,7 +12,8 @@ class Contact extends Model
 
     protected $fillable = [
         'company_id', 'name', 'email', 'phone', 'subject', 'message', 'read_at',
-        'property_id', 'property_title',
+        'property_id', 'property_title', 'lead_source',
+        'property_type', 'purpose', 'city', 'location', 'budget_min', 'budget_max',
     ];
 
     protected function casts(): array

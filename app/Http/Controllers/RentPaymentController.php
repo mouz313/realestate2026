@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\RentPaymentExport;
 use App\Mail\RentPaymentConfirmation;
 use App\Models\RentAgreement;
 use App\Models\RentPayment;
 use App\Models\Setting;
 use App\Notifications\RentPaymentReceived;
+use App\Services\ExcelWriter;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -34,7 +36,7 @@ class RentPaymentController extends Controller
 
             $currentPayment = $agreement->rentPayments
                 ->firstWhere('month', $currentMonth)
-                ->firstWhere('year', $currentYear);
+                ?->firstWhere('year', $currentYear);
 
             $agreement->current_payment = $currentPayment;
             $agreement->total_paid = (float) $agreement->rentPayments->where('status', 'paid')->sum('amount');
@@ -70,7 +72,9 @@ class RentPaymentController extends Controller
         $monthsPaid = $rentAgreement->rentPayments->where('status', 'paid')->count();
         $totalMonths = $rentAgreement->rentPayments->count();
 
-        $payments = $rentAgreement->rentPayments->sortBy('year')->sortBy('month')->values();
+        $payments = $rentAgreement->rentPayments
+            ->sortBy(fn ($payment) => $payment->year * 12 + ($payment->month - 1))
+            ->values();
 
         return view('rent-payments.show', compact('rentAgreement', 'payments', 'totalPaid', 'totalPending', 'totalLateFee', 'monthsPaid', 'totalMonths'));
     }
@@ -196,8 +200,8 @@ class RentPaymentController extends Controller
 
     public function exportExcel()
     {
-        [$headers, $rows] = \App\Exports\RentPaymentExport::build();
+        [$headers, $rows] = RentPaymentExport::build();
 
-        return \App\Services\ExcelWriter::stream('rent-payments-'.date('Y-m-d').'.xlsx', $headers, $rows);
+        return ExcelWriter::stream('rent-payments-'.date('Y-m-d').'.xlsx', $headers, $rows);
     }
 }

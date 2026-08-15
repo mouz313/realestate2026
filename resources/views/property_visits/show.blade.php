@@ -16,7 +16,7 @@
 <div class="page-header">
     <h3>Property Visit <span class="urdu">(جائیداد کا دورہ)</span> #{{ $propertyVisit->id }}</h3>
     <div class="page-header-sub">
-        @php $sc = ['scheduled' => 'status-active', 'completed' => 'status-completed', 'cancelled' => 'status-cancelled', 'rescheduled' => 'status-pending', 'no_show' => 'status-draft']; @endphp
+        @php $sc = \App\Helpers\Status::classes('property_visit'); @endphp
         <span class="badge {{ $sc[$propertyVisit->status] ?? 'status-active' }} fs-6">{{ ucfirst(str_replace('_', ' ', $propertyVisit->status ?? 'scheduled')) }}</span>
     </div>
     <div class="action-btns">

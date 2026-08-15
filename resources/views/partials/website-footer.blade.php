@@ -89,7 +89,15 @@
                         <a href="{{ $social['youtube'] }}" class="social-icon" target="_blank"><i class="ti ti-brand-youtube"></i></a>
                     @endif
                     @if(!empty($social['whatsapp']) && $social['whatsapp'] !== '#')
-                        <a href="{{ $social['whatsapp'] }}" class="social-icon" target="_blank"><i class="ti ti-brand-whatsapp"></i></a>
+                        @php
+                            $wa = $social['whatsapp'];
+                            if (!preg_match('#^https?://#i', $wa) && !str_starts_with($wa, 'wa.me/')) {
+                                $wa = 'https://wa.me/' . preg_replace('/[^0-9]/', '', $wa);
+                            } elseif (str_starts_with($wa, 'wa.me/')) {
+                                $wa = 'https://' . $wa;
+                            }
+                        @endphp
+                        <a href="{{ $wa }}" class="social-icon" target="_blank"><i class="ti ti-brand-whatsapp"></i></a>
                     @endif
                 </div>
             </div>
@@ -99,6 +107,7 @@
                     <li class="mb-2"><a href="{{ route('home') }}">Home</a></li>
                     <li class="mb-2"><a href="{{ route('website.properties') }}">Listings</a></li>
                     <li class="mb-2"><a href="{{ route('website.about') }}">About Us</a></li>
+                    <li class="mb-2"><a href="{{ route('website.blog') }}">Blog</a></li>
                     <li class="mb-2"><a href="{{ route('website.contact') }}">Contact</a></li>
                     <li class="mb-2"><a href="{{ route('website.privacy') }}">Privacy Policy</a></li>
                     <li class="mb-2"><a href="{{ route('website.terms') }}">Terms</a></li>

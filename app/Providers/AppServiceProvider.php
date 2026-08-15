@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\RentAgreement;
 use App\Observers\CompanyObserver;
 use App\Observers\RentAgreementObserver;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -41,5 +42,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('manage_payouts', fn ($user) => $user->hasPermission('approve_payouts'));
         Gate::define('view_reports', fn ($user) => $user->hasPermission('view_reports'));
         Gate::define('export_reports', fn ($user) => $user->hasPermission('export_reports'));
+
+        Blade::directive('statusBadge', function ($expression) {
+            return "<?php echo \\App\\Helpers\\Status::badge($expression); ?>";
+        });
     }
 }

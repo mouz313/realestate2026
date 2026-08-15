@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
@@ -131,5 +132,20 @@ class SettingsController extends Controller
         toastr()->success('Settings saved successfully.');
 
         return back();
+    }
+
+    public function runCron(Request $request, string $job)
+    {
+        $jobs = config('cron.jobs', []);
+
+        if (! isset($jobs[$job])) {
+            abort(404);
+        }
+
+        $exit = Artisan::call($jobs[$job]['command'], $jobs[$job]['options'] ?? []);
+
+        toastr()->success('Cron job "'.$jobs[$job]['name'].'" executed (exit '.$exit.').');
+
+        return redirect()->route('settings.index');
     }
 }

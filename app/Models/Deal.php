@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Deal extends Model
 {
-    use LogsActivity, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, LogsActivity, SoftDeletes;
 
     protected static function booted(): void
     {
@@ -21,7 +21,7 @@ class Deal extends Model
     }
 
     protected $fillable = [
-        'company_id', 'deal_number', 'type', 'status', 'property_id', 'buyer_id', 'seller_id',
+        'company_id', 'deal_number', 'type', 'status', 'lead_source', 'property_id', 'buyer_id', 'seller_id',
         'agent_id', 'co_agent_id', 'sale_price', 'token_amount', 'token_date',
         'commission_percentage', 'commission_amount', 'agent_commission', 'agency_share',
         'agreement_date', 'possession_date', 'payment_plan', 'notes',

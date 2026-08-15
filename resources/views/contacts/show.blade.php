@@ -16,6 +16,9 @@
                 <i class="ti ti-building"></i> <span class="urdu">(جائیداد دیکھیں)</span>
             </a>
         @endif
+        <a href="{{ route('contacts.edit', $contact) }}" class="btn btn-outline-secondary">
+            <i class="ti ti-edit"></i> <span class="urdu">(ترمیم)</span>
+        </a>
         <a href="{{ route('contacts.index') }}" class="btn btn-outline-secondary">
             <i class="ti ti-arrow-left"></i> <span class="urdu">(واپس)</span>
         </a>
@@ -65,8 +68,53 @@
                             <td>{{ $contact->property_title ?? '-' }}</td>
                         </tr>
                         <tr>
+                            <th>Property Type <span class="urdu">(قسم)</span></th>
+                            <td>
+                                @if($contact->property_type)
+                                    <span class="badge status-info">{{ \App\Helpers\Status::propertyTypeLabel($contact->property_type) }}</span>
+                                @else
+                                    -
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Purpose <span class="urdu">(مقصد)</span></th>
+                            <td>
+                                @if($contact->purpose)
+                                    <span class="badge {{ $contact->purpose === 'rent' ? 'status-pending' : 'status-completed' }}">{{ \App\Helpers\Status::purposeLabel($contact->purpose) }}</span>
+                                @else
+                                    -
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>City <span class="urdu">(شہر)</span></th>
+                            <td>{{ $contact->city ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Area / Location <span class="urdu">(علاقہ)</span></th>
+                            <td>{{ $contact->location ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Budget <span class="urdu">(بجٹ)</span></th>
+                            <td>
+                                @if($contact->budget_min || $contact->budget_max)
+                                    Rs. {{ $contact->budget_min ? number_format($contact->budget_min) : '—' }}
+                                    @if($contact->budget_max)
+                                        – {{ number_format($contact->budget_max) }}
+                                    @endif
+                                @else
+                                    -
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
                             <th>Subject <span class="urdu">(موضوع)</span></th>
                             <td>{{ $contact->subject ?? 'Contact Message' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Source <span class="urdu">(ذریعہ)</span></th>
+                            <td><span class="badge status-info">{{ \App\Helpers\Status::leadSourceLabel($contact->lead_source) }}</span></td>
                         </tr>
                         <tr>
                             <th>Received <span class="urdu">(موصول ہوا)</span></th>

@@ -181,79 +181,82 @@
                         </td>
                     </tr>
 
-                    @if($rp->status !== 'paid' && $rp->status !== 'waived')
-                    <div class="modal fade" id="payModal{{ $rp->id }}" tabindex="-1">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <form action="{{ route('rent-payments.pay', $rp) }}" method="POST">
-                                    @csrf @method('PATCH')
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Mark Paid — {{ date('F Y', mktime(0, 0, 0, $rp->month, 1, $rp->year)) }}</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="mb-3">
-                                            <label class="form-label">Amount Due</label>
-                                            <div class="fs-5 fw-bold">Rs. {{ number_format($rp->total_due, 2) }}</div>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Payment Method <span class="text-danger">*</span></label>
-                                            <select name="payment_method" class="form-select" required>
-                                                <option value="cash">Cash</option>
-                                                <option value="bank_transfer">Bank Transfer</option>
-                                                <option value="raast">Raast</option>
-                                                <option value="cheque">Cheque</option>
-                                                <option value="online">Online</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Paid Date <span class="text-danger">*</span></label>
-                                            <input type="date" name="paid_date" class="form-control" value="{{ date('Y-m-d') }}" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Reference No</label>
-                                            <input type="text" name="reference_no" class="form-control" placeholder="Optional">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Notes</label>
-                                            <textarea name="notes" class="form-control" rows="2" placeholder="Optional"></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-success"><i class="ti ti-check"></i> Confirm Payment</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal fade" id="waiveModal{{ $rp->id }}" tabindex="-1">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <form action="{{ route('rent-payments.waive', $rp) }}" method="POST">
-                                    @csrf @method('PATCH')
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Waive Payment</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <p>Are you sure you want to waive <strong>Rs. {{ number_format($rp->total_due, 2) }}</strong> for {{ date('F Y', mktime(0, 0, 0, $rp->month, 1, $rp->year)) }}?</p>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-warning"><i class="ti ti-player-skip-forward"></i> Waive</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
-
                     @endforeach
                 </tbody>
             </table>
         </div>
+
+        @foreach($payments as $rp)
+            @if($rp->status !== 'paid' && $rp->status !== 'waived')
+            <div class="modal fade" id="payModal{{ $rp->id }}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form action="{{ route('rent-payments.pay', $rp) }}" method="POST">
+                            @csrf @method('PATCH')
+                            <div class="modal-header">
+                                <h5 class="modal-title">Mark Paid — {{ date('F Y', mktime(0, 0, 0, $rp->month, 1, $rp->year)) }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Amount Due</label>
+                                    <div class="fs-5 fw-bold">Rs. {{ number_format($rp->total_due, 2) }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Payment Method <span class="text-danger">*</span></label>
+                                    <select name="payment_method" class="form-select" required>
+                                        <option value="cash">Cash</option>
+                                        <option value="bank_transfer">Bank Transfer</option>
+                                        <option value="raast">Raast</option>
+                                        <option value="cheque">Cheque</option>
+                                        <option value="online">Online</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Paid Date <span class="text-danger">*</span></label>
+                                    <input type="date" name="paid_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Reference No</label>
+                                    <input type="text" name="reference_no" class="form-control" placeholder="Optional">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Notes</label>
+                                    <textarea name="notes" class="form-control" rows="2" placeholder="Optional"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success"><i class="ti ti-check"></i> Confirm Payment</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="waiveModal{{ $rp->id }}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form action="{{ route('rent-payments.waive', $rp) }}" method="POST">
+                            @csrf @method('PATCH')
+                            <div class="modal-header">
+                                <h5 class="modal-title">Waive Payment</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Are you sure you want to waive <strong>Rs. {{ number_format($rp->total_due, 2) }}</strong> for {{ date('F Y', mktime(0, 0, 0, $rp->month, 1, $rp->year)) }}?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-warning"><i class="ti ti-player-skip-forward"></i> Waive</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            @endif
+        @endforeach
+
         @else
         <div class="text-center text-secondary py-5">
             <i class="ti ti-calendar-stats" style="font-size:2rem;display:block;margin-bottom:8px;"></i>

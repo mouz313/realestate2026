@@ -47,7 +47,7 @@
                     <td class="d-none d-md-table-cell text-secondary">{{ $token->reference_no ?? '-' }}</td>
                     <td class="text-secondary">{{ $token->received_date ? $token->received_date->format('d M Y') : '-' }}</td>
                     <td>
-                        @php $sc = ['received' => 'status-paid', 'pending' => 'status-pending', 'cancelled' => 'status-cancelled']; @endphp
+                        @php $sc = \App\Helpers\Status::classes('token'); @endphp
                         <span class="badge {{ $sc[$token->status] ?? 'status-pending' }}">{{ ucfirst($token->status ?? 'pending') }}</span>
                     </td>
                     <td class="text-end">

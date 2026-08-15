@@ -22,7 +22,7 @@
                     <p class="mb-0 small">Expiry: {{ $quotation->expiry_date->format('d M Y') }}</p>
                 @endif
                 <p class="mb-0 small">
-                    @php $sc = ['draft' => 'secondary', 'sent' => 'primary', 'approved' => 'success', 'rejected' => 'danger']; @endphp
+                    @php $sc = \App\Helpers\Status::classes('portal_quotation'); @endphp
                     <span class="badge bg-{{ $sc[$quotation->status] ?? 'secondary' }}">{{ ucfirst($quotation->status) }}</span>
                 </p>
             </div>

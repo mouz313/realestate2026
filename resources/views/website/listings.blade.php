@@ -155,6 +155,7 @@
                                 </div>
                                 <div class="card-cta">
                                     <a href="{{ route('website.property', $property) }}" class="btn btn-outline-amber btn-sm w-100">View Details <i class="ti ti-arrow-right ms-1"></i></a>
+                                    <a href="{{ route('website.compare.add', $property) }}" class="btn btn-outline-secondary btn-sm w-100 mt-2"><i class="ti ti-git-compare"></i> Compare</a>
                                 </div>
                             </div>
                         </div>

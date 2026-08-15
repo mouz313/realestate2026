@@ -64,6 +64,11 @@
                 <i class="ti ti-message"></i> SMS <span class="urdu">(ایس ایم ایس)</span>
             </button>
         </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="cron-tab" data-bs-toggle="tab" data-bs-target="#cron" type="button" role="tab">
+                <i class="ti ti-clock"></i> Cron Jobs <span class="urdu">(شیڈولڈ ٹاسکس)</span>
+            </button>
+        </li>
     </ul>
 
     <div class="tab-content">
@@ -483,6 +488,56 @@
         <button type="submit" class="btn btn-dark"><i class="ti ti-device-floppy"></i> Save All Settings <span class="urdu">(تمام ترتیبات محفوظ کریں)</span></button>
     </div>
 </form>
+
+{{-- Cron Jobs Tab --}}
+<div class="tab-content">
+<div class="tab-pane fade" id="cron" role="tabpanel">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0"><i class="ti ti-clock me-1"></i> Cron Jobs <span class="urdu">(شیڈولڈ ٹاسکس)</span></h5>
+            <span class="small text-secondary">Manual run &amp; webhook for external schedulers</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Job <span class="urdu">(ٹاسک)</span></th>
+                            <th>Schedule <span class="urdu">(شیڈول)</span></th>
+                            <th class="d-none d-md-table-cell">Description</th>
+                            <th>Web URL <span class="urdu">(ویب لنک)</span></th>
+                            <th class="text-end">Action <span class="urdu">(عمل)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(config('cron.jobs') as $key => $job)
+                        <tr>
+                            <td class="fw-medium">{{ $job['name'] }}</td>
+                            <td><span class="badge status-info">{{ $job['schedule'] }}</span></td>
+                            <td class="text-secondary d-none d-md-table-cell">{{ $job['description'] }}</td>
+                            <td>
+                                <code class="small">{{ url('/cron/' . $key) }}?token={{ config('cron.token') }}</code>
+                                <button type="button" class="btn btn-sm btn-outline-secondary ms-1" title="Copy" onclick="navigator.clipboard.writeText('{{ url('/cron/' . $key) }}?token={{ config('cron.token') }}')"><i class="ti ti-copy"></i></button>
+                            </td>
+                            <td class="text-end">
+                                <form action="{{ route('settings.cron.run', $key) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-dark"><i class="ti ti-player-play"></i> Run Now <span class="urdu">(ابھی چلائیں)</span></button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3 small text-secondary">
+                <i class="ti ti-info-circle"></i> Use the Web URL in an external scheduler (cPanel cron / job scheduler) with your secret token. Example:
+                <code class="d-block mt-1">0 9 * * * curl "{{ url('/cron/rent-reminders') }}?token={{ config('cron.token') }}"</code>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
 @endsection
 
 @push('scripts')

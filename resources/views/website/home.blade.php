@@ -430,44 +430,43 @@
             <h2 class="mt-3">What Clients <span class="text-amber">Say</span></h2>
             <div class="accent-line"></div>
         </div>
-        <div class="row g-4 justify-content-center stagger-children">
-            <div class="col-md-4 reveal">
-                <div class="testimonial-card h-100">
-                    <div class="tc-text">"Skyline made our home-buying experience seamless. Their agents were professional, knowledgeable, and always available when we needed them."</div>
-                    <div class="tc-author">
-                        <div class="tc-avatar">AK</div>
-                        <div>
-                            <div class="tc-name">Ahmed Khan</div>
-                            <div class="tc-role">Homeowner, Islamabad</div>
+
+        @php
+            $fallbackReviews = collect([
+                (object)['name' => 'Ahmed Khan', 'rating' => 5, 'comment' => 'Skyline made our home-buying experience seamless. Their agents were professional, knowledgeable, and always available when we needed them.', 'property' => null],
+                (object)['name' => 'Sara Ali', 'rating' => 5, 'comment' => 'Found the perfect commercial space within a week. The team understood exactly what I needed and delivered beyond expectations.', 'property' => null],
+                (object)['name' => 'Usman Malik', 'rating' => 5, 'comment' => 'Transparent process, verified listings, and excellent after-sale support. Highly recommended for anyone looking for property in Pakistan.', 'property' => null],
+            ]);
+            $reviewItems = $reviews->isNotEmpty() ? $reviews : $fallbackReviews;
+        @endphp
+
+        <div class="testimonial-carousel reveal">
+            <button class="tc-nav tc-prev" type="button" aria-label="Previous"><i class="ti ti-chevron-left"></i></button>
+            <div class="tc-track" id="tcTrack">
+                @foreach($reviewItems as $rv)
+                <div class="tc-slide">
+                    <div class="testimonial-card h-100">
+                        <div class="tc-stars">
+                            @for($s = 1; $s <= 5; $s++)
+                                <i class="ti ti-star{{ ($rv->rating ?? 5) >= $s ? '-filled' : '' }}"></i>
+                            @endfor
+                        </div>
+                        <div class="tc-text">"{{ $rv->comment }}"</div>
+                        <div class="tc-author">
+                            @php $initials = collect(explode(' ', $rv->name))->map(fn($w) => mb_substr($w, 0, 1))->take(2)->join(''); @endphp
+                            <div class="tc-avatar">{{ $initials }}</div>
+                            <div>
+                                <div class="tc-name">{{ $rv->name }}</div>
+                                <div class="tc-role">{{ $rv->property && $rv->property->city ? 'Property in ' . $rv->property->city : 'Valued Client' }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
+                @endforeach
             </div>
-            <div class="col-md-4 reveal">
-                <div class="testimonial-card h-100">
-                    <div class="tc-text">"Found the perfect commercial space within a week. The team understood exactly what I needed and delivered beyond expectations."</div>
-                    <div class="tc-author">
-                        <div class="tc-avatar">SA</div>
-                        <div>
-                            <div class="tc-name">Sara Ali</div>
-                            <div class="tc-role">Business Owner, Lahore</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 reveal">
-                <div class="testimonial-card h-100">
-                    <div class="tc-text">"Transparent process, verified listings, and excellent after-sale support. Highly recommended for anyone looking for property in Pakistan."</div>
-                    <div class="tc-author">
-                        <div class="tc-avatar">UM</div>
-                        <div>
-                            <div class="tc-name">Usman Malik</div>
-                            <div class="tc-role">Investor, Karachi</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <button class="tc-nav tc-next" type="button" aria-label="Next"><i class="ti ti-chevron-right"></i></button>
         </div>
+        <div class="tc-dots" id="tcDots"></div>
     </div>
 </section>
 
@@ -568,10 +567,10 @@
         <h2 class="mb-3 reveal">Ready to Find Your <span class="text-amber">Next Property?</span></h2>
         <p class="text-secondary mb-4 mx-auto reveal" style="max-width:520px;">Talk to our expert team and discover the perfect property that matches your needs and budget.</p>
         <div class="d-flex justify-content-center gap-3 flex-wrap reveal">
-            <a href="https://wa.me/{{ ltrim($contactInfo['phone'] ?? '923001234567', '+') }}" class="btn btn-amber btn-lg px-4" target="_blank">
+            <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $contactInfo['phone'] ?? '923001234567') }}" class="btn btn-amber btn-lg px-4" target="_blank">
                 <i class="ti ti-brand-whatsapp me-1"></i> WhatsApp Us
             </a>
-            <a href="tel:{{ $contactInfo['phone'] ?? '+923001234567' }}" class="btn btn-outline-amber btn-lg px-4">
+            <a href="tel:{{ preg_replace('/[^0-9+]/', '', $contactInfo['phone'] ?? '+923001234567') }}" class="btn btn-outline-amber btn-lg px-4">
                 <i class="ti ti-phone me-1"></i> Call Now
             </a>
         </div>
@@ -665,6 +664,47 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }, { threshold: 0.25 });
         howObserver.observe(howSection);
+    }
+
+    // ── Testimonial Carousel ──
+    var tcTrack = document.getElementById('tcTrack');
+    if (tcTrack) {
+        var tcPrev = document.querySelector('.tc-prev');
+        var tcNext = document.querySelector('.tc-next');
+        var tcDotsWrap = document.getElementById('tcDots');
+        var tcSlides = tcTrack.querySelectorAll('.tc-slide');
+
+        function tcStep() {
+            var slide = tcTrack.querySelector('.tc-slide');
+            if (!slide) return tcTrack.clientWidth * 0.8;
+            var gap = parseInt(getComputedStyle(tcTrack).columnGap || getComputedStyle(tcTrack).gap) || 20;
+            return slide.getBoundingClientRect().width + gap;
+        }
+        function tcScrollTo(index) {
+            var max = tcTrack.scrollWidth - tcTrack.clientWidth;
+            var target = Math.max(0, Math.min(index * tcStep(), max));
+            tcTrack.scrollTo({ left: target, behavior: 'smooth' });
+        }
+        if (tcPrev) tcPrev.addEventListener('click', function() { tcTrack.scrollBy({ left: -tcStep(), behavior: 'smooth' }); });
+        if (tcNext) tcNext.addEventListener('click', function() { tcTrack.scrollBy({ left: tcStep(), behavior: 'smooth' }); });
+
+        if (tcDotsWrap && tcSlides.length > 1) {
+            for (var d = 0; d < tcSlides.length; d++) {
+                var dot = document.createElement('button');
+                dot.setAttribute('type', 'button');
+                dot.setAttribute('aria-label', 'Go to testimonial ' + (d + 1));
+                (function(i) { dot.addEventListener('click', function() { tcScrollTo(i); }); })(d);
+                tcDotsWrap.appendChild(dot);
+            }
+            var tcDotsBtns = tcDotsWrap.querySelectorAll('button');
+            function tcUpdateDots() {
+                var step = tcStep();
+                var active = Math.round(tcTrack.scrollLeft / step);
+                tcDotsBtns.forEach(function(b, i) { b.classList.toggle('active', i === active); });
+            }
+            tcTrack.addEventListener('scroll', tcUpdateDots);
+            tcUpdateDots();
+        }
     }
 
 });

@@ -1,6 +1,13 @@
 /* ========================================
    CSS Variables / Theme System
    ======================================== */
+.urdu {
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Urdu Typesetting', serif;
+  direction: rtl;
+  display: inline-block;
+  text-align: right;
+  line-height: 1.9;
+}
 :root {
     --sidebar-bg: #1a1a2e;
     --sidebar-text: #a2a3b7;
@@ -96,6 +103,11 @@ a:not(.nav-link):not(.btn):not(.dropdown-item):not(.stat-link):hover {
 .main-content-area {
     background: var(--body-bg);
     transition: background-color 0.3s ease;
+}
+@media (min-width: 992px) {
+    .main-content-area {
+        margin-left: 260px;
+    }
 }
 .content-wrap {
     background: var(--body-bg);
@@ -975,6 +987,7 @@ hr {
 .status-sold, .status-rented { background: var(--text-muted) !important; color: #fff !important; }
 .status-invoiced { background: var(--accent-quotations) !important; color: #fff !important; }
 .status-inquiry { background: var(--accent-pending) !important; color: #fff !important; }
+.status-info { background: #0ea5e9 !important; color: #fff !important; }
 .status-visit_scheduled { background: var(--accent-unpaid) !important; color: #fff !important; }
 .status-offer_made { background: #f59e0b !important; color: #fff !important; }
 .status-token_received { background: #8b5cf6 !important; color: #fff !important; }

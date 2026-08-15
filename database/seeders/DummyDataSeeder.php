@@ -205,6 +205,45 @@ class DummyDataSeeder extends Seeder
         }
         $this->command->info('Settings configured.');
 
+        // ─── BLOG POSTS ─────────────────────────────────────
+        if (class_exists(\App\Models\Post::class) && \App\Models\Post::count() === 0) {
+            $posts = [
+                [
+                    'title' => 'Real Estate Market Trends in Pakistan 2026',
+                    'excerpt' => 'A look at how property prices, demand and investment hotspots are shaping up across major cities this year.',
+                    'body' => "The Pakistani real estate market continues to evolve in 2026. With rising demand for residential plots in Lahore and Islamabad, and steady rental yields in Karachi, investors are diversifying their portfolios.\n\nOff-plan projects remain attractive for overseas Pakistanis, while marla-based plots in gated societies see the strongest liquidity. Our advisors recommend verifying title documents and NOC status before any commitment.",
+                    'is_published' => true,
+                    'published_at' => Carbon::now()->subDays(10),
+                ],
+                [
+                    'title' => 'Tips for First-Time Home Buyers in Pakistan',
+                    'excerpt' => 'Everything you need to know before purchasing your first home — from budgeting to documentation.',
+                    'body' => "Buying your first home is a major milestone. Start by setting a realistic budget and getting pre-approved financing where possible.\n\nAlways confirm the seller's CNIC, property ownership documents, and any outstanding dues. Work with a verified agent and never pay token amounts without a written agreement.",
+                    'is_published' => true,
+                    'published_at' => Carbon::now()->subDays(4),
+                ],
+                [
+                    'title' => 'Understanding Rent Agreements and Token Systems',
+                    'excerpt' => 'How rent agreements, schedules and token amounts work in our platform.',
+                    'body' => "Rent agreements in Pakistan typically run for 11 months and are renewable. Our platform helps you generate schedules, track payments and send reminders.\n\nTokens secure a deal and are adjusted against the final payment. Keep records of every transaction for tax and dispute purposes.",
+                    'is_published' => true,
+                    'published_at' => Carbon::now()->subDays(1),
+                ],
+            ];
+            foreach ($posts as $p) {
+                \App\Models\Post::create([
+                    'title' => $p['title'],
+                    'slug' => \Illuminate\Support\Str::slug($p['title']),
+                    'excerpt' => $p['excerpt'],
+                    'body' => $p['body'],
+                    'is_published' => $p['is_published'],
+                    'published_at' => $p['published_at'],
+                    'author_id' => $createdUsers[0]->id ?? null,
+                ]);
+            }
+            $this->command->info('Blog posts created.');
+        }
+
         $this->command->info('─────────────────────────────');
         $this->command->info('Dummy data seeded successfully!');
         $this->command->info('Logins:');

@@ -3,15 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Exports\DealExport;
+use App\Helpers\Status;
 use App\Models\Agent;
 use App\Models\Client;
 use App\Models\Deal;
 use App\Models\Property;
 use App\Notifications\DealStatusChanged;
-use App\Notifications\TokenReceived;
 use App\Services\ExcelWriter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Validation\Rule;
 
 class DealController extends Controller
 {
@@ -22,6 +23,7 @@ class DealController extends Controller
             ->when($agentId, fn ($q) => $q->where('agent_id', $agentId))
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
             ->when($request->type, fn ($q) => $q->where('type', $request->type))
+            ->when($request->lead_source, fn ($q) => $q->where('lead_source', $request->lead_source))
             ->when($request->search, function ($q) use ($request) {
                 $s = $request->search;
                 $q->where(function ($q2) use ($s) {
@@ -34,8 +36,9 @@ class DealController extends Controller
             ->latest()->paginate(15)->withQueryString();
 
         $statuses = ['inquiry', 'visit_scheduled', 'offer_made', 'token_received', 'agreement_signed', 'in_progress', 'completed', 'cancelled'];
+        $leadSources = Status::leadSources();
 
-        return view('deals.index', compact('deals', 'statuses'));
+        return view('deals.index', compact('deals', 'statuses', 'leadSources'));
     }
 
     public function create()
@@ -45,13 +48,15 @@ class DealController extends Controller
         $agents = Agent::orderBy('name')->get();
         $statuses = ['inquiry', 'visit_scheduled', 'offer_made', 'token_received', 'agreement_signed', 'in_progress', 'completed', 'cancelled'];
         $defaultAgentId = auth()->user()->isAgent() ? auth()->user()->agent_id : null;
+        $leadSources = Status::leadSources();
 
-        return view('deals.create', compact('properties', 'clients', 'agents', 'statuses', 'defaultAgentId'));
+        return view('deals.create', compact('properties', 'clients', 'agents', 'statuses', 'defaultAgentId', 'leadSources'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
+            'lead_source' => ['nullable', 'string', Rule::in(array_keys(Status::leadSources()))],
             'property_id' => 'required|exists:properties,id',
             'buyer_id' => 'required|exists:clients,id',
             'seller_id' => 'required|exists:clients,id',
@@ -102,14 +107,16 @@ class DealController extends Controller
         $clients = Client::orderBy('name')->get();
         $agents = Agent::orderBy('name')->get();
         $statuses = ['inquiry', 'visit_scheduled', 'offer_made', 'token_received', 'agreement_signed', 'in_progress', 'completed', 'cancelled'];
+        $leadSources = Status::leadSources();
 
-        return view('deals.edit', compact('deal', 'properties', 'clients', 'agents', 'statuses'));
+        return view('deals.edit', compact('deal', 'properties', 'clients', 'agents', 'statuses', 'leadSources'));
     }
 
     public function update(Request $request, Deal $deal)
     {
         $this->authorizeAgentAccess($deal);
         $request->validate([
+            'lead_source' => ['nullable', 'string', Rule::in(array_keys(Status::leadSources()))],
             'property_id' => 'required|exists:properties,id',
             'buyer_id' => 'required|exists:clients,id',
             'seller_id' => 'required|exists:clients,id',

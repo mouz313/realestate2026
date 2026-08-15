@@ -24,7 +24,7 @@
                         <small class="text-secondary">{{ $q->created_at->format('d M Y') }}</small>
                     </div>
                     @php
-                        $sc = ['draft' => 'secondary', 'sent' => 'primary', 'approved' => 'success', 'rejected' => 'danger', 'invoiced' => 'info'];
+                        $sc = \App\Helpers\Status::classes('portal_quotation');
                     @endphp
                     <span class="badge bg-{{ $sc[$q->status] ?? 'secondary' }}">{{ ucfirst($q->status) }}</span>
                 </div>

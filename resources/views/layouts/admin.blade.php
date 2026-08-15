@@ -148,7 +148,13 @@
                 <li>
                     <a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}">
                         <i class="ti ti-bell"></i>
-                        Notifications @php($unread = Auth::user()->unreadNotifications()->count()) @if($unread) <span class="badge rounded-pill bg-danger">{{$unread}}</span> @endif
+                        Notifications
+                        @php
+                            $unread = Auth::user()?->unreadNotifications()->count() ?? 0;
+                        @endphp
+                        @if($unread > 0)
+                            <span class="badge rounded-pill bg-danger ms-1">{{ $unread }}</span>
+                        @endif
                     </a>
                 </li>
                 <li>
@@ -169,8 +175,22 @@
                 </li>
                 <li>
                     <a href="{{ route('contacts.index') }}" class="nav-link {{ request()->routeIs('contacts.*') ? 'active' : '' }}">
-                        <i class="ti ti-message-report"></i>
-                        Enquiries
+                        <i class="ti ti-message-report me-2"></i> Enquiries <span class="urdu">(انکوائریاں)</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('posts.index') }}" class="nav-link {{ request()->routeIs('posts.*') ? 'active' : '' }}">
+                        <i class="ti ti-article me-2"></i> Blog <span class="urdu">(بلاگ)</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('reviews.index') }}" class="nav-link {{ request()->routeIs('reviews.*') ? 'active' : '' }}">
+                        <i class="ti ti-star me-2"></i> Reviews <span class="urdu">(رائے)</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('referrals.index') }}" class="nav-link {{ request()->routeIs('referrals.*') ? 'active' : '' }}">
+                        <i class="ti ti-users-group me-2"></i> Referrals <span class="urdu">(ریفرلز)</span>
                     </a>
                 </li>
                 <li>
@@ -257,12 +277,15 @@
             <hr>
             <ul class="nav nav-pills flex-column p-3">
                 <li><a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}"><i class="ti ti-report"></i> Reports</a></li>
-                <li><a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}"><i class="ti ti-bell"></i> Notifications</a></li>
+                <li><a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}"><i class="ti ti-bell"></i> Notifications @php $unread = Auth::user()?->unreadNotifications()->count() ?? 0; @endphp @if($unread > 0)<span class="badge rounded-pill bg-danger ms-1">{{ $unread }}</span>@endif</a></li>
                 <li><a href="{{ route('home') }}" target="_blank" class="nav-link"><i class="ti ti-external-link"></i> Visit Website</a></li>
                 @can('admin')
                 <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Administration</span></li>
                 <li><a href="{{ route('cities.index') }}" class="nav-link {{ request()->routeIs('cities.*') ? 'active' : '' }}"><i class="ti ti-building-community"></i> Cities</a></li>
                 <li><a href="{{ route('contacts.index') }}" class="nav-link {{ request()->routeIs('contacts.*') ? 'active' : '' }}"><i class="ti ti-message-report"></i> Enquiries</a></li>
+                <li><a href="{{ route('posts.index') }}" class="nav-link {{ request()->routeIs('posts.*') ? 'active' : '' }}"><i class="ti ti-article"></i> Blog</a></li>
+                <li><a href="{{ route('reviews.index') }}" class="nav-link {{ request()->routeIs('reviews.*') ? 'active' : '' }}"><i class="ti ti-star"></i> Reviews</a></li>
+                <li><a href="{{ route('referrals.index') }}" class="nav-link {{ request()->routeIs('referrals.*') ? 'active' : '' }}"><i class="ti ti-users-group"></i> Referrals</a></li>
                 <li><a href="{{ route('expenses.index') }}" class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }}"><i class="ti ti-receipt"></i> Expenses</a></li>
                 <li><a href="{{ route('roles.index') }}" class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}"><i class="ti ti-shield"></i> Roles</a></li>
                 <li><a href="{{ route('permissions.index') }}" class="nav-link {{ request()->routeIs('permissions.*') ? 'active' : '' }}"><i class="ti ti-key"></i> Permissions</a></li>
@@ -275,7 +298,7 @@
     </div>
 
         {{-- Main Content --}}
-        <div class="d-flex flex-column flex-grow-1 main-content-area" style="margin-left: 260px;">
+        <div class="d-flex flex-column flex-grow-1 main-content-area">
             {{-- Top Navbar --}}
             <nav class="navbar navbar-expand topbar shadow-sm">
                 <div class="container-fluid">
@@ -293,8 +316,8 @@
             <li class="nav-item">
                 <a class="nav-link position-relative" href="{{ route('notifications.index') }}" title="Notifications">
                     <i class="ti ti-bell"></i>
-                    @php $unread = Auth::user()->unreadNotifications()->count(); @endphp
-                    @if($unread)
+                    @php $unread = Auth::user()?->unreadNotifications()->count() ?? 0; @endphp
+                    @if($unread > 0)
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ $unread }}</span>
                     @endif
                 </a>

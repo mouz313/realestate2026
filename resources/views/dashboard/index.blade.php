@@ -10,6 +10,30 @@
     .stat-value.fs-5 { font-size:1rem !important; }
     .stat-card .stat-label { font-size:0.7rem !important; }
   }
+  /* Attention panel */
+  .attention-card { border:0; border-radius:12px; transition:transform .15s ease, box-shadow .15s ease; overflow:hidden; }
+  .attention-card:hover { transform:translateY(-3px); box-shadow:0 10px 25px rgba(0,0,0,.12); }
+  .attention-card .att-icon { width:46px; height:46px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; }
+  .attention-card .att-count { font-size:1.7rem; font-weight:700; line-height:1; }
+  .attention-card .att-label { font-size:0.82rem; color:var(--text-muted); }
+  .attention-danger { background:rgba(239,68,68,.08); }
+  .attention-danger .att-icon { background:rgba(239,68,68,.15); color:#ef4444; }
+  .attention-danger .att-count { color:#ef4444; }
+  .attention-warning { background:rgba(245,158,11,.10); }
+  .attention-warning .att-icon { background:rgba(245,158,11,.18); color:#f59e0b; }
+  .attention-warning .att-count { color:#f59e0b; }
+  .attention-info { background:rgba(14,165,233,.08); }
+  .attention-info .att-icon { background:rgba(14,165,233,.15); color:#0ea5e9; }
+  .attention-info .att-count { color:#0ea5e9; }
+  .attention-purple { background:rgba(139,92,246,.08); }
+  .attention-purple .att-icon { background:rgba(139,92,246,.15); color:#8b5cf6; }
+  .attention-purple .att-count { color:#8b5cf6; }
+  /* Compact list rows */
+  .mini-list { margin:0; padding:0; list-style:none; }
+  .mini-list li { padding:.6rem .25rem; border-bottom:1px solid var(--table-border, #eee); }
+  .mini-list li:last-child { border-bottom:0; }
+  .mini-row { display:flex; align-items:center; gap:.6rem; }
+  .mini-thumb { width:38px; height:38px; border-radius:9px; background:rgba(212,162,78,.12); color:var(--sky-amber,#D4A24E); display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
 </style>
 @endpush
 
@@ -22,6 +46,42 @@
 @endsection
 
 @section('content')
+{{-- Attention Required — action items admin must not miss --}}
+@php
+    $attentionItems = collect([
+        ['count' => $stats['new_enquiries'], 'label' => 'New Enquiries', 'urdu' => 'نئی انکوائریاں', 'icon' => 'ti-message-report', 'cls' => 'attention-danger', 'route' => 'contacts.index', 'show' => $stats['new_enquiries'] > 0],
+        ['count' => $pendingReviews->count(), 'label' => 'Pending Reviews', 'urdu' => 'زیر التواء رائے', 'icon' => 'ti-star', 'cls' => 'attention-warning', 'route' => 'reviews.index', 'show' => $pendingReviews->count() > 0],
+        ['count' => $rentDueSoon, 'label' => 'Rent Due (7d)', 'urdu' => 'کرایہ (۷ دن)', 'icon' => 'ti-cash', 'cls' => 'attention-info', 'route' => 'rent-payments.index', 'show' => $rentDueSoon > 0],
+        ['count' => $recentReferrals->count(), 'label' => 'Referrals', 'urdu' => 'ریفرلز', 'icon' => 'ti-users-group', 'cls' => 'attention-purple', 'route' => 'referrals.index', 'show' => $recentReferrals->count() > 0],
+    ])->filter(fn ($i) => $i['show']);
+@endphp
+@if($attentionItems->isNotEmpty())
+<div class="alert-attention mb-3">
+    <div class="d-flex align-items-center gap-2 mb-2">
+        <i class="ti ti-bell-ringing text-danger"></i>
+        <h6 class="mb-0 fw-bold">Attention Required <span class="urdu">(توجہ درکار)</span></h6>
+        <span class="badge bg-danger ms-1">{{ $attentionItems->sum('count') }}</span>
+    </div>
+    <div class="row g-3">
+        @foreach($attentionItems as $item)
+        <div class="col-6 col-lg-3">
+            <a href="{{ route($item['route']) }}" class="text-decoration-none">
+                <div class="card attention-card {{ $item['cls'] }}">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="att-icon"><i class="ti {{ $item['icon'] }}"></i></div>
+                        <div class="min-w-0">
+                            <div class="att-count">{{ $item['count'] }}</div>
+                            <div class="att-label">{{ $item['label'] }} <span class="urdu">({{ $item['urdu'] }})</span></div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
 {{-- Core Business Stats --}}
 <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-3">
     <div class="col">
@@ -241,6 +301,150 @@
     </div>
 </div>
 
+{{-- Lead Source Analytics --}}
+<div class="mt-3 mt-md-4">
+    <h5 class="mb-3 fw-semibold section-heading"><i class="ti ti-target me-1"></i> Lead Sources <span class="urdu">(لیڈ کے ذرائع)</span></h5>
+    <div class="card">
+        <div class="card-body">
+            @php
+                $lsTotal = $stats['lead_sources']->sum();
+                $lsMax = $stats['lead_sources']->max() ?: 1;
+            @endphp
+            @if($lsTotal > 0)
+                <div class="row g-3">
+                    <div class="col-lg-7">
+                        <div class="d-flex flex-column gap-2">
+                            @foreach($stats['lead_sources'] as $key => $count)
+                                <div>
+                                    <div class="d-flex justify-content-between small mb-1">
+                                        <span>{{ \App\Helpers\Status::leadSourceLabel($key) }}</span>
+                                        <span class="text-secondary">{{ $count }} ({{ round($count / $lsTotal * 100) }}%)</span>
+                                    </div>
+                                    <div class="progress" style="height:8px;">
+                                        <div class="progress-bar" style="width: {{ round($count / $lsMax * 100) }}%;background:linear-gradient(90deg,#6366f1,#8b5cf6);"></div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="col-lg-5 d-flex flex-column justify-content-center align-items-center text-center border-start-lg">
+                        <div class="stat-value fs-3">{{ $lsTotal }}</div>
+                        <div class="stat-label">Total Leads <span class="urdu">(کل لیڈز)</span></div>
+                        <a href="{{ route('contacts.index') }}" class="stat-link mt-2">View Enquiries <i class="ti ti-arrow-right"></i></a>
+                    </div>
+                </div>
+            @else
+                <div class="empty-state">
+                    <i class="ti ti-target"></i>
+                    <p>No leads captured yet. <span class="urdu">(ابھی تک کوئی لیڈ نہیں)</span></p>
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+{{-- New-enquiry / review / referral widgets --}}
+<div class="mt-3 mt-md-4">
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0"><i class="ti ti-message-report me-1"></i> Recent Enquiries <span class="urdu">(حالیہ انکوائریاں)</span></h5>
+                    <a href="{{ route('contacts.index') }}" class="small text-decoration-none fw-medium">View all</a>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="mini-list">
+                        @forelse($newEnquiries as $c)
+                        <li>
+                            <div class="mini-row">
+                                <div class="mini-thumb"><i class="ti ti-user"></i></div>
+                                <div class="min-w-0 flex-grow-1">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fw-medium text-truncate">{{ $c->name }}</span>
+                                        @if(! $c->read_at)<span class="badge bg-warning text-dark">New</span>@endif
+                                    </div>
+                                    <div class="small text-secondary text-truncate">
+                                        {{ $c->property_type ? \App\Helpers\Status::propertyTypeLabel($c->property_type) : '—' }}
+                                        @if($c->purpose) &middot; {{ \App\Helpers\Status::purposeLabel($c->purpose) }} @endif
+                                        @if($c->city) &middot; {{ $c->city }} @endif
+                                    </div>
+                                </div>
+                                <a href="{{ route('contacts.show', $c) }}" class="btn btn-sm btn-outline-secondary"><i class="ti ti-eye"></i></a>
+                            </div>
+                        </li>
+                        @empty
+                        <li class="text-center text-secondary py-4 small">No enquiries yet.</li>
+                        @endforelse
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0"><i class="ti ti-star me-1"></i> Pending Reviews <span class="urdu">(زیر التواء رائے)</span></h5>
+                    <a href="{{ route('reviews.index') }}" class="small text-decoration-none fw-medium">View all</a>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="mini-list">
+                        @forelse($pendingReviews as $r)
+                        <li>
+                            <div class="mini-row">
+                                <div class="mini-thumb"><i class="ti ti-star"></i></div>
+                                <div class="min-w-0 flex-grow-1">
+                                    <div class="fw-medium text-truncate">{{ $r->name }}</div>
+                                    <div class="small text-secondary text-truncate">
+                                        @for($s = 1; $s <= 5; $s++)<i class="ti ti-star{{ $s <= $r->rating ? '-filled' : '' }}" style="font-size:.7rem;color:#f59e0b;"></i>@endfor
+                                        @if($r->property) &middot; {{ $r->property->city ?? '' }} @endif
+                                    </div>
+                                </div>
+                                <form action="{{ route('reviews.approve', $r) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button class="btn btn-sm btn-success" title="Approve"><i class="ti ti-check"></i></button>
+                                </form>
+                            </div>
+                        </li>
+                        @empty
+                        <li class="text-center text-secondary py-4 small">No pending reviews. <span class="urdu">(کوئی زیر التواء نہیں)</span></li>
+                        @endforelse
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0"><i class="ti ti-users-group me-1"></i> Recent Referrals <span class="urdu">(حالیہ ریفرلز)</span></h5>
+                    <a href="{{ route('referrals.index') }}" class="small text-decoration-none fw-medium">View all</a>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="mini-list">
+                        @forelse($recentReferrals as $rf)
+                        <li>
+                            <div class="mini-row">
+                                <div class="mini-thumb"><i class="ti ti-user-plus"></i></div>
+                                <div class="min-w-0 flex-grow-1">
+                                    <div class="fw-medium text-truncate">{{ $rf->referred_name ?? 'Referral' }}</div>
+                                    <div class="small text-secondary text-truncate">
+                                        {{ ucfirst($rf->status) }}
+                                        @if($rf->referrer_name) &middot; by {{ $rf->referrer_name }} @endif
+                                    </div>
+                                </div>
+                                <a href="{{ route('referrals.index') }}" class="btn btn-sm btn-outline-secondary"><i class="ti ti-eye"></i></a>
+                            </div>
+                        </li>
+                        @empty
+                        <li class="text-center text-secondary py-4 small">No referrals yet. <span class="urdu">(کوئی ریفرل نہیں)</span></li>
+                        @endforelse
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Recent Activity --}}
 <div class="row g-3 mt-3 mt-md-4">
     <div class="col-lg-6">
@@ -309,7 +513,7 @@
                                 <td>{{ $q->client->name }}</td>
                                 <td class="fw-medium">{{ number_format($q->total, 2) }}</td>
                                 <td>
-                                    @php $sc = ['draft'=>'status-draft','sent'=>'status-sent','approved'=>'status-approved','rejected'=>'status-rejected','invoiced'=>'status-invoiced']; @endphp
+                                    @php $sc = \App\Helpers\Status::classes('invoice'); @endphp
                                     <span class="badge {{ $sc[$q->status] ?? 'status-draft' }}">{{ ucfirst($q->status) }}</span>
                                 </td>
                             </tr>
@@ -490,11 +694,15 @@
 <div class="row g-3 mt-3">
     <div class="col-lg-6">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h5 class="mb-0"><i class="ti ti-info-circle me-1"></i> Quick Links <span class="urdu">(فوری روابط)</span></h5>
+                <span class="small text-secondary">Posts: {{ $postsPublished }} published / {{ $postsDraft }} draft</span>
             </div>
             <div class="card-body">
                 <div class="row g-2">
+                    <div class="col-6">
+                        <a href="{{ route('contacts.create') }}" class="btn btn-outline-secondary w-100 justify-content-center text-start text-sm-center"><i class="ti ti-plus"></i> <span class="d-none d-sm-inline">Add </span>Enquiry <span class="urdu d-none d-md-inline">(نئی انکوائری)</span></a>
+                    </div>
                     <div class="col-6">
                         <a href="{{ route('properties.create') }}" class="btn btn-outline-secondary w-100 justify-content-center text-start text-sm-center"><i class="ti ti-plus"></i> <span class="d-none d-sm-inline">Add </span>Property <span class="urdu d-none d-md-inline">(شامل)</span></a>
                     </div>
@@ -506,6 +714,9 @@
                     </div>
                     <div class="col-6">
                         <a href="{{ route('quotations.create') }}" class="btn btn-outline-secondary w-100 justify-content-center text-start text-sm-center"><i class="ti ti-plus"></i> <span class="d-none d-sm-inline">New </span>Quote <span class="urdu d-none d-md-inline">(نئی)</span></a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{{ route('posts.create') }}" class="btn btn-outline-secondary w-100 justify-content-center text-start text-sm-center"><i class="ti ti-article"></i> <span class="d-none d-sm-inline">New </span>Post <span class="urdu d-none d-md-inline">(نیا بلاگ)</span></a>
                     </div>
                     <div class="col-6">
                         <a href="{{ route('rent-payments.index') }}" class="btn btn-outline-secondary w-100 justify-content-center text-start text-sm-center"><i class="ti ti-cash"></i> <span class="d-none d-sm-inline">Rent </span>Overview <span class="urdu d-none d-md-inline">(کرایہ)</span></a>

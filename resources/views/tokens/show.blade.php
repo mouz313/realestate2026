@@ -16,7 +16,7 @@
 <div class="page-header">
     <h3>Token <span class="urdu">(ٹوکن)</span> #{{ $token->id }}</h3>
     <div class="page-header-sub">
-        @php $sc = ['received' => 'status-paid', 'pending' => 'status-pending', 'cancelled' => 'status-cancelled']; @endphp
+        @php $sc = \App\Helpers\Status::classes('token'); @endphp
         <span class="badge {{ $sc[$token->status] ?? 'status-pending' }} fs-6">{{ ucfirst($token->status ?? 'pending') }}</span>
     </div>
     <div class="action-btns">

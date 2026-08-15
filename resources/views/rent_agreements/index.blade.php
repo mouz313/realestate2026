@@ -46,7 +46,7 @@
                     <td class="fw-medium">{{ number_format($agreement->rent_amount, 0) }}</td>
                     <td class="text-secondary d-none d-md-table-cell">{{ $agreement->start_date ? $agreement->start_date->format('d M Y') : '-' }} / {{ $agreement->end_date ? $agreement->end_date->format('d M Y') : 'Open' }}</td>
                     <td>
-                        @php $sc = ['active' => 'status-active', 'expired' => 'status-draft', 'terminated' => 'status-cancelled', 'pending' => 'status-pending']; @endphp
+                        @php $sc = \App\Helpers\Status::classes('rent_agreement'); @endphp
                         <span class="badge {{ $sc[$agreement->status] ?? 'status-pending' }}">{{ ucfirst($agreement->status ?? 'pending') }}</span>
                     </td>
                     <td class="d-none d-md-table-cell">{{ $agreement->security_deposit ? number_format($agreement->security_deposit, 0) : '-' }}</td>

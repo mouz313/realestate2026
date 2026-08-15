@@ -55,7 +55,7 @@
                     <td>{{ number_format($installment->paid_amount ?? 0, 0) }}</td>
                     <td class="text-secondary">{{ $installment->due_date ? $installment->due_date->format('d M Y') : '-' }}</td>
                     <td>
-                        @php $sc = ['pending' => 'status-pending', 'paid' => 'status-paid', 'overdue' => 'status-cancelled', 'partial' => 'status-partial']; @endphp
+                        @php $sc = \App\Helpers\Status::classes('installment'); @endphp
                         <span class="badge {{ $sc[$installment->status] ?? 'status-pending' }}">{{ ucfirst($installment->status ?? 'pending') }}</span>
                     </td>
                     <td class="d-none d-md-table-cell">{{ $installment->late_fee ? number_format($installment->late_fee, 0) : '-' }}</td>

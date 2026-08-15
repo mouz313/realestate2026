@@ -1,4 +1,3 @@
-<?php header('Content-Type: application/xml; charset=utf-8'); ?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 @foreach($urls as $u)
     <url>

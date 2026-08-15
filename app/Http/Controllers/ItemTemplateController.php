@@ -31,6 +31,13 @@ class ItemTemplateController extends Controller
         return back();
     }
 
+    public function edit(ItemTemplate $itemTemplate)
+    {
+        $templates = ItemTemplate::latest()->paginate(20);
+
+        return view('settings.item-templates', compact('templates', 'itemTemplate'));
+    }
+
     public function update(Request $request, ItemTemplate $itemTemplate)
     {
         $request->validate([

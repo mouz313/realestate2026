@@ -1903,6 +1903,23 @@
   transform: scale(1);
 }
 
+/* Fallback: never leave reveal content invisible when motion is reduced */
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal-left, .reveal-right, .reveal-scale {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Urdu / Nastaliq text helper */
+.urdu {
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Urdu Typesetting', serif;
+  direction: rtl;
+  display: inline-block;
+  text-align: right;
+  line-height: 1.9;
+}
+
 /* Stagger children */
 .stagger-children > *:nth-child(1) { transition-delay: 0.05s; }
 .stagger-children > *:nth-child(2) { transition-delay: 0.1s; }
@@ -2253,4 +2270,259 @@
     width: 100%;
     justify-content: center;
   }
+}
+
+/* ---------- Floating WhatsApp Button ---------- */
+.floating-whatsapp {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1080;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #25D366;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.floating-whatsapp:hover,
+.floating-whatsapp:focus {
+  color: #fff;
+  transform: scale(1.08);
+  box-shadow: 0 8px 26px rgba(37, 211, 102, 0.55);
+}
+@media (max-width: 575.98px) {
+  .floating-whatsapp {
+    bottom: 16px;
+    right: 16px;
+    width: 50px;
+    height: 50px;
+    font-size: 1.4rem;
+  }
+}
+
+/* ---------- Skyline content components (blog, compare) ---------- */
+.sky-section {
+  background: var(--sky-bg);
+  color: var(--sky-text);
+}
+.sky-section .text-secondary {
+  color: var(--sky-text-muted) !important;
+}
+.sky-title {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  color: var(--sky-text);
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+.sky-card {
+  background: var(--sky-card);
+  border: 1px solid var(--sky-border);
+  border-radius: 12px;
+  color: var(--sky-text);
+}
+.sky-card img {
+  border-radius: 12px 12px 0 0;
+}
+.sky-card a.text-dark,
+.sky-card .card-title a {
+  color: var(--sky-text) !important;
+}
+.sky-card .card-title a:hover {
+  color: var(--sky-amber) !important;
+}
+.sky-card .text-secondary {
+  color: var(--sky-text-muted) !important;
+}
+.blog-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.blog-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  border-color: var(--sky-amber);
+}
+.blog-card .card-img-top,
+.blog-card > a > img {
+  transition: transform 0.4s ease;
+}
+.blog-card:hover .card-img-top,
+.blog-card:hover > a > img {
+  transform: scale(1.05);
+}
+.blog-body {
+  color: var(--sky-text-muted);
+  font-size: 1.05rem;
+}
+.blog-body p {
+  margin-bottom: 1.1rem;
+}
+.blog-hero {
+  position: relative;
+  min-height: 380px;
+  display: flex;
+  align-items: flex-end;
+  background-size: cover;
+  background-position: center;
+}
+.blog-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 17, 21, 0.25) 0%, rgba(15, 17, 21, 0.55) 55%, rgba(15, 17, 21, 0.92) 100%);
+}
+.blog-hero-content {
+  position: relative;
+  z-index: 2;
+  padding: 2rem 1.5rem;
+  width: 100%;
+  color: #fff;
+}
+.blog-hero-title {
+  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0;
+  color: #fff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+}
+
+/* Testimonial carousel */
+.testimonial-carousel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.tc-track {
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: 0.5rem 0.25rem 1rem;
+  flex: 1;
+}
+.tc-track::-webkit-scrollbar {
+  display: none;
+}
+.tc-track {
+  scrollbar-width: none;
+}
+.tc-slide {
+  scroll-snap-align: start;
+  flex: 0 0 calc(33.333% - 0.85rem);
+  min-width: 280px;
+}
+.tc-nav {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--sky-border);
+  background: var(--sky-card);
+  color: var(--sky-amber);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.tc-nav:hover {
+  background: var(--sky-amber);
+  color: #14161b;
+  transform: scale(1.05);
+}
+.tc-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.tc-dots button {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: var(--sky-border);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s ease, width 0.2s ease;
+}
+.tc-dots button.active {
+  background: var(--sky-amber);
+  width: 26px;
+  border-radius: 6px;
+}
+.tc-stars {
+  color: var(--sky-amber);
+  display: flex;
+  gap: 0.15rem;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+/* Comparison grid */
+.compare-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  align-items: start;
+}
+.compare-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-top: 3px solid var(--sky-amber);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.compare-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+.compare-card-img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+.compare-card-body {
+  padding: 1rem 1.1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.spec-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+}
+.spec-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--sky-border);
+  font-size: 0.9rem;
+}
+.spec-list li i {
+  color: var(--sky-amber);
+  width: 22px;
+  text-align: center;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+.spec-label {
+  color: var(--sky-text-muted);
+}
+.spec-value {
+  margin-left: auto;
+  font-weight: 600;
+  text-align: right;
 }

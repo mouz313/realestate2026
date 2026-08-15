@@ -199,11 +199,7 @@
                 <hr>
                 <h6 class="mb-2">Pay via Raast / IBAN <span class="urdu">(راست/آئی بین)</span></h6>
                 <div class="text-center mb-2">
-                    <?php
-                        $upiString = $settings['bank_iban'] . '@raast';
-                        $qrData = "upi://pay?pa={$upiString}&am=" . number_format($invoice->total - $invoice->paid_amount, 2, '.', '') . "&tn=" . urlencode($invoice->invoice_number) . "&cu=PKR";
-                    ?>
-                    <img src="{{ \App\Helpers\QrHelper::pngDataUri($qrData) }}" alt="Raast QR" class="img-fluid border rounded" style="max-width:150px;">
+                    <img src="{{ \App\Helpers\QrHelper::raastDataUri($settings['bank_iban'], $invoice->total - $invoice->paid_amount, $invoice->invoice_number) }}" alt="Raast QR" class="img-fluid border rounded" style="max-width:150px;">
                     <div class="mt-1 small">
                         <strong>IBAN:</strong> {{ $settings['bank_iban'] }}<br>
                         <strong>Amount:</strong> {{ number_format($invoice->total - $invoice->paid_amount, 2) }}<br>

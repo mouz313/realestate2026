@@ -151,7 +151,7 @@
                     <td>{{ $agent->email ?? '-' }}</td>
                     <td class="text-secondary">{{ $agent->role ?? '-' }}</td>
                     <td>
-                        @php $sc = ['active' => 'status-active', 'inactive' => 'status-draft', 'suspended' => 'status-cancelled']; @endphp
+                        @php $sc = \App\Helpers\Status::classes('team'); @endphp
                         <span class="badge {{ $sc[$agent->status] ?? 'status-draft' }}">{{ ucfirst($agent->status ?? 'inactive') }}</span>
                     </td>
                     <td>
