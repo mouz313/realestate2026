@@ -16,6 +16,12 @@ return new class extends Migration
             $table->string('subject', 100)->nullable();
             $table->text('message');
             $table->timestamp('read_at')->nullable();
+            $table->string('property_type')->nullable();
+            $table->string('purpose')->nullable();
+            $table->string('city')->nullable();
+            $table->string('location')->nullable();
+            $table->decimal('budget_min', 14, 2)->nullable();
+            $table->decimal('budget_max', 14, 2)->nullable();
             $table->timestamps();
         });
     }
