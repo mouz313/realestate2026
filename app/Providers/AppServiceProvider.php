@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\RentAgreement;
 use App\Observers\CompanyObserver;
 use App\Observers\RentAgreementObserver;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -22,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Paginator::useBootstrapFive();
+
         RentAgreement::observe(RentAgreementObserver::class);
         Company::observe(CompanyObserver::class);
 
