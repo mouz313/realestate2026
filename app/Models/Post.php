@@ -13,7 +13,7 @@ class Post extends Model
 
     protected $fillable = [
         'company_id', 'author_id', 'title', 'slug', 'excerpt', 'body',
-        'featured_image', 'is_published', 'published_at', 'seo_title', 'seo_description',
+        'featured_image', 'featured_image_mime', 'is_published', 'published_at', 'seo_title', 'seo_description',
     ];
 
     protected function casts(): array

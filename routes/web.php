@@ -112,6 +112,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('expenses', ExpenseController::class)->except(['show']);
         Route::resource('cities', CityController::class);
         Route::resource('posts', PostController::class)->except(['show']);
+        Route::get('/posts/{post}/image', [PostController::class, 'image'])->name('posts.image');
         Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
         Route::post('/reviews/{review}/approve', [ReviewController::class, 'approve'])->name('reviews.approve');
         Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');

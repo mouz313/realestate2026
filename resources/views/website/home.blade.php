@@ -5,7 +5,20 @@
 
 @section('content')
 {{-- HERO --}}
-<section class="sky-hero" style="overflow:hidden;">
+<section class="sky-hero position-relative" style="overflow:hidden;">
+    @if(!empty($sliderImages))
+    <div id="heroSlider" class="carousel slide" data-bs-ride="carousel" style="position:absolute;inset:0;z-index:1;">
+        <div class="carousel-inner h-100">
+            @foreach($sliderImages as $si => $slide)
+            <div class="carousel-item h-100 {{ $si === 0 ? 'active' : '' }}">
+                <img src="{{ Storage::url($slide['image']) }}" class="w-100 h-100" style="object-fit:cover;" alt="{{ $slide['title'] ?? '' }}">
+            </div>
+            @endforeach
+        </div>
+    </div>
+    <div style="position:absolute;inset:0;z-index:2;background:linear-gradient(135deg, rgba(26,29,36,.82) 0%, rgba(26,29,36,.68) 100%);"></div>
+    @endif
+
     @for($i = 0; $i < 12; $i++)
         <div class="sky-particle" style="left:{{ rand(5,95) }}%;top:{{ rand(10,80) }}%;animation-delay:{{ $i * 0.5 }}s;animation-duration:{{ rand(4,7) }}s;width:{{ rand(3,6) }}px;height:{{ rand(3,6) }}px;"></div>
     @endfor

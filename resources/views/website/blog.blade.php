@@ -22,7 +22,7 @@
                     <article class="card sky-card blog-card h-100 border-0 shadow-sm">
                         @if($post->featured_image)
                             <a href="{{ route('website.blog.show', $post) }}">
-                                <img src="{{ Storage::url($post->featured_image) }}" class="card-img-top" alt="{{ $post->title }}" style="height:200px;object-fit:cover;">
+                                <img src="{{ route('posts.image', $post) }}" class="card-img-top" alt="{{ $post->title }}" style="height:200px;object-fit:cover;">
                             </a>
                         @endif
                         <div class="card-body d-flex flex-column">

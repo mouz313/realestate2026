@@ -29,7 +29,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Excerpt <span class="urdu">(خلاصہ)</span> <small class="text-secondary">(short summary)</small></label>
-                        <textarea class="form-control @error('excerpt') is-invalid @enderror" name="excerpt" rows="2" maxlength="500">{{ old('excerpt') }}</textarea>
+                        <textarea class="form-control @error('excerpt') is-invalid @enderror" name="excerpt" rows="2" maxlength="2000">{{ old('excerpt') }}</textarea>
                         @error('excerpt') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">
@@ -42,7 +42,7 @@
                     <div class="mb-3">
                         <label class="form-label">Featured Image <span class="urdu">(تصویر)</span></label>
                         <input type="file" class="form-control @error('featured_image') is-invalid @enderror" name="featured_image" accept="image/*">
-                        <small class="text-secondary">JPEG, PNG, WebP up to 2MB.</small>
+                        <small class="text-secondary">JPEG, PNG, WebP up to 5MB. Auto-compressed on upload.</small>
                         @error('featured_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">

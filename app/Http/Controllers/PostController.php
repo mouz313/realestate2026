@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
 class PostController extends Controller
@@ -43,9 +43,9 @@ class PostController extends Controller
     {
         $data = $request->validate([
             'title' => 'required|string|max:255',
-            'excerpt' => 'nullable|string|max:500',
+            'excerpt' => 'nullable|string|max:2000',
             'body' => 'required|string',
-            'featured_image' => 'nullable|image|max:2048',
+            'featured_image' => 'nullable|image|max:5120',
             'is_published' => 'nullable|boolean',
             'published_at' => 'nullable|date',
             'seo_title' => 'nullable|string|max:255',
@@ -60,7 +60,9 @@ class PostController extends Controller
             : null;
 
         if ($request->hasFile('featured_image')) {
-            $data['featured_image'] = $request->file('featured_image')->store('posts', 'public');
+            [$blob, $mime] = $this->compressImage($request->file('featured_image'));
+            $data['featured_image'] = $blob;
+            $data['featured_image_mime'] = $mime;
         }
 
         Post::create($data);
@@ -79,9 +81,9 @@ class PostController extends Controller
     {
         $data = $request->validate([
             'title' => 'required|string|max:255',
-            'excerpt' => 'nullable|string|max:500',
+            'excerpt' => 'nullable|string|max:2000',
             'body' => 'required|string',
-            'featured_image' => 'nullable|image|max:2048',
+            'featured_image' => 'nullable|image|max:5120',
             'is_published' => 'nullable|boolean',
             'published_at' => 'nullable|date',
             'seo_title' => 'nullable|string|max:255',
@@ -94,10 +96,9 @@ class PostController extends Controller
             : null;
 
         if ($request->hasFile('featured_image')) {
-            if ($post->featured_image) {
-                Storage::disk('public')->delete($post->featured_image);
-            }
-            $data['featured_image'] = $request->file('featured_image')->store('posts', 'public');
+            [$blob, $mime] = $this->compressImage($request->file('featured_image'));
+            $data['featured_image'] = $blob;
+            $data['featured_image_mime'] = $mime;
         }
 
         $post->update($data);
@@ -109,14 +110,84 @@ class PostController extends Controller
 
     public function destroy(Post $post)
     {
-        if ($post->featured_image) {
-            Storage::disk('public')->delete($post->featured_image);
-        }
         $post->delete();
 
         toastr()->success('Post deleted successfully.');
 
         return redirect()->route('posts.index');
+    }
+
+    public function image(Post $post)
+    {
+        if (! $post->featured_image) {
+            abort(404);
+        }
+
+        return response($post->featured_image)
+            ->header('Content-Type', $post->featured_image_mime ?: 'image/jpeg')
+            ->header('Cache-Control', 'public, max-age=86400');
+    }
+
+    protected function compressImage(UploadedFile $file, int $maxWidth = 1280, int $quality = 82): array
+    {
+        $src = $file->getRealPath();
+        $info = @getimagesize($src);
+
+        if (! $info) {
+            return [$file->get(), $file->getClientMimeType()];
+        }
+
+        $type = $info[2];
+
+        $img = match ($type) {
+            IMAGETYPE_JPEG => @imagecreatefromjpeg($src),
+            IMAGETYPE_PNG => @imagecreatefrompng($src),
+            IMAGETYPE_WEBP => @imagecreatefromwebp($src),
+            IMAGETYPE_GIF => @imagecreatefromgif($src),
+            default => false,
+        };
+
+        if (! $img) {
+            return [$file->get(), $file->getClientMimeType()];
+        }
+
+        $w = imagesx($img);
+        $h = imagesy($img);
+        $scale = min(1.0, $maxWidth / max(1, $w));
+        $nw = (int) round($w * $scale);
+        $nh = (int) round($h * $scale);
+
+        $out = imagecreatetruecolor($nw, $nh);
+
+        if (in_array($type, [IMAGETYPE_PNG, IMAGETYPE_WEBP, IMAGETYPE_GIF], true)) {
+            imagealphablending($out, false);
+            imagesavealpha($out, true);
+            $trans = imagecolorallocatealpha($out, 0, 0, 0, 127);
+            imagefilledrectangle($out, 0, 0, $nw, $nh, $trans);
+        }
+
+        imagecopyresampled($out, $img, 0, 0, 0, 0, $nw, $nh, $w, $h);
+
+        ob_start();
+        if ($type === IMAGETYPE_PNG) {
+            imagepng($out, null, 8);
+            $mime = 'image/png';
+        } elseif ($type === IMAGETYPE_WEBP) {
+            imagewebp($out, null, $quality);
+            $mime = 'image/webp';
+        } elseif ($type === IMAGETYPE_GIF) {
+            imagegif($out);
+            $mime = 'image/gif';
+        } else {
+            imagejpeg($out, null, $quality);
+            $mime = 'image/jpeg';
+        }
+        $blob = ob_get_clean();
+
+        imagedestroy($img);
+        imagedestroy($out);
+
+        return [$blob, $mime];
     }
 
     protected function uniqueSlug(string $title): string

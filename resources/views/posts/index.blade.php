@@ -59,7 +59,7 @@
                     <td>
                         <div class="d-flex align-items-center gap-2">
                             @if($post->featured_image)
-                                <img src="{{ Storage::url($post->featured_image) }}" alt="" class="rounded" style="width:46px;height:46px;object-fit:cover;">
+                                <img src="{{ route('posts.image', $post) }}" alt="" class="rounded" style="width:46px;height:46px;object-fit:cover;">
                             @endif
                             <div class="min-w-0">
                                 <div class="fw-semibold text-truncate">{{ $post->title }}</div>

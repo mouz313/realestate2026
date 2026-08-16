@@ -29,7 +29,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Excerpt <span class="urdu">(خلاصہ)</span></label>
-                        <textarea class="form-control @error('excerpt') is-invalid @enderror" name="excerpt" rows="2" maxlength="500">{{ old('excerpt', $post->excerpt) }}</textarea>
+                        <textarea class="form-control @error('excerpt') is-invalid @enderror" name="excerpt" rows="2" maxlength="2000">{{ old('excerpt', $post->excerpt) }}</textarea>
                         @error('excerpt') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">
@@ -43,11 +43,11 @@
                         <label class="form-label">Featured Image <span class="urdu">(تصویر)</span></label>
                         @if($post->featured_image)
                             <div class="mb-2">
-                                <img src="{{ Storage::url($post->featured_image) }}" alt="" class="img-fluid rounded" style="max-height:140px;object-fit:cover;">
+                                <img src="{{ route('posts.image', $post) }}" alt="" class="img-fluid rounded" style="max-height:140px;object-fit:cover;">
                             </div>
                         @endif
                         <input type="file" class="form-control @error('featured_image') is-invalid @enderror" name="featured_image" accept="image/*">
-                        <small class="text-secondary">JPEG, PNG, WebP up to 2MB.</small>
+                        <small class="text-secondary">JPEG, PNG, WebP up to 5MB. Auto-compressed on upload.</small>
                         @error('featured_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">

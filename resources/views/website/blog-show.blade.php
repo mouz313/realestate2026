@@ -21,7 +21,7 @@
 
         <article class="sky-card card border-0 shadow-sm overflow-hidden">
             @if($post->featured_image)
-                <div class="blog-hero" style="background-image:url('{{ Storage::url($post->featured_image) }}');">
+                <div class="blog-hero" style="background-image:url('{{ route('posts.image', $post) }}');">
                     <div class="blog-hero-overlay"></div>
                     <div class="blog-hero-content">
                         <div class="small mb-2 opacity-75">
@@ -56,7 +56,7 @@
                     <article class="card sky-card blog-card h-100 border-0 shadow-sm">
                         @if($r->featured_image)
                             <a href="{{ route('website.blog.show', $r) }}">
-                                <img src="{{ Storage::url($r->featured_image) }}" class="card-img-top" alt="{{ $r->title }}" style="height:160px;object-fit:cover;">
+                                <img src="{{ route('posts.image', $r) }}" class="card-img-top" alt="{{ $r->title }}" style="height:160px;object-fit:cover;">
                             </a>
                         @endif
                         <div class="card-body">
