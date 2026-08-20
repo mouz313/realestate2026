@@ -58,17 +58,17 @@
                     @if($quotation->property->plot_size)
                         <div class="f-label">Size</div>
                         <div class="f-value">{{ $quotation->property->plot_size }} {{ $quotation->property->plot_size_unit ?? '' }}</div>
-                    @elseif($quotation->property->type)
+                    @elseif($quotation->property->category)
                         <div class="f-label">Type</div>
-                        <div class="f-value">{{ ucfirst($quotation->property->type) }}</div>
+                        <div class="f-value">{{ \App\Helpers\Status::categoryLabel($quotation->property->category) }}</div>
                     @endif
                 </td>
             </tr>
-            @if($quotation->property->plot_size && $quotation->property->type)
+            @if($quotation->property->plot_size && $quotation->property->category)
             <tr>
                 <td>
                     <div class="f-label">Type</div>
-                    <div class="f-value">{{ ucfirst($quotation->property->type) }}</div>
+                    <div class="f-value">{{ \App\Helpers\Status::categoryLabel($quotation->property->category) }}</div>
                 </td>
                 <td></td>
             </tr>

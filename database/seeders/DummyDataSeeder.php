@@ -3,10 +3,19 @@
 namespace Database\Seeders;
 
 use App\Models\Agent;
+use App\Models\CallLog;
+use App\Models\City;
 use App\Models\Client;
+use App\Models\Commission;
+use App\Models\Company;
 use App\Models\Deal;
+use App\Models\Invoice;
 use App\Models\Property;
+use App\Models\PropertyVisit;
+use App\Models\Quotation;
+use App\Models\RentalRecord;
 use App\Models\Setting;
+use App\Models\Token;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
@@ -16,6 +25,8 @@ class DummyDataSeeder extends Seeder
 {
     public function run(): void
     {
+        $companyId = Company::first()->id;
+
         // ─── USERS ───────────────────────────────────────────
         $users = [
             ['name' => 'Alam Gir', 'email' => 'alam@gmail.com'],
@@ -25,8 +36,11 @@ class DummyDataSeeder extends Seeder
         foreach ($users as $u) {
             $createdUsers[] = User::firstOrCreate(
                 ['email' => $u['email']],
-                ['name' => $u['name'], 'password' => Hash::make('password'), 'role' => 'agent']
+                ['name' => $u['name'], 'password' => Hash::make('password'), 'role' => 'agent', 'company_id' => $companyId]
             );
+        }
+        foreach ($createdUsers as $user) {
+            $user->assignRole('agent');
         }
         $this->command->info('Users created: alam@gmail.com / password, rana@gmail.com / password');
 
@@ -44,6 +58,7 @@ class DummyDataSeeder extends Seeder
                 ['email' => $a['email']],
                 [
                     'name' => $a['name'],
+                    'company_id' => $companyId,
                     'role' => $a['role'],
                     'phone' => $a['phone'],
                     'whatsapp' => $a['whatsapp'],
@@ -87,15 +102,16 @@ class DummyDataSeeder extends Seeder
             ['name' => 'Mahnoor Sheikh', 'company' => null, 'email' => 'mahnoor@example.com', 'phone' => '03001112229', 'address' => 'House 3, Street 12, G-10/2, Islamabad'],
             ['name' => 'Tariq Mehmood', 'company' => 'TM Industries', 'email' => 'tariq@example.com', 'phone' => '03001112230', 'address' => '22-A, Shadman Market, Lahore'],
         ];
-        foreach ($clientsData as $c) {
+        foreach ($clientsData as $i => $c) {
             Client::firstOrCreate(
                 ['email' => $c['email']],
                 [
                     'name' => $c['name'],
+                    'company_id' => $companyId,
                     'company' => $c['company'],
                     'phone' => $c['phone'],
                     'address' => $c['address'],
-                    'client_type' => 'buyer',
+                    'client_type' => ($i % 2 === 0 ? 'buyer' : 'seller'),
                     'cnic' => '42000'.str_pad((string) rand(1000000, 9999999), 7, '0', STR_PAD_LEFT),
                     'cnic_verified' => (bool) rand(0, 1),
                     'notes' => rand(0, 1) ? 'Preferred client' : null,
@@ -108,25 +124,26 @@ class DummyDataSeeder extends Seeder
         $agentIds = Agent::pluck('id')->toArray();
         $ownerIds = Client::pluck('id')->toArray();
         $propertiesData = [
-            ['title' => 'Luxury 5-Bed Villa with Pool', 'type' => 'house', 'transaction_type' => 'sale', 'price' => 45000000, 'city' => 'Islamabad', 'sector_town' => 'F-7/4', 'bedrooms' => 5, 'bathrooms' => 6, 'plot_size' => 1200, 'plot_size_unit' => 'sqft', 'covered_area' => 6500, 'furnished' => true, 'description' => 'Stunning luxury villa in the heart of Islamabad with modern architecture, private pool, landscaped garden, and smart home features.', 'features' => ['Central AC', 'Heating', 'Generator Backup', 'Smart Home System', 'CCTV'], 'community_amenities' => ['Gym', 'Park', 'Security', 'Mosque'], 'nearby_places' => ['Super Market', 'School', 'Hospital'], 'possession_status' => 'ready'],
-            ['title' => 'Modern 3-Bed Apartment with City View', 'type' => 'flat', 'transaction_type' => 'sale', 'price' => 18500000, 'city' => 'Lahore', 'sector_town' => 'Gulberg', 'bedrooms' => 3, 'bathrooms' => 3, 'plot_size' => null, 'plot_size_unit' => null, 'covered_area' => 1800, 'furnished' => false, 'description' => 'Premium apartment on 12th floor with panoramic city views, modern kitchen, and high-end finishes in the heart of Lahore.', 'features' => ['Central AC', 'Elevator', 'Security', 'Parking'], 'community_amenities' => ['Gym', 'Swimming Pool', 'Community Hall'], 'nearby_places' => ['MM Alam Road', 'Shopping Mall', 'Restaurants'], 'possession_status' => 'ready'],
-            ['title' => 'Commercial Plaza - Prime Location', 'type' => 'commercial', 'transaction_type' => 'sale', 'price' => 120000000, 'city' => 'Karachi', 'sector_town' => 'Clifton', 'bedrooms' => null, 'bathrooms' => 4, 'plot_size' => 400, 'plot_size_unit' => 'sqft', 'covered_area' => 12000, 'furnished' => false, 'description' => 'Prime commercial plaza on main Clifton road. Ground + 3 floors, ideal for showrooms, offices, or retail.', 'features' => ['Central AC', 'Elevator', 'Generator', 'Parking'], 'community_amenities' => ['Security', 'Maintenance'], 'nearby_places' => ['Dolmen Mall', 'Beach', 'Hotels'], 'possession_status' => 'ready'],
-            ['title' => 'Residential Plot in DHA Phase 8', 'type' => 'plot', 'transaction_type' => 'sale', 'price' => 8500000, 'city' => 'Karachi', 'sector_town' => 'DHA Phase 8', 'bedrooms' => null, 'bathrooms' => null, 'plot_size' => 200, 'plot_size_unit' => 'sqft', 'covered_area' => null, 'furnished' => false, 'description' => 'A prime residential plot in the most sought-after DHA Phase 8. Perfect for building your dream home.', 'features' => null, 'community_amenities' => ['Park', 'Security', 'Mosque'], 'nearby_places' => ['School', 'Hospital', 'Market'], 'possession_status' => 'ready'],
-            ['title' => 'Farmhouse with Orchard', 'type' => 'farmhouse', 'transaction_type' => 'sale', 'price' => 65000000, 'city' => 'Lahore', 'sector_town' => 'Raiwind Road', 'bedrooms' => 6, 'bathrooms' => 5, 'plot_size' => 8, 'plot_size_unit' => 'kanal', 'covered_area' => 8000, 'furnished' => true, 'description' => 'Beautiful farmhouse with fruit orchard, swimming pool, and spacious lawns. Perfect weekend getaway near Lahore.', 'features' => ['Central AC', 'Heating', 'Generator', 'Swimming Pool', 'CCTV'], 'community_amenities' => null, 'nearby_places' => ['Raiwind Road', 'Lahore Ring Road'], 'possession_status' => 'ready'],
-            ['title' => '3-Bed Family House in Bahria Town', 'type' => 'house', 'transaction_type' => 'sale', 'price' => 22000000, 'city' => 'Rawalpindi', 'sector_town' => 'Bahria Town', 'bedrooms' => 3, 'bathrooms' => 3, 'plot_size' => 500, 'plot_size_unit' => 'sqft', 'covered_area' => 2800, 'furnished' => false, 'description' => 'Spacious family house in the secure environment of Bahria Town. Modern design with all amenities nearby.', 'features' => ['Central AC', 'Generator', 'Security'], 'community_amenities' => ['Park', 'Gym', 'Swimming Pool', 'Security'], 'nearby_places' => ['School', 'Hospital', 'Market'], 'possession_status' => 'ready'],
-            ['title' => 'Luxury Penthouse - 4-Bed', 'type' => 'flat', 'transaction_type' => 'sale', 'price' => 55000000, 'city' => 'Islamabad', 'sector_town' => 'E-7', 'bedrooms' => 4, 'bathrooms' => 4, 'plot_size' => null, 'plot_size_unit' => null, 'covered_area' => 3500, 'furnished' => true, 'description' => 'Exclusive penthouse in the diplomatic enclave with stunning Margalla Hills views, private terrace, and premium fittings.', 'features' => ['Central AC', 'Underfloor Heating', 'Smart Home', 'CCTV', 'Private Terrace'], 'community_amenities' => ['Gym', 'Security', 'Parking'], 'nearby_places' => ['Diplomatic Enclave', 'Centaurus Mall', 'Marriott Hotel'], 'possession_status' => 'ready'],
-            ['title' => 'Commercial Shop - Saddar Bazar', 'type' => 'commercial', 'transaction_type' => 'sale', 'price' => 35000000, 'city' => 'Rawalpindi', 'sector_town' => 'Saddar', 'bedrooms' => null, 'bathrooms' => 1, 'plot_size' => 80, 'plot_size_unit' => 'sqft', 'covered_area' => 720, 'furnished' => false, 'description' => 'High-foot-traffic commercial shop in Saddar Bazar. Currently rented, generating excellent monthly income.', 'features' => ['Air Conditioning', 'Store Room'], 'community_amenities' => null, 'nearby_places' => ['Saddar Bazar', 'Metro Station'], 'possession_status' => 'ready'],
-            ['title' => 'Agricultural Land 25 Acres', 'type' => 'farmhouse', 'transaction_type' => 'sale', 'price' => 15000000, 'city' => 'Multan', 'sector_town' => 'Basti Malook', 'bedrooms' => null, 'bathrooms' => null, 'plot_size' => 25, 'plot_size_unit' => 'acre', 'covered_area' => null, 'furnished' => false, 'description' => 'Productive agricultural land with tube well irrigation. Ideal for farming or future development near Multan.', 'features' => ['Tube Well', 'Electricity'], 'community_amenities' => null, 'nearby_places' => ['Multan City', 'Motorway M4'], 'possession_status' => 'ready'],
-            ['title' => 'Modern Office in Blue Area', 'type' => 'commercial', 'transaction_type' => 'rent', 'price' => 150000, 'city' => 'Islamabad', 'sector_town' => 'Blue Area', 'bedrooms' => null, 'bathrooms' => 2, 'plot_size' => null, 'plot_size_unit' => null, 'covered_area' => 1500, 'furnished' => true, 'description' => 'Fully furnished modern office space in Islamabad\'s business district. Reception, 3 cabins, and open area.', 'features' => ['Central AC', 'Generator', 'Furnished', 'Parking'], 'community_amenities' => ['Security', 'Maintenance', 'Elevator'], 'nearby_places' => ['NAB Office', 'Serena Hotel', 'Convention Centre'], 'possession_status' => 'ready'],
-            ['title' => '4-Bed House with Basement', 'type' => 'house', 'transaction_type' => 'rent', 'price' => 85000, 'city' => 'Lahore', 'sector_town' => 'Model Town', 'bedrooms' => 4, 'bathrooms' => 4, 'plot_size' => 600, 'plot_size_unit' => 'sqft', 'covered_area' => 4000, 'furnished' => false, 'description' => 'Spacious house in Model Town with basement, servant quarters, and large garden. Ideal for family.', 'features' => ['Generator', 'Security', 'Garden'], 'community_amenities' => ['Park', 'Security'], 'nearby_places' => ['Model Town Market', 'School', 'Hospital'], 'possession_status' => 'ready'],
-            ['title' => '2-Bed Apartment Near University', 'type' => 'flat', 'transaction_type' => 'rent', 'price' => 45000, 'city' => 'Islamabad', 'sector_town' => 'G-11/3', 'bedrooms' => 2, 'bathrooms' => 2, 'plot_size' => null, 'plot_size_unit' => null, 'covered_area' => 1200, 'furnished' => true, 'description' => 'Cozy furnished apartment near top universities. Ideal for students or young professionals.', 'features' => ['Air Conditioning', 'Internet', 'Furnished'], 'community_amenities' => ['Security', 'Parking'], 'nearby_places' => ['IIUI', 'COMSATS', 'Giga Mall'], 'possession_status' => 'ready'],
+            ['title' => 'Luxury 5-Bed Villa with Pool', 'category' => 'house', 'transaction_type' => 'sale', 'price' => 45000000, 'city' => 'Islamabad', 'sector_town' => 'F-7/4', 'bedrooms' => 5, 'bathrooms' => 6, 'plot_size' => 1200, 'plot_size_unit' => 'sqft', 'covered_area' => 6500, 'furnished' => true, 'description' => 'Stunning luxury villa in the heart of Islamabad with modern architecture, private pool, landscaped garden, and smart home features.', 'features' => ['Central AC', 'Heating', 'Generator Backup', 'Smart Home System', 'CCTV'], 'community_amenities' => ['Gym', 'Park', 'Security', 'Mosque'], 'nearby_places' => ['Super Market', 'School', 'Hospital'], 'possession_status' => 'ready'],
+            ['title' => 'Modern 3-Bed Apartment with City View', 'category' => 'flat', 'transaction_type' => 'sale', 'price' => 18500000, 'city' => 'Lahore', 'sector_town' => 'Gulberg', 'bedrooms' => 3, 'bathrooms' => 3, 'plot_size' => null, 'plot_size_unit' => null, 'covered_area' => 1800, 'furnished' => false, 'description' => 'Premium apartment on 12th floor with panoramic city views, modern kitchen, and high-end finishes in the heart of Lahore.', 'features' => ['Central AC', 'Elevator', 'Security', 'Parking'], 'community_amenities' => ['Gym', 'Swimming Pool', 'Community Hall'], 'nearby_places' => ['MM Alam Road', 'Shopping Mall', 'Restaurants'], 'possession_status' => 'ready'],
+            ['title' => 'Commercial Plaza - Prime Location', 'category' => 'office', 'transaction_type' => 'sale', 'price' => 120000000, 'city' => 'Karachi', 'sector_town' => 'Clifton', 'bedrooms' => null, 'bathrooms' => 4, 'plot_size' => 400, 'plot_size_unit' => 'sqft', 'covered_area' => 12000, 'furnished' => false, 'description' => 'Prime commercial plaza on main Clifton road. Ground + 3 floors, ideal for showrooms, offices, or retail.', 'features' => ['Central AC', 'Elevator', 'Generator', 'Parking'], 'community_amenities' => ['Security', 'Maintenance'], 'nearby_places' => ['Dolmen Mall', 'Beach', 'Hotels'], 'possession_status' => 'ready'],
+            ['title' => 'Residential Plot in DHA Phase 8', 'category' => 'plot', 'transaction_type' => 'sale', 'price' => 8500000, 'city' => 'Karachi', 'sector_town' => 'DHA Phase 8', 'bedrooms' => null, 'bathrooms' => null, 'plot_size' => 200, 'plot_size_unit' => 'sqft', 'covered_area' => null, 'furnished' => false, 'description' => 'A prime residential plot in the most sought-after DHA Phase 8. Perfect for building your dream home.', 'features' => null, 'community_amenities' => ['Park', 'Security', 'Mosque'], 'nearby_places' => ['School', 'Hospital', 'Market'], 'possession_status' => 'ready'],
+            ['title' => 'Farmhouse with Orchard', 'category' => 'farmhouse', 'transaction_type' => 'sale', 'price' => 65000000, 'city' => 'Lahore', 'sector_town' => 'Raiwind Road', 'bedrooms' => 6, 'bathrooms' => 5, 'plot_size' => 8, 'plot_size_unit' => 'kanal', 'covered_area' => 8000, 'furnished' => true, 'description' => 'Beautiful farmhouse with fruit orchard, swimming pool, and spacious lawns. Perfect weekend getaway near Lahore.', 'features' => ['Central AC', 'Heating', 'Generator', 'Swimming Pool', 'CCTV'], 'community_amenities' => null, 'nearby_places' => ['Raiwind Road', 'Lahore Ring Road'], 'possession_status' => 'ready'],
+            ['title' => '3-Bed Family House in Bahria Town', 'category' => 'house', 'transaction_type' => 'sale', 'price' => 22000000, 'city' => 'Rawalpindi', 'sector_town' => 'Bahria Town', 'bedrooms' => 3, 'bathrooms' => 3, 'plot_size' => 500, 'plot_size_unit' => 'sqft', 'covered_area' => 2800, 'furnished' => false, 'description' => 'Spacious family house in the secure environment of Bahria Town. Modern design with all amenities nearby.', 'features' => ['Central AC', 'Generator', 'Security'], 'community_amenities' => ['Park', 'Gym', 'Swimming Pool', 'Security'], 'nearby_places' => ['School', 'Hospital', 'Market'], 'possession_status' => 'ready'],
+            ['title' => 'Luxury Penthouse - 4-Bed', 'category' => 'flat', 'transaction_type' => 'sale', 'price' => 55000000, 'city' => 'Islamabad', 'sector_town' => 'E-7', 'bedrooms' => 4, 'bathrooms' => 4, 'plot_size' => null, 'plot_size_unit' => null, 'covered_area' => 3500, 'furnished' => true, 'description' => 'Exclusive penthouse in the diplomatic enclave with stunning Margalla Hills views, private terrace, and premium fittings.', 'features' => ['Central AC', 'Underfloor Heating', 'Smart Home', 'CCTV', 'Private Terrace'], 'community_amenities' => ['Gym', 'Security', 'Parking'], 'nearby_places' => ['Diplomatic Enclave', 'Centaurus Mall', 'Marriott Hotel'], 'possession_status' => 'ready'],
+            ['title' => 'Commercial Shop - Saddar Bazar', 'category' => 'shop', 'transaction_type' => 'sale', 'price' => 35000000, 'city' => 'Rawalpindi', 'sector_town' => 'Saddar', 'bedrooms' => null, 'bathrooms' => 1, 'plot_size' => 80, 'plot_size_unit' => 'sqft', 'covered_area' => 720, 'furnished' => false, 'description' => 'High-foot-traffic commercial shop in Saddar Bazar. Currently rented, generating excellent monthly income.', 'features' => ['Air Conditioning', 'Store Room'], 'community_amenities' => null, 'nearby_places' => ['Saddar Bazar', 'Metro Station'], 'possession_status' => 'ready'],
+            ['title' => 'Agricultural Land 25 Acres', 'category' => 'farmhouse', 'transaction_type' => 'sale', 'price' => 15000000, 'city' => 'Multan', 'sector_town' => 'Basti Malook', 'bedrooms' => null, 'bathrooms' => null, 'plot_size' => 25, 'plot_size_unit' => 'acre', 'covered_area' => null, 'furnished' => false, 'description' => 'Productive agricultural land with tube well irrigation. Ideal for farming or future development near Multan.', 'features' => ['Tube Well', 'Electricity'], 'community_amenities' => null, 'nearby_places' => ['Multan City', 'Motorway M4'], 'possession_status' => 'ready'],
+            ['title' => 'Modern Office in Blue Area', 'category' => 'office', 'transaction_type' => 'rent', 'price' => 150000, 'city' => 'Islamabad', 'sector_town' => 'Blue Area', 'bedrooms' => null, 'bathrooms' => 2, 'plot_size' => null, 'plot_size_unit' => null, 'covered_area' => 1500, 'furnished' => true, 'description' => 'Fully furnished modern office space in Islamabad\'s business district. Reception, 3 cabins, and open area.', 'features' => ['Central AC', 'Generator', 'Furnished', 'Parking'], 'community_amenities' => ['Security', 'Maintenance', 'Elevator'], 'nearby_places' => ['NAB Office', 'Serena Hotel', 'Convention Centre'], 'possession_status' => 'ready'],
+            ['title' => '4-Bed House with Basement', 'category' => 'house', 'transaction_type' => 'rent', 'price' => 85000, 'city' => 'Lahore', 'sector_town' => 'Model Town', 'bedrooms' => 4, 'bathrooms' => 4, 'plot_size' => 600, 'plot_size_unit' => 'sqft', 'covered_area' => 4000, 'furnished' => false, 'description' => 'Spacious house in Model Town with basement, servant quarters, and large garden. Ideal for family.', 'features' => ['Generator', 'Security', 'Garden'], 'community_amenities' => ['Park', 'Security'], 'nearby_places' => ['Model Town Market', 'School', 'Hospital'], 'possession_status' => 'ready'],
+            ['title' => '2-Bed Apartment Near University', 'category' => 'flat', 'transaction_type' => 'rent', 'price' => 45000, 'city' => 'Islamabad', 'sector_town' => 'G-11/3', 'bedrooms' => 2, 'bathrooms' => 2, 'plot_size' => null, 'plot_size_unit' => null, 'covered_area' => 1200, 'furnished' => true, 'description' => 'Cozy furnished apartment near top universities. Ideal for students or young professionals.', 'features' => ['Air Conditioning', 'Internet', 'Furnished'], 'community_amenities' => ['Security', 'Parking'], 'nearby_places' => ['IIUI', 'COMSATS', 'Giga Mall'], 'possession_status' => 'ready'],
         ];
         foreach ($propertiesData as $p) {
             Property::firstOrCreate(
                 ['title' => $p['title']],
                 [
                     'property_code' => 'PRP-'.strtoupper(substr((string) rand(100000, 999999), 0, 6)),
-                    'type' => $p['type'],
+                    'company_id' => $companyId,
+                    'category' => $p['category'],
                     'transaction_type' => $p['transaction_type'],
                     'status' => 'available',
                     'price' => $p['price'],
@@ -169,6 +186,7 @@ class DummyDataSeeder extends Seeder
                 ['deal_number' => $d['deal_number']],
                 [
                     'property_id' => $propertyIds[array_rand($propertyIds)],
+                    'company_id' => $companyId,
                     'buyer_id' => $clientIds[array_rand($clientIds)],
                     'seller_id' => $clientIds[array_rand($clientIds)],
                     'agent_id' => $agentIds[array_rand($agentIds)],
@@ -187,10 +205,136 @@ class DummyDataSeeder extends Seeder
         }
         $this->command->info('5 Deals created.');
 
+        // ─── CALL LOGS ───────────────────────────────────────
+        $callLogData = [
+            ['name' => 'Imran Sheikh', 'phone' => '03007891234', 'caller_role' => 'seller', 'category' => 'house', 'transaction_type' => 'sale', 'city' => 'Islamabad', 'budget_min' => 40000000, 'budget_max' => 50000000, 'status' => 'new', 'notes' => 'Wants to sell 5-bed villa in F-7.'],
+            ['name' => 'Nadia Khan', 'phone' => '03007891235', 'caller_role' => 'buyer', 'category' => 'flat', 'transaction_type' => 'sale', 'city' => 'Lahore', 'budget_min' => 15000000, 'budget_max' => 20000000, 'status' => 'new', 'notes' => 'Looking for 3-bed apartment in Gulberg.'],
+            ['name' => 'Faisalabad Builders', 'phone' => '03007891236', 'caller_role' => 'seller', 'category' => 'plot', 'transaction_type' => 'sale', 'city' => 'Karachi', 'budget_min' => 8000000, 'budget_max' => 9000000, 'status' => 'contacted', 'notes' => 'Residential plot in DHA Phase 8.'],
+            ['name' => 'Ayesha Tariq', 'phone' => '03007891237', 'caller_role' => 'buyer', 'category' => 'house', 'transaction_type' => 'rent', 'city' => 'Lahore', 'budget_min' => 70000, 'budget_max' => 90000, 'status' => 'callback', 'notes' => 'Family house for rent in Model Town.'],
+            ['name' => 'Khalid Mahmood', 'phone' => '03007891238', 'caller_role' => 'buyer', 'category' => 'office', 'transaction_type' => 'sale', 'city' => 'Islamabad', 'budget_min' => 100000000, 'budget_max' => 130000000, 'status' => 'new', 'notes' => 'Commercial plaza in Blue Area.'],
+            ['name' => 'Saima Bibi', 'phone' => '03007891239', 'caller_role' => 'seller', 'category' => 'farmhouse', 'transaction_type' => 'sale', 'city' => 'Lahore', 'budget_min' => 60000000, 'budget_max' => 70000000, 'status' => 'matched', 'notes' => 'Farmhouse with orchard near Raiwind.'],
+        ];
+        foreach ($callLogData as $c) {
+            CallLog::firstOrCreate(
+                ['phone' => $c['phone']],
+                array_merge($c, [
+                    'company_id' => $companyId,
+                    'lead_source' => 'phone_call',
+                    'assigned_agent_id' => $agentIds[array_rand($agentIds)],
+                    'call_datetime' => Carbon::now()->subDays(rand(1, 20)),
+                ])
+            );
+        }
+        $this->command->info('6 Call Logs created.');
+
+        // ─── RENTAL RECORDS ──────────────────────────────────
+        $rentalData = [
+            ['property_index' => 9, 'status' => 'active', 'start' => 30, 'months' => 11],
+            ['property_index' => 10, 'status' => 'active', 'start' => 15, 'months' => 11],
+            ['property_index' => 11, 'status' => 'active', 'start' => 5, 'months' => 11],
+        ];
+        foreach ($rentalData as $r) {
+            $prop = Property::where('transaction_type', 'rent')->skip($r['property_index'] - 9)->first();
+            if (! $prop) {
+                continue;
+            }
+            RentalRecord::firstOrCreate(
+                ['property_id' => $prop->id],
+                [
+                    'company_id' => $companyId,
+                    'tenant_id' => $clientIds[array_rand($clientIds)],
+                    'landlord_id' => $ownerIds[array_rand($ownerIds)],
+                    'created_by' => $agentIds[array_rand($agentIds)],
+                    'start_date' => Carbon::now()->subDays($r['start']),
+                    'end_date' => Carbon::now()->addMonths($r['months']),
+                    'duration_months' => $r['months'],
+                    'status' => $r['status'],
+                    'notes' => 'Rental agreement executed.',
+                ]
+            );
+        }
+        $this->command->info('Rental records created.');
+
+        // ─── QUOTATIONS / INVOICES / COMMISSIONS / TOKENS / VISITS ──
+        $dealIds = Deal::pluck('id')->toArray();
+        foreach ($dealIds as $dealId) {
+            $deal = Deal::find($dealId);
+            $quotation = Quotation::firstOrCreate(
+                ['deal_id' => $dealId],
+                [
+                    'company_id' => $companyId,
+                    'client_id' => $deal->buyer_id,
+                    'property_id' => $deal->property_id,
+                    'quote_number' => 'Q-'.strtoupper(substr((string) rand(100000, 999999), 0, 6)),
+                    'status' => 'sent',
+                    'expiry_date' => Carbon::now()->addDays(15),
+                    'subtotal' => $deal->sale_price,
+                    'tax_rate' => 16,
+                    'tax_amount' => round($deal->sale_price * 0.16),
+                    'total' => round($deal->sale_price * 1.16),
+                    'notes' => 'Generated quotation.',
+                ]
+            );
+
+            Invoice::firstOrCreate(
+                ['deal_id' => $dealId],
+                [
+                    'company_id' => $companyId,
+                    'quotation_id' => $quotation->id,
+                    'client_id' => $deal->buyer_id,
+                    'agent_id' => $deal->agent_id,
+                    'invoice_type' => 'sale',
+                    'invoice_number' => 'INV-'.strtoupper(substr((string) rand(100000, 999999), 0, 6)),
+                    'status' => 'sent',
+                    'due_date' => Carbon::now()->addDays(30),
+                    'subtotal' => $deal->sale_price,
+                    'tax_rate' => 16,
+                    'tax_amount' => round($deal->sale_price * 0.16),
+                    'total' => round($deal->sale_price * 1.16),
+                    'paid_amount' => 0,
+                    'payment_status' => 'unpaid',
+                    'notes' => 'Generated invoice.',
+                ]
+            );
+
+            Commission::firstOrCreate(
+                ['deal_id' => $dealId, 'agent_id' => $deal->agent_id],
+                [
+                    'company_id' => $companyId,
+                    'type' => 'percentage',
+                    'percentage' => 2.50,
+                    'amount' => round($deal->sale_price * 0.025),
+                ]
+            );
+
+            Token::firstOrCreate(
+                ['deal_id' => $dealId],
+                [
+                    'company_id' => $companyId,
+                    'amount' => $deal->token_amount ?? round($deal->sale_price * 0.05),
+                    'payment_method' => 'cash',
+                    'reference_no' => 'TKN-'.rand(1000, 9999),
+                    'received_date' => Carbon::now()->subDays(rand(5, 30)),
+                ]
+            );
+
+            PropertyVisit::firstOrCreate(
+                ['client_id' => $deal->buyer_id, 'property_id' => $deal->property_id],
+                [
+                    'company_id' => $companyId,
+                    'agent_id' => $deal->agent_id,
+                    'scheduled_date' => Carbon::now()->subDays(rand(1, 20)),
+                    'status' => 'completed',
+                    'notes' => 'Site visit completed.',
+                ]
+            );
+        }
+        $this->command->info('Quotations, Invoices, Commissions, Tokens & Visits created for all deals.');
+
         // ─── SETTINGS ────────────────────────────────────────
         $settings = [
             ['key' => 'brand_logo', 'value' => ''],
-            ['key' => 'brand_name', 'value' => 'Prime Property Agency'],
+            ['key' => 'business_name', 'value' => 'Prime Property Agency'],
             ['key' => 'currency', 'value' => 'PKR'],
             ['key' => 'tax_rate', 'value' => '16'],
             ['key' => 'admin_email', 'value' => 'admin@agency.com'],
@@ -204,45 +348,6 @@ class DummyDataSeeder extends Seeder
             );
         }
         $this->command->info('Settings configured.');
-
-        // ─── BLOG POSTS ─────────────────────────────────────
-        if (class_exists(\App\Models\Post::class) && \App\Models\Post::count() === 0) {
-            $posts = [
-                [
-                    'title' => 'Real Estate Market Trends in Pakistan 2026',
-                    'excerpt' => 'A look at how property prices, demand and investment hotspots are shaping up across major cities this year.',
-                    'body' => "The Pakistani real estate market continues to evolve in 2026. With rising demand for residential plots in Lahore and Islamabad, and steady rental yields in Karachi, investors are diversifying their portfolios.\n\nOff-plan projects remain attractive for overseas Pakistanis, while marla-based plots in gated societies see the strongest liquidity. Our advisors recommend verifying title documents and NOC status before any commitment.",
-                    'is_published' => true,
-                    'published_at' => Carbon::now()->subDays(10),
-                ],
-                [
-                    'title' => 'Tips for First-Time Home Buyers in Pakistan',
-                    'excerpt' => 'Everything you need to know before purchasing your first home — from budgeting to documentation.',
-                    'body' => "Buying your first home is a major milestone. Start by setting a realistic budget and getting pre-approved financing where possible.\n\nAlways confirm the seller's CNIC, property ownership documents, and any outstanding dues. Work with a verified agent and never pay token amounts without a written agreement.",
-                    'is_published' => true,
-                    'published_at' => Carbon::now()->subDays(4),
-                ],
-                [
-                    'title' => 'Understanding Rent Agreements and Token Systems',
-                    'excerpt' => 'How rent agreements, schedules and token amounts work in our platform.',
-                    'body' => "Rent agreements in Pakistan typically run for 11 months and are renewable. Our platform helps you generate schedules, track payments and send reminders.\n\nTokens secure a deal and are adjusted against the final payment. Keep records of every transaction for tax and dispute purposes.",
-                    'is_published' => true,
-                    'published_at' => Carbon::now()->subDays(1),
-                ],
-            ];
-            foreach ($posts as $p) {
-                \App\Models\Post::create([
-                    'title' => $p['title'],
-                    'slug' => \Illuminate\Support\Str::slug($p['title']),
-                    'excerpt' => $p['excerpt'],
-                    'body' => $p['body'],
-                    'is_published' => $p['is_published'],
-                    'published_at' => $p['published_at'],
-                    'author_id' => $createdUsers[0]->id ?? null,
-                ]);
-            }
-            $this->command->info('Blog posts created.');
-        }
 
         $this->command->info('─────────────────────────────');
         $this->command->info('Dummy data seeded successfully!');

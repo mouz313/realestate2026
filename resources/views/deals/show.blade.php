@@ -121,7 +121,7 @@
                         </tr>
                         <tr>
                             <th>Type <span class="urdu">(قسم)</span></th>
-                            <td>{{ ucfirst($deal->property->type ?? '-') }}</td>
+                            <td>{{ \App\Helpers\Status::categoryLabel($deal->property->category ?? '-') }}</td>
                         </tr>
                         <tr>
                             <th>Price <span class="urdu">(قیمت)</span></th>
@@ -320,45 +320,4 @@
     </div>
 </div>
 
-{{-- Installment Plan --}}
-@if(($deal->installmentPlan ?? null) || ($deal->installments ?? null)?->isNotEmpty())
-<div class="card mt-4">
-    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h5><i class="ti ti-calendar-stats me-1"></i> Installment Plan <span class="urdu">(قسط کا منصوبہ)</span></h5>
-        <a href="{{ route('installments.create', ['deal_id' => $deal->id]) }}" class="btn btn-sm btn-dark"><i class="ti ti-plus"></i> <span class="urdu">(قسط شامل کریں)</span></a>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Amount <span class="urdu">(رقم)</span></th>
-                        <th>Paid Amount <span class="urdu">(ادا شدہ رقم)</span></th>
-                        <th>Due Date <span class="urdu">(واجب الادا تاریخ)</span></th>
-                        <th>Status <span class="urdu">(کیفیت)</span></th>
-                        <th>Late Fee <span class="urdu">(تاخیری فیس)</span></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse(($deal->installments ?? $deal->installmentPlan?->installments ?? []) as $installment)
-                    <tr>
-                        <td>{{ $installment->installment_no ?? $loop->iteration }}</td>
-                        <td>{{ number_format($installment->amount, 2) }}</td>
-                        <td>{{ number_format($installment->paid_amount ?? 0, 2) }}</td>
-                        <td>{{ $installment->due_date ? $installment->due_date->format('d M Y') : '-' }}</td>
-                        <td>
-                            <span class="badge status-{{ $installment->status ?? 'pending' }}">{{ ucfirst($installment->status ?? 'pending') }}</span>
-                        </td>
-                        <td>{{ $installment->late_fee ? number_format($installment->late_fee, 2) : '-' }}</td>
-                    </tr>
-                    @empty
-                    <tr><td colspan="6"><div class="empty-state"><i class="ti ti-calendar-stats"></i><span><span class="urdu">(اس ڈیل کے لیے کوئی قسط نہیں)</span></span></div></td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-@endif
 @endsection

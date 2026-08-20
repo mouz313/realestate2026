@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Commission;
 use App\Models\Deal;
-use App\Models\RentAgreement;
 use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -17,15 +16,6 @@ class AgreementPDFController extends Controller
         $pdf = Pdf::loadView('pdf.sale-agreement', compact('deal', 'settings'));
 
         return $pdf->download('sale-agreement-'.$deal->deal_number.'.pdf');
-    }
-
-    public function rentAgreement(RentAgreement $rentAgreement)
-    {
-        $rentAgreement->load(['property', 'tenant', 'owner', 'deal.agent']);
-        $settings = Setting::pluck('value', 'key')->toArray();
-        $pdf = Pdf::loadView('pdf.rent-agreement', compact('rentAgreement', 'settings'));
-
-        return $pdf->download('rent-agreement-'.$rentAgreement->id.'.pdf');
     }
 
     public function tokenReceipt(Deal $deal)

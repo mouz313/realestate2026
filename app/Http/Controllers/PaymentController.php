@@ -10,7 +10,7 @@ class PaymentController extends Controller
 {
     public function index()
     {
-        $payments = Payment::with(['invoice.client', 'rentAgreement.tenant'])->latest()->paginate(15);
+        $payments = Payment::with(['invoice.client'])->latest()->paginate(15);
         $settings = Setting::pluck('value', 'key')->toArray();
 
         return view('payments.index', compact('payments', 'settings'));
@@ -21,7 +21,7 @@ class PaymentController extends Controller
         if (! $payment->invoice_id) {
             toastr()->warning('Deposit payments are managed from the rent agreement page.');
 
-            return redirect()->route('rent-agreements.show', $payment->rent_agreement_id);
+            return back();
         }
 
         $payment->load('invoice');
@@ -34,7 +34,7 @@ class PaymentController extends Controller
         if (! $payment->invoice_id) {
             toastr()->warning('Deposit payments are managed from the rent agreement page.');
 
-            return redirect()->route('rent-agreements.show', $payment->rent_agreement_id);
+            return back();
         }
 
         $invoice = $payment->invoice;
@@ -71,7 +71,7 @@ class PaymentController extends Controller
         if (! $payment->invoice_id) {
             toastr()->warning('Deposit payments are managed from the rent agreement page.');
 
-            return redirect()->route('rent-agreements.show', $payment->rent_agreement_id);
+            return back();
         }
 
         $invoice = $payment->invoice;

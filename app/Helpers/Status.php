@@ -9,9 +9,6 @@ class Status
             'available' => 'status-available',
             'sold' => 'status-sold',
             'rented' => 'status-rented',
-            'under_offer' => 'status-under_offer',
-            'pending' => 'status-pending',
-            'reserved' => 'status-reserved',
         ],
         'deal' => [
             'inquiry' => 'status-inquiry',
@@ -29,12 +26,6 @@ class Status
             'completed' => 'status-completed',
             'cancelled' => 'status-cancelled',
         ],
-        'installment' => [
-            'pending' => 'status-pending',
-            'paid' => 'status-paid',
-            'overdue' => 'status-cancelled',
-            'partial' => 'status-partial',
-        ],
         'invoice' => [
             'draft' => 'status-draft',
             'sent' => 'status-sent',
@@ -51,12 +42,6 @@ class Status
             'received' => 'status-paid',
             'pending' => 'status-pending',
             'cancelled' => 'status-cancelled',
-        ],
-        'rent_agreement' => [
-            'active' => 'status-active',
-            'expired' => 'status-draft',
-            'terminated' => 'status-cancelled',
-            'pending' => 'status-pending',
         ],
         'quotation' => [
             'draft' => 'status-draft',
@@ -97,7 +82,32 @@ class Status
             'instagram' => 'Instagram',
             'website' => 'Website',
             'referral' => 'Referral',
+            'phone_call' => 'Phone Call',
             'other' => 'Other',
+        ],
+        'category' => [
+            'house' => 'House',
+            'plot' => 'Plot',
+            'farmhouse' => 'Farmhouse',
+            'agricultural_land' => 'Agricultural Land',
+            'flat' => 'Flat',
+            'studio_apartment' => 'Studio Apartment',
+            'office' => 'Office',
+            'shop' => 'Shop',
+        ],
+        'transaction_type' => [
+            'sale' => 'Sale',
+            'buy' => 'Buy',
+            'rent' => 'Rent',
+            'installment' => 'Installment',
+        ],
+        'call_status' => [
+            'new' => 'New',
+            'contacted' => 'Contacted',
+            'callback' => 'Callback',
+            'matched' => 'Matched',
+            'converted' => 'Converted',
+            'lost' => 'Lost',
         ],
         'property_type' => [
             'house' => 'House',
@@ -133,6 +143,21 @@ class Status
     public static function leadSourceLabel($key): string
     {
         return self::$maps['lead_source'][$key] ?? ucfirst(str_replace('_', ' ', (string) $key));
+    }
+
+    public static function categoryLabel($key): string
+    {
+        return self::$maps['category'][$key] ?? ucfirst(str_replace('_', ' ', (string) $key));
+    }
+
+    public static function transactionTypeLabel($key): string
+    {
+        return self::$maps['transaction_type'][$key] ?? ucfirst(str_replace('_', ' ', (string) $key));
+    }
+
+    public static function callStatusLabel($key): string
+    {
+        return self::$maps['call_status'][$key] ?? ucfirst(str_replace('_', ' ', (string) $key));
     }
 
     public static function enquiryPropertyTypes(): array

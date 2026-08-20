@@ -37,7 +37,7 @@
                 <div class="table-responsive">
                     <table class="detail-table table">
                         <tr><th>Title <span class="urdu">(عنوان)</span></th><td>{{ $property->title }}</td></tr>
-                        <tr><th>Type <span class="urdu">(قسم)</span></th><td>{{ ucfirst($property->type ?? '-') }}</td></tr>
+                        <tr><th>Type <span class="urdu">(قسم)</span></th><td>{{ $property->category ? \App\Helpers\Status::categoryLabel($property->category) : '-' }}</td></tr>
                         <tr><th>Transaction Type <span class="urdu">(لین دین کی قسم)</span></th><td>{{ ucfirst($property->transaction_type ?? '-') }}</td></tr>
                         <tr><th>Price <span class="urdu">(قیمت)</span></th><td class="fw-semibold" style="font-size:1.05rem;">{{ number_format($property->price, 0) }} {{ $property->currency ?? 'PKR' }}</td></tr>
                         <tr><th>Price Per Sqft <span class="urdu">(قیمت فی مربع فٹ)</span></th><td>{{ $property->price_per_sqft ? number_format($property->price_per_sqft, 0) : '-' }}</td></tr>

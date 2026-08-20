@@ -1,0 +1,245 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Helpers\Status;
+use App\Models\Agent;
+use App\Models\CallLog;
+use App\Models\City;
+use App\Models\Client;
+use App\Models\Company;
+use App\Models\Property;
+use Illuminate\Http\Request;
+
+class CallLogController extends Controller
+{
+    protected array $statuses = ['new', 'contacted', 'callback', 'matched', 'converted', 'lost'];
+    protected array $leadSources;
+    protected array $categories = ['house', 'plot', 'farmhouse', 'agricultural_land', 'flat', 'studio_apartment', 'office', 'shop'];
+    protected array $transactionTypes = ['sale', 'buy', 'rent', 'installment'];
+
+    public function __construct()
+    {
+        $this->leadSources = array_merge(['phone_call' => 'Phone Call'], Status::leadSources());
+    }
+
+    public function index(Request $request)
+    {
+        $query = CallLog::with(['client', 'property', 'assignedAgent']);
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        if ($leadSource = $request->input('lead_source')) {
+            $query->where('lead_source', $leadSource);
+        }
+
+        if ($category = $request->input('category')) {
+            $query->where('category', $category);
+        }
+
+        if ($transactionType = $request->input('transaction_type')) {
+            $query->where('transaction_type', $transactionType);
+        }
+
+        if ($request->input('due') == 1) {
+            $query->whereNotNull('follow_up_date')
+                  ->where('follow_up_date', '<=', today())
+                  ->whereNotIn('status', ['converted', 'lost']);
+        }
+
+        $callLogs = $query->latest('call_datetime')->paginate(15)->withQueryString();
+
+        return view('call_logs.index', [
+            'callLogs' => $callLogs,
+            'statuses' => $this->statuses,
+            'leadSources' => $this->leadSources,
+            'categories' => $this->categories,
+            'transactionTypes' => $this->transactionTypes,
+        ]);
+    }
+
+    public function create()
+    {
+        $clients = Client::orderBy('name')->get();
+        $agents = Agent::orderBy('name')->get();
+        $cities = City::where('is_active', true)->orderBy('name')->get();
+
+        return view('call_logs.create', [
+            'clients' => $clients,
+            'agents' => $agents,
+            'cities' => $cities,
+            'statuses' => $this->statuses,
+            'leadSources' => $this->leadSources,
+            'categories' => $this->categories,
+            'transactionTypes' => $this->transactionTypes,
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:50',
+            'alternate_phone' => 'nullable|string|max:50',
+            'lead_source' => 'nullable|string|max:50',
+            'category' => 'nullable|string|in:' . implode(',', $this->categories),
+            'transaction_type' => 'nullable|string|in:' . implode(',', $this->transactionTypes),
+            'city' => 'nullable|string|max:100',
+            'city_id' => 'nullable|exists:cities,id',
+            'location' => 'nullable|string|max:255',
+            'bedrooms' => 'nullable|integer|min:0',
+            'budget_min' => 'nullable|numeric|min:0',
+            'budget_max' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string',
+            'call_datetime' => 'nullable|date',
+            'follow_up_date' => 'nullable|date',
+            'status' => 'nullable|string|in:' . implode(',', $this->statuses),
+            'assigned_agent_id' => 'nullable|exists:agents,id',
+            'property_id' => 'nullable|exists:properties,id',
+            'client_id' => 'nullable|exists:clients,id',
+            'caller_role' => 'nullable|in:seller,buyer',
+        ]);
+
+        $data['company_id'] = current_company_id();
+        $data['created_by'] = auth()->user()->agent_id ?? null;
+
+        CallLog::create($data);
+
+        toastr()->success('Call logged successfully.');
+        return redirect()->route('call-logs.index');
+    }
+
+    public function show(CallLog $callLog)
+    {
+        // Two-sided matching: a Seller call is matched against Buyer leads (other
+        // buyer call logs); a Buyer/Unknown call is matched against available Properties.
+        $matchType = $callLog->caller_role === 'seller' ? 'buyer' : 'property';
+
+        if ($matchType === 'buyer') {
+            $q = CallLog::where('id', '!=', $callLog->id)
+                ->where('caller_role', 'buyer')
+                ->where('status', '!=', 'lost');
+
+            if ($callLog->category) {
+                $q->where('category', $callLog->category);
+            }
+            if ($callLog->transaction_type) {
+                $q->where('transaction_type', $callLog->transaction_type);
+            }
+            if ($callLog->city_id) {
+                $q->where('city_id', $callLog->city_id);
+            } elseif ($callLog->city) {
+                $q->where('city', $callLog->city);
+            }
+            if ($callLog->budget_min) {
+                $q->where('budget_max', '>=', $callLog->budget_min);
+            }
+            if ($callLog->budget_max) {
+                $q->where('budget_min', '<=', $callLog->budget_max);
+            }
+
+            $buyerLeads = $q->with(['client', 'assignedAgent'])->take(20)->get();
+
+            $buyerClients = Client::where('client_type', 'buyer')
+                ->where('id', '!=', $callLog->client_id ?? 0)
+                ->orderBy('name')
+                ->take(20)
+                ->get();
+
+            return view('call_logs.show', compact('callLog', 'buyerLeads', 'buyerClients', 'matchType'));
+        } else {
+            $q = Property::where('status', 'available');
+
+            if ($callLog->category) {
+                $q->where('category', $callLog->category);
+            }
+            if ($callLog->transaction_type) {
+                $q->where('transaction_type', $callLog->transaction_type);
+            }
+            if ($callLog->city_id) {
+                $q->where('city_id', $callLog->city_id);
+            } elseif ($callLog->city) {
+                $q->where('city', $callLog->city);
+            }
+            if ($callLog->bedrooms) {
+                $q->where('bedrooms', '>=', $callLog->bedrooms);
+            }
+            if ($callLog->budget_min) {
+                $q->where('price', '>=', $callLog->budget_min);
+            }
+            if ($callLog->budget_max) {
+                $q->where('price', '<=', $callLog->budget_max);
+            }
+
+            $matches = $q->take(20)->get();
+        }
+
+        return view('call_logs.show', compact('callLog', 'matches', 'matchType'));
+    }
+
+    public function edit(CallLog $callLog)
+    {
+        $clients = Client::orderBy('name')->get();
+        $agents = Agent::orderBy('name')->get();
+        $cities = City::where('is_active', true)->orderBy('name')->get();
+
+        return view('call_logs.edit', [
+            'callLog' => $callLog,
+            'clients' => $clients,
+            'agents' => $agents,
+            'cities' => $cities,
+            'statuses' => $this->statuses,
+            'leadSources' => $this->leadSources,
+            'categories' => $this->categories,
+            'transactionTypes' => $this->transactionTypes,
+        ]);
+    }
+
+    public function update(Request $request, CallLog $callLog)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:50',
+            'alternate_phone' => 'nullable|string|max:50',
+            'lead_source' => 'nullable|string|max:50',
+            'category' => 'nullable|string|in:' . implode(',', $this->categories),
+            'transaction_type' => 'nullable|string|in:' . implode(',', $this->transactionTypes),
+            'city' => 'nullable|string|max:100',
+            'city_id' => 'nullable|exists:cities,id',
+            'location' => 'nullable|string|max:255',
+            'bedrooms' => 'nullable|integer|min:0',
+            'budget_min' => 'nullable|numeric|min:0',
+            'budget_max' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string',
+            'call_datetime' => 'nullable|date',
+            'follow_up_date' => 'nullable|date',
+            'status' => 'nullable|string|in:' . implode(',', $this->statuses),
+            'assigned_agent_id' => 'nullable|exists:agents,id',
+            'property_id' => 'nullable|exists:properties,id',
+            'client_id' => 'nullable|exists:clients,id',
+            'caller_role' => 'nullable|in:seller,buyer',
+        ]);
+
+        $callLog->update($data);
+
+        toastr()->success('Call log updated successfully.');
+        return redirect()->route('call-logs.index');
+    }
+
+    public function destroy(CallLog $callLog)
+    {
+        $callLog->delete();
+
+        toastr()->success('Call log deleted successfully.');
+        return redirect()->route('call-logs.index');
+    }
+}

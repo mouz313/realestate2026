@@ -4,9 +4,7 @@ namespace App\Providers;
 
 use App\Helpers\Toastr;
 use App\Models\Company;
-use App\Models\RentAgreement;
 use App\Observers\CompanyObserver;
-use App\Observers\RentAgreementObserver;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
@@ -25,7 +23,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrapFive();
 
-        RentAgreement::observe(RentAgreementObserver::class);
         Company::observe(CompanyObserver::class);
 
         Gate::define('owner', fn ($user) => $user->isOwner());

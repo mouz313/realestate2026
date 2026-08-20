@@ -4,16 +4,19 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <title>@yield('title', config('app.name')) - {{ config('app.name') }}</title>
+    @php $brandFavicon = \App\Models\Setting::where('key', 'brand_favicon')->value('value'); @endphp
+    <link rel="icon" type="image/x-icon" href="{{ $brandFavicon ? Storage::url($brandFavicon) : asset('favicon.ico') }}">
+    @php $brandName = \App\Models\Setting::where('key', 'business_name')->value('value'); @endphp
+    <title>@yield('title', config('app.name')) - {{ $brandName ?? config('app.name') }}</title>
     <link href="{{ asset('assets/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/tabler-icons.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('assets/toastr.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/custom.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/app.css') }}" rel="stylesheet">
     <style>.urdu{font-size:0.75em;opacity:0.75;unicode-bidi:embed}.min-w-0{min-width:0}</style>
     @stack('styles')
 </head>
 <body>
+@include('partials.preloader')
 <div class="d-flex" style="min-height: 100vh;">
     {{-- Sidebar Toggle Button (mobile only) --}}
     <button class="btn btn-dark sidebar-toggle d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
@@ -23,11 +26,11 @@
     {{-- Sidebar (Desktop) --}}
     <div class="d-none d-lg-flex flex-column flex-shrink-0 p-3 sidebar" style="width: 260px; position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; z-index: 100;">
         <a href="{{ route(dashboard_route()) }}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none gap-2 sidebar-brand">
-            @php $brandLogo = \App\Models\Setting::where('key', 'brand_logo')->value('value'); @endphp
-            @if($brandLogo)
-                <img src="{{ Storage::url($brandLogo) }}" alt="{{ config('app.name') }}" class="sidebar-logo">
+            @php $brand = \App\Models\Setting::whereIn('key', ['brand_logo', 'business_name'])->pluck('value', 'key'); @endphp
+            @if(($brand['brand_logo'] ?? null))
+                <img src="{{ Storage::url($brand['brand_logo']) }}" alt="{{ $brand['business_name'] ?? config('app.name') }}" class="sidebar-logo">
             @else
-                <span class="fs-5 fw-bold">{{ config('app.name') }}</span>
+                <span class="fs-5 fw-bold">{{ $brand['business_name'] ?? config('app.name') }}</span>
             @endif
         </a>
         <hr>
@@ -45,6 +48,12 @@
                 <a href="{{ route('clients.index') }}" class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}">
                     <i class="ti ti-users"></i>
                     Clients
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('call-logs.index') }}" class="nav-link {{ request()->routeIs('call-logs.*') ? 'active' : '' }}">
+                    <i class="ti ti-phone-call"></i>
+                    Call Logs
                 </a>
             </li>
             <li>
@@ -69,9 +78,15 @@
                 <span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.1em;">Real Estate</span>
             </li>
             <li>
-                <a href="{{ route('properties.index') }}" class="nav-link {{ request()->routeIs('properties.*') ? 'active' : '' }}">
+                <a href="{{ route('properties.index') }}" class="nav-link {{ request()->routeIs('properties.*') && !request()->routeIs('properties.available') ? 'active' : '' }}">
                     <i class="ti ti-building"></i>
                     Properties
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('properties.available') }}" class="nav-link {{ request()->routeIs('properties.available') ? 'active' : '' }}">
+                    <i class="ti ti-building-community"></i>
+                    Available Properties
                 </a>
             </li>
             <li>
@@ -87,30 +102,18 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('installments.index') }}" class="nav-link {{ request()->routeIs('installments.*') ? 'active' : '' }}">
-                    <i class="ti ti-calendar-stats"></i>
-                    Installments
-                </a>
-            </li>
-            <li>
                 <a href="{{ route('property-visits.index') }}" class="nav-link {{ request()->routeIs('property-visits.*') ? 'active' : '' }}">
                     <i class="ti ti-calendar-event"></i>
                     Visits
                 </a>
             </li>
             <li class="nav-item mt-2">
-                <span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.1em;">Rentals</span>
+                <span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.1em;">Rentals <span class="urdu">(کرائے)</span></span>
             </li>
             <li>
-                <a href="{{ route('rent-agreements.index') }}" class="nav-link {{ request()->routeIs('rent-agreements.*') ? 'active' : '' }}">
-                    <i class="ti ti-home-2"></i>
-                    Rent Agreements
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('rent-payments.index') }}" class="nav-link {{ request()->routeIs('rent-payments.*') ? 'active' : '' }}">
-                    <i class="ti ti-cash"></i>
-                    Rent Payments
+                <a href="{{ route('rental-records.index') }}" class="nav-link {{ request()->routeIs('rental-records.*') ? 'active' : '' }}">
+                    <i class="ti ti-home-check"></i>
+                    Rented Records
                 </a>
             </li>
             <li class="nav-item mt-2">
@@ -157,12 +160,6 @@
                         @endif
                     </a>
                 </li>
-                <li>
-                    <a href="{{ route('home') }}" target="_blank" class="nav-link">
-                        <i class="ti ti-external-link"></i>
-                        Visit Website
-                    </a>
-                </li>
                 @can('admin')
                 <li class="nav-item mt-2">
                     <span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.1em;">Administration</span>
@@ -176,16 +173,6 @@
                 <li>
                     <a href="{{ route('contacts.index') }}" class="nav-link {{ request()->routeIs('contacts.*') ? 'active' : '' }}">
                         <i class="ti ti-message-report me-2"></i> Enquiries <span class="urdu">(انکوائریاں)</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('posts.index') }}" class="nav-link {{ request()->routeIs('posts.*') ? 'active' : '' }}">
-                        <i class="ti ti-article me-2"></i> Blog <span class="urdu">(بلاگ)</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('reviews.index') }}" class="nav-link {{ request()->routeIs('reviews.*') ? 'active' : '' }}">
-                        <i class="ti ti-star me-2"></i> Reviews <span class="urdu">(رائے)</span>
                     </a>
                 </li>
                 <li>
@@ -237,11 +224,11 @@
     <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
         <div class="offcanvas-header" style="background:var(--sidebar-bg);">
             <a href="{{ route(dashboard_route()) }}" class="text-decoration-none sidebar-brand d-flex align-items-center gap-2">
-                @php $brandLogo = \App\Models\Setting::where('key', 'brand_logo')->value('value'); @endphp
-                @if($brandLogo)
-                    <img src="{{ Storage::url($brandLogo) }}" alt="{{ config('app.name') }}" class="sidebar-logo">
+                @php $brand = \App\Models\Setting::whereIn('key', ['brand_logo', 'business_name'])->pluck('value', 'key'); @endphp
+                @if(($brand['brand_logo'] ?? null))
+                    <img src="{{ Storage::url($brand['brand_logo']) }}" alt="{{ $brand['business_name'] ?? config('app.name') }}" class="sidebar-logo">
                 @else
-                    <span class="fs-5 fw-bold">{{ config('app.name') }}</span>
+                    <span class="fs-5 fw-bold">{{ $brand['business_name'] ?? config('app.name') }}</span>
                 @endif
             </a>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
@@ -253,21 +240,21 @@
                         <i class="ti ti-home"></i> Dashboard
                     </a>
                 </li>
-                <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Sales &amp; CRM</span></li>
-                <li><a href="{{ route('clients.index') }}" class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}"><i class="ti ti-users"></i> Clients</a></li>
-                <li><a href="{{ route('quotations.index') }}" class="nav-link {{ request()->routeIs('quotations.*') ? 'active' : '' }}"><i class="ti ti-file-description"></i> Quotations</a></li>
+                 <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Sales &amp; CRM</span></li>
+                 <li><a href="{{ route('clients.index') }}" class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}"><i class="ti ti-users"></i> Clients</a></li>
+                 <li><a href="{{ route('call-logs.index') }}" class="nav-link {{ request()->routeIs('call-logs.*') ? 'active' : '' }}"><i class="ti ti-phone-call"></i> Call Logs</a></li>
+                 <li><a href="{{ route('quotations.index') }}" class="nav-link {{ request()->routeIs('quotations.*') ? 'active' : '' }}"><i class="ti ti-file-description"></i> Quotations</a></li>
                 <li><a href="{{ route('invoices.index') }}" class="nav-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}"><i class="ti ti-file-invoice"></i> Invoices</a></li>
                 <li><a href="{{ route('payments.index') }}" class="nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}"><i class="ti ti-currency-dollar"></i> Payments</a></li>
-                <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Real Estate</span></li>
-                <li><a href="{{ route('properties.index') }}" class="nav-link {{ request()->routeIs('properties.*') ? 'active' : '' }}"><i class="ti ti-building"></i> Properties</a></li>
-                <li><a href="{{ route('deals.index') }}" class="nav-link {{ request()->routeIs('deals.*') ? 'active' : '' }}"><i class="ti ti-handshake"></i> Deals</a></li>
+                 <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Real Estate</span></li>
+                 <li><a href="{{ route('properties.index') }}" class="nav-link {{ request()->routeIs('properties.*') && !request()->routeIs('properties.available') ? 'active' : '' }}"><i class="ti ti-building"></i> Properties</a></li>
+                 <li><a href="{{ route('properties.available') }}" class="nav-link {{ request()->routeIs('properties.available') ? 'active' : '' }}"><i class="ti ti-building-community"></i> Available Properties</a></li>
+                 <li><a href="{{ route('deals.index') }}" class="nav-link {{ request()->routeIs('deals.*') ? 'active' : '' }}"><i class="ti ti-handshake"></i> Deals</a></li>
                 <li><a href="{{ route('tokens.index') }}" class="nav-link {{ request()->routeIs('tokens.*') ? 'active' : '' }}"><i class="ti ti-coin"></i> Tokens</a></li>
-                <li><a href="{{ route('installments.index') }}" class="nav-link {{ request()->routeIs('installments.*') ? 'active' : '' }}"><i class="ti ti-calendar-stats"></i> Installments</a></li>
-                <li><a href="{{ route('property-visits.index') }}" class="nav-link {{ request()->routeIs('property-visits.*') ? 'active' : '' }}"><i class="ti ti-calendar-event"></i> Visits</a></li>
-                <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Rentals</span></li>
-                <li><a href="{{ route('rent-agreements.index') }}" class="nav-link {{ request()->routeIs('rent-agreements.*') ? 'active' : '' }}"><i class="ti ti-home-2"></i> Rent Agreements</a></li>
-                <li><a href="{{ route('rent-payments.index') }}" class="nav-link {{ request()->routeIs('rent-payments.*') ? 'active' : '' }}"><i class="ti ti-cash"></i> Rent Payments</a></li>
-                <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Team &amp; Payouts</span></li>
+                 <li><a href="{{ route('property-visits.index') }}" class="nav-link {{ request()->routeIs('property-visits.*') ? 'active' : '' }}"><i class="ti ti-calendar-event"></i> Visits</a></li>
+                  <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Rentals <span class="urdu">(کرائے)</span></span></li>
+                  <li><a href="{{ route('rental-records.index') }}" class="nav-link {{ request()->routeIs('rental-records.*') ? 'active' : '' }}"><i class="ti ti-home-check"></i> Rented Records</a></li>
+                 <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Team &amp; Payouts</span></li>
                 @can('view_team')
                 <li><a href="{{ route('team.index') }}" class="nav-link {{ request()->routeIs('team.*') || request()->routeIs('agents.*') ? 'active' : '' }}"><i class="ti ti-users-group"></i> Team</a></li>
                 @endcan
@@ -278,13 +265,10 @@
             <ul class="nav nav-pills flex-column p-3">
                 <li><a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}"><i class="ti ti-report"></i> Reports</a></li>
                 <li><a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}"><i class="ti ti-bell"></i> Notifications @php $unread = Auth::user()?->unreadNotifications()->count() ?? 0; @endphp @if($unread > 0)<span class="badge rounded-pill bg-danger ms-1">{{ $unread }}</span>@endif</a></li>
-                <li><a href="{{ route('home') }}" target="_blank" class="nav-link"><i class="ti ti-external-link"></i> Visit Website</a></li>
                 @can('admin')
                 <li class="nav-item mt-2"><span class="text-white-50 small fw-medium px-2 text-uppercase" style="font-size:0.65rem;letter-spacing:0.1em;">Administration</span></li>
                 <li><a href="{{ route('cities.index') }}" class="nav-link {{ request()->routeIs('cities.*') ? 'active' : '' }}"><i class="ti ti-building-community"></i> Cities</a></li>
                 <li><a href="{{ route('contacts.index') }}" class="nav-link {{ request()->routeIs('contacts.*') ? 'active' : '' }}"><i class="ti ti-message-report"></i> Enquiries</a></li>
-                <li><a href="{{ route('posts.index') }}" class="nav-link {{ request()->routeIs('posts.*') ? 'active' : '' }}"><i class="ti ti-article"></i> Blog</a></li>
-                <li><a href="{{ route('reviews.index') }}" class="nav-link {{ request()->routeIs('reviews.*') ? 'active' : '' }}"><i class="ti ti-star"></i> Reviews</a></li>
                 <li><a href="{{ route('referrals.index') }}" class="nav-link {{ request()->routeIs('referrals.*') ? 'active' : '' }}"><i class="ti ti-users-group"></i> Referrals</a></li>
                 <li><a href="{{ route('expenses.index') }}" class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }}"><i class="ti ti-receipt"></i> Expenses</a></li>
                 <li><a href="{{ route('roles.index') }}" class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}"><i class="ti ti-shield"></i> Roles</a></li>
@@ -307,11 +291,7 @@
                     </button>
                     <div class="collapse navbar-collapse" id="navbarNav">
                         {{-- Global Search --}}
-                        <div class="nav-search position-relative me-auto">
-                            <i class="ti ti-search nav-search-icon"></i>
-                            <input type="text" id="globalSearch" class="form-control nav-search-input" placeholder="Search anything..." autocomplete="off">
-                            <div id="searchResults" class="search-dropdown"></div>
-                        </div>
+                        @include('partials.global-search')
         <ul class="navbar-nav ms-auto align-items-center gap-2">
             <li class="nav-item">
                 <a class="nav-link position-relative" href="{{ route('notifications.index') }}" title="Notifications">
@@ -375,7 +355,6 @@
 
     <script src="{{ asset('assets/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('assets/jquery.min.js') }}"></script>
-    <script src="{{ asset('assets/toastr.min.js') }}"></script>
     <script>
         // Disable buttons on submit to prevent double-clicks
         document.addEventListener('submit', function(e) {
@@ -385,60 +364,6 @@
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Processing...';
             });
         });
-    </script>
-    <script>
-        // Global search
-        (function() {
-            const input = document.getElementById('globalSearch');
-            const results = document.getElementById('searchResults');
-            let timer;
-
-            if (!input) return;
-
-            input.addEventListener('input', function() {
-                clearTimeout(timer);
-                const q = this.value.trim();
-                if (q.length < 2) {
-                    results.classList.remove('show');
-                    return;
-                }
-                timer = setTimeout(() => {
-                    fetch('{{ route('search.index') }}?q=' + encodeURIComponent(q), {
-                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-                    })
-                    .then(r => r.json())
-                    .then(data => {
-                        if (!data.length) {
-                            results.innerHTML = '<div class="search-dropdown-empty">No results found</div>';
-                            results.classList.add('show');
-                            return;
-                        }
-                        results.innerHTML = '';
-                        data.forEach(item => {
-                            const el = document.createElement('a');
-                            el.href = item.url;
-                            el.className = 'search-dropdown-item';
-                            el.innerHTML = '<i class="' + item.icon + '"></i>' +
-                                '<div class="search-dropdown-text">' +
-                                    '<div class="search-dropdown-label"></div>' +
-                                    '<div class="search-dropdown-sub"></div>' +
-                                '</div>';
-                            el.querySelector('.search-dropdown-label').textContent = item.label;
-                            el.querySelector('.search-dropdown-sub').textContent = item.type + (item.sub ? ' · ' + item.sub : '');
-                            results.appendChild(el);
-                        });
-                        results.classList.add('show');
-                    })
-                    .catch((err) => console.error('Search error:', err));
-                }, 300);
-            });
-
-            document.addEventListener('click', function(e) {
-                if (!input.contains(e.target) && !results.contains(e.target)) {
-                    results.classList.remove('show');
-                }
-            });
-        })();
     </script>
     <script>
         // Theme toggle
@@ -458,6 +383,7 @@
             });
         })();
     </script>
+    @include('partials.toastr')
     <script>
         @if (session()->has('toastr'))
             @php $t = session('toastr'); @endphp

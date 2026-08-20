@@ -41,11 +41,6 @@ class Client extends Model
         return $this->hasMany(Invoice::class);
     }
 
-    public function portalActions(): HasMany
-    {
-        return $this->hasMany(PortalAction::class);
-    }
-
     public function ownedProperties(): HasMany
     {
         return $this->hasMany(Property::class, 'owner_id');
@@ -59,16 +54,6 @@ class Client extends Model
     public function dealsAsSeller(): HasMany
     {
         return $this->hasMany(Deal::class, 'seller_id');
-    }
-
-    public function rentAgreementsAsTenant(): HasMany
-    {
-        return $this->hasMany(RentAgreement::class, 'tenant_id');
-    }
-
-    public function rentAgreementsAsOwner(): HasMany
-    {
-        return $this->hasMany(RentAgreement::class, 'owner_id');
     }
 
     public function propertyVisits(): HasMany

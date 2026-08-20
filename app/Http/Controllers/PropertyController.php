@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Agent;
+use App\Models\CallLog;
 use App\Models\City;
 use App\Models\Client;
 use App\Models\Property;
@@ -25,28 +26,56 @@ class PropertyController extends Controller
         return view('properties.index', compact('properties'));
     }
 
+    public function available()
+    {
+        $agentId = auth()->user()->isAgent() ? auth()->user()->agent_id : null;
+        $properties = Property::with(['owner', 'assignedAgent'])
+            ->when($agentId, fn ($q) => $q->where('assigned_agent_id', $agentId))
+            ->where('status', 'available')
+            ->latest()->paginate(15);
+
+        return view('properties.index', compact('properties'));
+    }
+
     public function create()
     {
         $clients = Client::orderBy('name')->get();
         $agents = Agent::orderBy('name')->get();
         $cities = City::where('is_active', true)->orderBy('name')->get();
-        $types = ['house', 'flat', 'plot', 'commercial', 'farmhouse', 'penthouse'];
-        $transactionTypes = ['sale', 'rent', 'lease'];
-        $statuses = ['available', 'under_offer', 'sold', 'rented', 'under_construction', 'off_market'];
+        $types = ['house', 'plot', 'farmhouse', 'agricultural_land', 'flat', 'studio_apartment', 'office', 'shop'];
+        $transactionTypes = ['sale', 'buy', 'rent', 'installment'];
+        $statuses = ['available', 'rented', 'sold'];
         $lastProperty = Property::withTrashed()->orderBy('id', 'desc')->first();
         $nextId = $lastProperty ? $lastProperty->id + 1 : 1;
         $autoCode = 'PR-'.str_pad($nextId, 5, '0', STR_PAD_LEFT);
 
-        return view('properties.create', compact('clients', 'agents', 'cities', 'types', 'transactionTypes', 'statuses', 'autoCode'));
+        $prefill = [];
+        if ($callLog = CallLog::find(request('call_log'))) {
+            $prefill = [
+                'call_log_id' => $callLog->id,
+                'owner_name' => $callLog->caller_role === 'seller' ? $callLog->name : null,
+                'owner_phone' => $callLog->caller_role === 'seller' ? $callLog->phone : null,
+                'category' => $callLog->category,
+                'transaction_type' => $callLog->transaction_type === 'buy' ? 'sale' : $callLog->transaction_type,
+                'city_id' => $callLog->city_id,
+                'city' => $callLog->city,
+                'location' => $callLog->location,
+                'bedrooms' => $callLog->bedrooms,
+                'budget_min' => $callLog->budget_min,
+                'budget_max' => $callLog->budget_max,
+            ];
+        }
+
+        return view('properties.create', compact('clients', 'agents', 'cities', 'types', 'transactionTypes', 'statuses', 'autoCode', 'prefill'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'type' => 'required|string|in:house,flat,plot,commercial,farmhouse,penthouse',
-            'transaction_type' => 'required|string|in:sale,rent,lease',
-            'status' => 'required|string|in:available,under_offer,sold,rented,under_construction,off_market',
+            'category' => 'required|string|in:house,plot,farmhouse,agricultural_land,flat,studio_apartment,office,shop',
+            'transaction_type' => 'required|string|in:sale,buy,rent,installment',
+            'status' => 'required|string|in:available,rented,sold',
             'possession_status' => 'nullable|string|in:ready,under_construction,off_plan',
             'possession_year' => 'nullable|integer|min:1900|max:2100',
             'price' => 'required|numeric|min:0',
@@ -86,7 +115,10 @@ class PropertyController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'description' => 'nullable|string|max:5000',
-            'owner_id' => 'required|exists:clients,id',
+            'owner_id' => 'nullable|exists:clients,id',
+            'owner_name' => 'nullable|string|max:255',
+            'owner_phone' => 'nullable|string|max:50',
+            'call_log_id' => 'nullable|exists:call_logs,id',
             'assigned_agent_id' => 'nullable|exists:agents,id',
             'listed_date' => 'nullable|date',
             'expiry_date' => 'nullable|date',
@@ -110,6 +142,13 @@ class PropertyController extends Controller
             $data['assigned_agent_id'] = auth()->user()->agent_id;
         }
 
+        $data['owner_id'] = $this->resolveClient(
+            $request->input('owner_id'),
+            $request->input('owner_name'),
+            $request->input('owner_phone'),
+            'seller'
+        );
+
         $data['property_code'] = DB::transaction(function () {
             $last = Property::withTrashed()->lockForUpdate()->orderBy('id', 'desc')->first();
             $nextId = $last ? $last->id + 1 : 1;
@@ -119,6 +158,11 @@ class PropertyController extends Controller
 
         $property = Property::create($data);
         $this->handleMediaUploads($request, $property);
+
+        if ($callLogId = $request->input('call_log_id')) {
+            CallLog::where('id', $callLogId)->update(['property_id' => $property->id, 'status' => 'matched', 'matched_at' => now()]);
+        }
+
         toastr()->success('Property added successfully.');
 
         return redirect()->route('properties.index');
@@ -140,9 +184,9 @@ class PropertyController extends Controller
         $clients = Client::orderBy('name')->get();
         $agents = Agent::orderBy('name')->get();
         $cities = City::where('is_active', true)->orderBy('name')->get();
-        $types = ['house', 'flat', 'plot', 'commercial', 'farmhouse', 'penthouse'];
-        $transactionTypes = ['sale', 'rent', 'lease'];
-        $statuses = ['available', 'under_offer', 'sold', 'rented', 'under_construction', 'off_market'];
+        $types = ['house', 'plot', 'farmhouse', 'agricultural_land', 'flat', 'studio_apartment', 'office', 'shop'];
+        $transactionTypes = ['sale', 'buy', 'rent', 'installment'];
+        $statuses = ['available', 'rented', 'sold'];
 
         return view('properties.edit', compact('property', 'clients', 'agents', 'cities', 'types', 'transactionTypes', 'statuses'));
     }
@@ -152,9 +196,9 @@ class PropertyController extends Controller
         $this->authorizePropertyAccess($property);
         $request->validate([
             'title' => 'required|string|max:255',
-            'type' => 'required|string|in:house,flat,plot,commercial,farmhouse,penthouse',
-            'transaction_type' => 'required|string|in:sale,rent,lease',
-            'status' => 'required|string|in:available,under_offer,sold,rented,under_construction,off_market',
+            'category' => 'required|string|in:house,plot,farmhouse,agricultural_land,flat,studio_apartment,office,shop',
+            'transaction_type' => 'required|string|in:sale,buy,rent,installment',
+            'status' => 'required|string|in:available,rented,sold',
             'possession_status' => 'nullable|string|in:ready,under_construction,off_plan',
             'possession_year' => 'nullable|integer|min:1900|max:2100',
             'price' => 'required|numeric|min:0',
@@ -194,7 +238,10 @@ class PropertyController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'description' => 'nullable|string|max:5000',
-            'owner_id' => 'required|exists:clients,id',
+            'owner_id' => 'nullable|exists:clients,id',
+            'owner_name' => 'nullable|string|max:255',
+            'owner_phone' => 'nullable|string|max:50',
+            'call_log_id' => 'nullable|exists:call_logs,id',
             'assigned_agent_id' => 'nullable|exists:agents,id',
             'listed_date' => 'nullable|date',
             'expiry_date' => 'nullable|date',
@@ -213,6 +260,13 @@ class PropertyController extends Controller
         $data['nearby_places'] = $request->has('nearby_places') ? $request->nearby_places : null;
         $data['utilities'] = $request->has('utilities') ? $request->utilities : null;
         $data['city_id'] = $request->city ? City::where('name', $request->city)->value('id') : null;
+
+        $data['owner_id'] = $this->resolveClient(
+            $request->input('owner_id'),
+            $request->input('owner_name'),
+            $request->input('owner_phone'),
+            'seller'
+        );
 
         $oldStatus = $property->status;
         $property->update($data);
@@ -320,5 +374,25 @@ class PropertyController extends Controller
         [$headers, $rows] = \App\Exports\PropertyExport::build();
 
         return \App\Services\ExcelWriter::stream('properties-'.date('Y-m-d').'.xlsx', $headers, $rows);
+    }
+
+    protected function resolveClient(?string $id, ?string $name, ?string $phone, string $type): ?int
+    {
+        if (! empty($id)) {
+            return (int) $id;
+        }
+
+        if (! empty($name)) {
+            $client = Client::create([
+                'name' => $name,
+                'phone' => $phone,
+                'client_type' => $type,
+                'company_id' => current_company_id(),
+            ]);
+
+            return $client->id;
+        }
+
+        return null;
     }
 }

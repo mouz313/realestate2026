@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Agent;
 use App\Models\Commission;
 use App\Models\Deal;
-use App\Models\RentAgreement;
 use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -114,30 +113,6 @@ class ReportController extends Controller
             ->where('status', 'paid')->sum('amount');
 
         return view('reports.commissions', compact('commissions', 'totalPending', 'totalApproved', 'totalPaid', 'start', 'end'));
-    }
-
-    public function rentRoll(Request $request)
-    {
-        $status = $request->status ?: 'active';
-        $agentId = $this->agentFilter();
-
-        $agreements = RentAgreement::with(['property', 'tenant', 'owner'])
-            ->when($status !== 'all', fn ($q) => $q->where('status', $status))
-            ->when($agentId, fn ($q) => $q->whereHas('property', fn ($pq) => $pq->where('assigned_agent_id', $agentId)))
-            ->latest()
-            ->paginate(20);
-
-        $totalMonthlyRent = RentAgreement::where('status', 'active')
-            ->when($agentId, fn ($q) => $q->whereHas('property', fn ($pq) => $pq->where('assigned_agent_id', $agentId)))
-            ->sum('rent_amount');
-        $totalDeposits = RentAgreement::where('status', 'active')
-            ->when($agentId, fn ($q) => $q->whereHas('property', fn ($pq) => $pq->where('assigned_agent_id', $agentId)))
-            ->sum('security_deposit');
-        $activeCount = RentAgreement::where('status', 'active')
-            ->when($agentId, fn ($q) => $q->whereHas('property', fn ($pq) => $pq->where('assigned_agent_id', $agentId)))
-            ->count();
-
-        return view('reports.rent-roll', compact('agreements', 'totalMonthlyRent', 'totalDeposits', 'activeCount', 'status'));
     }
 
     public function exportSalesPdf(Request $request)

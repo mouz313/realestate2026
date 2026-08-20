@@ -21,7 +21,7 @@ class PropertyExport
             return [
                 $p->property_code ?? $p->id,
                 $p->title,
-                str_replace('_', ' ', $p->type),
+                str_replace('_', ' ', $p->category),
                 str_replace('_', ' ', $p->status),
                 $p->price,
                 $p->city,

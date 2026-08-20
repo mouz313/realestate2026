@@ -19,6 +19,9 @@
     </div>
     <form action="{{ route('properties.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
+        @if(!empty($prefill['call_log_id']))
+        <input type="hidden" name="call_log_id" value="{{ $prefill['call_log_id'] }}">
+        @endif
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-6">
@@ -38,15 +41,12 @@
                         </div>
                         <div class="col-6">
                             <div class="mb-3">
-                                <label class="form-label">Type <span class="urdu">(قسم)</span> <span class="text-danger">*</span></label>
-                                <select class="form-select @error('type') is-invalid @enderror" name="type" required>
+                                <label class="form-label">Category <span class="urdu">(قسم)</span> <span class="text-danger">*</span></label>
+                                <select class="form-select @error('category') is-invalid @enderror" name="category" required>
                                     <option value=""><span class="urdu">(قسم منتخب کریں)</span></option>
-                                    <option value="house" {{ old('type') == 'house' ? 'selected' : '' }}>House</option>
-                                    <option value="flat" {{ old('type') == 'flat' ? 'selected' : '' }}>Flat</option>
-                                    <option value="plot" {{ old('type') == 'plot' ? 'selected' : '' }}>Plot</option>
-                                    <option value="commercial" {{ old('type') == 'commercial' ? 'selected' : '' }}>Commercial</option>
-                                    <option value="farmhouse" {{ old('type') == 'farmhouse' ? 'selected' : '' }}>Farmhouse</option>
-                                    <option value="penthouse" {{ old('type') == 'penthouse' ? 'selected' : '' }}>Penthouse</option>
+                                    @foreach($types as $t)
+                                    <option value="{{ $t }}" {{ old('category') == $t ? 'selected' : '' }}>{{ \App\Helpers\Status::categoryLabel($t) }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -58,8 +58,9 @@
                                 <select class="form-select @error('transaction_type') is-invalid @enderror" name="transaction_type">
 <option value=""><span class="urdu">(منتخب کریں)</span></option>
                             <option value="sale" {{ old('transaction_type') == 'sale' ? 'selected' : '' }}>Sale <span class="urdu">(فروخت)</span></option>
+                            <option value="buy" {{ old('transaction_type') == 'buy' ? 'selected' : '' }}>Buy <span class="urdu">(خریداری)</span></option>
                             <option value="rent" {{ old('transaction_type') == 'rent' ? 'selected' : '' }}>Rent <span class="urdu">(کرایہ)</span></option>
-                            <option value="lease" {{ old('transaction_type') == 'lease' ? 'selected' : '' }}>Lease <span class="urdu">(لیز)</span></option>
+                            <option value="installment" {{ old('transaction_type') == 'installment' ? 'selected' : '' }}>Installment <span class="urdu">(اقساط)</span></option>
                                 </select>
                             </div>
                         </div>
@@ -68,11 +69,8 @@
                                 <label class="form-label">Status <span class="urdu">(کیفیت)</span></label>
                                 <select class="form-select @error('status') is-invalid @enderror" name="status">
                                     <option value="available" {{ old('status') == 'available' ? 'selected' : '' }}>Available <span class="urdu">(دستیاب)</span></option>
-                                    <option value="under_offer" {{ old('status') == 'under_offer' ? 'selected' : '' }}>Under Offer <span class="urdu">(آفر کے تحت)</span></option>
-                                    <option value="sold" {{ old('status') == 'sold' ? 'selected' : '' }}>Sold <span class="urdu">(فروخت شدہ)</span></option>
                                     <option value="rented" {{ old('status') == 'rented' ? 'selected' : '' }}>Rented <span class="urdu">(کرایہ پر)</span></option>
-                                    <option value="under_construction" {{ old('status') == 'under_construction' ? 'selected' : '' }}>Under Construction <span class="urdu">(زیر تعمیر)</span></option>
-                                    <option value="off_market" {{ old('status') == 'off_market' ? 'selected' : '' }}>Off Market <span class="urdu">(مارکیٹ سے باہر)</span></option>
+                                    <option value="sold" {{ old('status') == 'sold' ? 'selected' : '' }}>Sold <span class="urdu">(فروخت شدہ)</span></option>
                                 </select>
                             </div>
                         </div>
@@ -330,12 +328,26 @@
                         <div class="col-6">
                             <div class="mb-3">
                                 <label class="form-label">Owner <span class="urdu">(مالک)</span></label>
-                                <select class="form-select @error('owner_id') is-invalid @enderror" name="owner_id">
-                                    <option value=""><span class="urdu">(مالک منتخب کریں)</span></option>
+                                <select class="form-select" name="owner_select" id="owner_select">
+                                    <option value="">— Select existing —</option>
+                                    <option value="__new__" @selected(old('owner_name', $prefill['owner_name'] ?? null))>➕ Add new owner <span class="urdu">(نیا مالک)</span></option>
                                     @foreach($clients ?? [] as $client)
-                                        <option value="{{ $client->id }}" {{ old('owner_id') == $client->id ? 'selected' : '' }}>{{ $client->name }}</option>
+                                        <option value="{{ $client->id }}" @selected(old('owner_id', $prefill['owner_id'] ?? null) == $client->id)>{{ $client->name }}</option>
                                     @endforeach
                                 </select>
+                                <input type="hidden" name="owner_id" id="owner_id" value="{{ old('owner_id', $prefill['owner_id'] ?? '') }}">
+                                @error('owner_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                <div class="row g-2 mt-2" id="owner_new" style="display:@if(old('owner_name', $prefill['owner_name'] ?? null)) flex @else none @endif;">
+                                    <div class="col">
+                                        <input type="text" class="form-control @error('owner_name') is-invalid @enderror" name="owner_name" placeholder="Owner name" value="{{ old('owner_name', $prefill['owner_name'] ?? '') }}">
+                                        @error('owner_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                    <div class="col">
+                                        <input type="text" class="form-control @error('owner_phone') is-invalid @enderror" name="owner_phone" placeholder="Owner phone" value="{{ old('owner_phone', $prefill['owner_phone'] ?? '') }}">
+                                        @error('owner_phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                </div>
+                                <div class="form-text">Client is created only when this property is saved.</div>
                             </div>
                         </div>
                         <div class="col-6">
@@ -637,6 +649,23 @@
         });
     }
 })();
+</script>
+@endpush
+
+@push('scripts')
+<script>
+    function bindClientToggle(selectId, idField, newBox) {
+        const select = document.getElementById(selectId);
+        const hidden = document.getElementById(idField);
+        const box = document.getElementById(newBox);
+        function apply() {
+            if (select.value === '__new__') { hidden.value = ''; box.style.display = 'flex'; }
+            else { hidden.value = select.value; box.style.display = 'none'; }
+        }
+        select.addEventListener('change', apply);
+        apply();
+    }
+    bindClientToggle('owner_select', 'owner_id', 'owner_new');
 </script>
 @endpush
 @endsection

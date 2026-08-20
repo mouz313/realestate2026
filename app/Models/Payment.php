@@ -27,9 +27,4 @@ class Payment extends Model
     {
         return $this->belongsTo(Invoice::class);
     }
-
-    public function rentAgreement(): BelongsTo
-    {
-        return $this->belongsTo(RentAgreement::class);
-    }
 }

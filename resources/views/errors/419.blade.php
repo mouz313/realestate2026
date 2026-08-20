@@ -1,4 +1,4 @@
-@extends('public.layouts.app')
+@extends('layouts.auth')
 @section('title', 'Session Expired')
 @section('content')
 <div class="container py-5 text-center">

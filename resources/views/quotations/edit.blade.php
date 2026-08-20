@@ -55,7 +55,7 @@
                                     data-title="{{ $p->title }}"
                                     data-price="{{ $p->price }}"
                                     data-location="{{ $p->location_address ?? '' }}, {{ $p->city ?? '' }}"
-                                    data-type="{{ ucfirst($p->type) }}"
+                                    data-type="{{ \App\Helpers\Status::categoryLabel($p->category) }}"
                                     data-size="{{ $p->plot_size ? $p->plot_size . ' ' . ($p->plot_size_unit ?? '') : '' }}"
                                     {{ old('property_id', $quotation->property_id) == $p->id ? 'selected' : '' }}>
                                     {{ $p->title }} — {{ $p->city ?? '' }} (Rs. {{ number_format($p->price, 0) }})
@@ -69,7 +69,7 @@
                             <div>
                                 <div class="pc-title" id="pcTitle">{{ $quotation->property?->title ?? '' }}</div>
                                 <div class="pc-detail" id="pcDetail">{{ $quotation->property?->location_address ? $quotation->property->location_address . ', ' . $quotation->property->city : '' }}</div>
-                                <div class="pc-detail" id="pcType">{{ $quotation->property ? ucfirst($quotation->property->type) . ($quotation->property->plot_size ? ' — ' . $quotation->property->plot_size . ' ' . $quotation->property->plot_size_unit : '') : '' }}</div>
+                                <div class="pc-detail" id="pcType">{{ $quotation->property ? \App\Helpers\Status::categoryLabel($quotation->property->category) . ($quotation->property->plot_size ? ' — ' . $quotation->property->plot_size . ' ' . $quotation->property->plot_size_unit : '') : '' }}</div>
                             </div>
                             <div class="pc-price" id="pcPrice">{{ $quotation->property ? 'Rs. ' . number_format($quotation->property->price, 0) : '' }}</div>
                         </div>

@@ -18,7 +18,7 @@
 <table class="info">
     <tr><td>Title</td><td>{{ $deal->property->title ?? 'N/A' }}</td></tr>
     <tr><td>Location</td><td>{{ $deal->property->location_address ?? 'N/A' }}, {{ $deal->property->city ?? '' }}</td></tr>
-    <tr><td>Type / Size</td><td>{{ ucfirst($deal->property->type ?? 'N/A') }} &mdash; {{ $deal->property->plot_size ?? '' }} {{ $deal->property->plot_size_unit ?? '' }}</td></tr>
+    <tr><td>Type / Size</td><td>{{ \App\Helpers\Status::categoryLabel($deal->property->category ?? 'N/A') }} &mdash; {{ $deal->property->plot_size ?? '' }} {{ $deal->property->plot_size_unit ?? '' }}</td></tr>
 </table>
 
 <div class="sec-title">Sale Consideration</div>

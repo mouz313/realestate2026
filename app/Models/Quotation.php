@@ -62,11 +62,6 @@ class Quotation extends Model
         return $this->hasMany(Invoice::class);
     }
 
-    public function portalActions(): HasMany
-    {
-        return $this->hasMany(PortalAction::class);
-    }
-
     public function versions(): HasMany
     {
         return $this->hasMany(QuotationVersion::class);

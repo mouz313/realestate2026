@@ -50,8 +50,6 @@
 @php
     $attentionItems = collect([
         ['count' => $stats['new_enquiries'], 'label' => 'New Enquiries', 'urdu' => 'نئی انکوائریاں', 'icon' => 'ti-message-report', 'cls' => 'attention-danger', 'route' => 'contacts.index', 'show' => $stats['new_enquiries'] > 0],
-        ['count' => $pendingReviews->count(), 'label' => 'Pending Reviews', 'urdu' => 'زیر التواء رائے', 'icon' => 'ti-star', 'cls' => 'attention-warning', 'route' => 'reviews.index', 'show' => $pendingReviews->count() > 0],
-        ['count' => $rentDueSoon, 'label' => 'Rent Due (7d)', 'urdu' => 'کرایہ (۷ دن)', 'icon' => 'ti-cash', 'cls' => 'attention-info', 'route' => 'rent-payments.index', 'show' => $rentDueSoon > 0],
         ['count' => $recentReferrals->count(), 'label' => 'Referrals', 'urdu' => 'ریفرلز', 'icon' => 'ti-users-group', 'cls' => 'attention-purple', 'route' => 'referrals.index', 'show' => $recentReferrals->count() > 0],
     ])->filter(fn ($i) => $i['show']);
 @endphp
@@ -81,6 +79,105 @@
     </div>
 </div>
 @endif
+
+{{-- KPI Cards — Records overview --}}
+@php
+    $totalProperties = \App\Models\Property::count();
+    $availableProps  = \App\Models\Property::where('status', 'available')->count();
+    $rentedProps     = \App\Models\Property::where('status', 'rented')->count();
+    $sellersCount    = \App\Models\Client::where('client_type', 'seller')->count();
+    $buyersCount     = \App\Models\Client::where('client_type', 'buyer')->count();
+    $callLogCount    = \App\Models\CallLog::count();
+    $followupsDue    = \App\Models\CallLog::whereNotNull('follow_up_date')
+                            ->whereDate('follow_up_date', '<=', \Carbon\Carbon::today())
+                            ->whereNotIn('status', ['converted', 'lost'])
+                            ->count();
+    $callStatusBadge = [
+        'new' => 'bg-info', 'contacted' => 'bg-primary', 'callback' => 'bg-warning',
+        'matched' => 'bg-success', 'converted' => 'bg-success', 'lost' => 'bg-danger',
+    ];
+    $recentCallLogs = \App\Models\CallLog::with('client')->latest()->take(5)->get();
+    $recentRentals  = \App\Models\RentalRecord::with(['property', 'tenant'])->latest()->take(5)->get();
+@endphp
+<div class="kpi-row mb-1">
+    <div class="col">
+        <div class="kpi-card h-100">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="ti ti-building"></i></div>
+                <div class="min-w-0">
+                    <div class="kpi-value">{{ $totalProperties }}</div>
+                    <div class="kpi-label">Total Properties</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="kpi-card kpi-success h-100">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="ti ti-building-community"></i></div>
+                <div class="min-w-0">
+                    <div class="kpi-value">{{ $availableProps }}</div>
+                    <div class="kpi-label">Available</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="kpi-card kpi-info h-100">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="ti ti-home-check"></i></div>
+                <div class="min-w-0">
+                    <div class="kpi-value">{{ $rentedProps }}</div>
+                    <div class="kpi-label">Rented</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="kpi-card kpi-accent h-100">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="ti ti-user-check"></i></div>
+                <div class="min-w-0">
+                    <div class="kpi-value">{{ $sellersCount }}</div>
+                    <div class="kpi-label">Sellers</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="kpi-card kpi-accent h-100">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="ti ti-user-plus"></i></div>
+                <div class="min-w-0">
+                    <div class="kpi-value">{{ $buyersCount }}</div>
+                    <div class="kpi-label">Buyers</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="kpi-card h-100">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="ti ti-phone-call"></i></div>
+                <div class="min-w-0">
+                    <div class="kpi-value">{{ $callLogCount }}</div>
+                    <div class="kpi-label">Call Logs</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="kpi-card kpi-warning h-100">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="ti ti-bell-ringing"></i></div>
+                <div class="min-w-0">
+                    <div class="kpi-value">{{ $followupsDue }}</div>
+                    <div class="kpi-label">Follow-ups Due</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 {{-- Core Business Stats --}}
 <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-3">
@@ -281,20 +378,83 @@
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="card stat-card" style="--accent-clients: #f97316;">
-                <div class="card-body">
-                    <div class="stat-label">Rentals <span class="urdu">(کرایہ)</span></div>
-                    <div class="stat-value" style="font-size:1.35rem;">{{ $stats['active_rentals'] }}</div>
-                    <a href="{{ route('rent-agreements.index') }}" class="stat-link">View <i class="ti ti-arrow-right"></i></a>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-4 col-xl-2">
             <div class="card stat-card" style="--accent-clients: #8b5cf6;">
                 <div class="card-body">
                     <div class="stat-label">Pending Comm. <span class="urdu">(زیر کمیشن)</span></div>
                     <div class="stat-value" style="font-size:1.35rem;">{{ number_format($stats['pending_commissions'], 0) }}</div>
                     <a href="{{ route('commissions.index') }}" class="stat-link">View <i class="ti ti-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Recent Records — Call Logs & Rental Records --}}
+<div class="mt-3 mt-md-4">
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0"><i class="ti ti-phone-call me-1"></i> Recent Call Logs <span class="urdu">(حالیہ کالیں)</span></h5>
+                    <a href="{{ route('call-logs.index') }}" class="small text-decoration-none fw-medium">View all</a>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="mini-list">
+                        @forelse($recentCallLogs as $cl)
+                        <li>
+                            <div class="mini-row">
+                                <div class="mini-thumb"><i class="ti ti-phone"></i></div>
+                                <div class="min-w-0 flex-grow-1">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fw-medium text-truncate">{{ $cl->name ?: ($cl->client->name ?? '—') }}</span>
+                                        <span class="badge {{ $callStatusBadge[$cl->status] ?? 'bg-secondary' }}">{{ ucfirst(str_replace('_', ' ', $cl->status)) }}</span>
+                                    </div>
+                                    <div class="small text-secondary text-truncate">
+                                        {{ $cl->category ? ucfirst(str_replace('_', ' ', $cl->category)) : 'Requirement' }}
+                                        @if($cl->transaction_type) &middot; {{ ucfirst($cl->transaction_type) }} @endif
+                                        @if($cl->follow_up_date) &middot; Follow-up: {{ $cl->follow_up_date->format('d M Y') }} @endif
+                                    </div>
+                                </div>
+                                <a href="{{ route('call-logs.show', $cl) }}" class="btn btn-sm btn-outline-secondary"><i class="ti ti-eye"></i></a>
+                            </div>
+                        </li>
+                        @empty
+                        <li class="text-center text-secondary py-4 small">No call logs yet.</li>
+                        @endforelse
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0"><i class="ti ti-home-check me-1"></i> Recent Rental Records <span class="urdu">(حالیہ کرائے)</span></h5>
+                    <a href="{{ route('rental-records.index') }}" class="small text-decoration-none fw-medium">View all</a>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="mini-list">
+                        @forelse($recentRentals as $rr)
+                        <li>
+                            <div class="mini-row">
+                                <div class="mini-thumb"><i class="ti ti-home"></i></div>
+                                <div class="min-w-0 flex-grow-1">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fw-medium text-truncate">{{ $rr->property->title ?? 'Property' }}</span>
+                                        <span class="badge {{ $callStatusBadge[$rr->status] ?? 'bg-secondary' }}">{{ ucfirst(str_replace('_', ' ', $rr->status)) }}</span>
+                                    </div>
+                                    <div class="small text-secondary text-truncate">
+                                        Tenant: {{ $rr->tenant->name ?? '—' }}
+                                        @if($rr->start_date) &middot; From {{ $rr->start_date->format('d M Y') }} @endif
+                                    </div>
+                                </div>
+                                <a href="{{ route('rental-records.show', $rr) }}" class="btn btn-sm btn-outline-secondary"><i class="ti ti-eye"></i></a>
+                            </div>
+                        </li>
+                        @empty
+                        <li class="text-center text-secondary py-4 small">No rental records yet.</li>
+                        @endforelse
+                    </ul>
                 </div>
             </div>
         </div>
@@ -383,39 +543,6 @@
         <div class="col-lg-4">
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h5 class="mb-0"><i class="ti ti-star me-1"></i> Pending Reviews <span class="urdu">(زیر التواء رائے)</span></h5>
-                    <a href="{{ route('reviews.index') }}" class="small text-decoration-none fw-medium">View all</a>
-                </div>
-                <div class="card-body p-0">
-                    <ul class="mini-list">
-                        @forelse($pendingReviews as $r)
-                        <li>
-                            <div class="mini-row">
-                                <div class="mini-thumb"><i class="ti ti-star"></i></div>
-                                <div class="min-w-0 flex-grow-1">
-                                    <div class="fw-medium text-truncate">{{ $r->name }}</div>
-                                    <div class="small text-secondary text-truncate">
-                                        @for($s = 1; $s <= 5; $s++)<i class="ti ti-star{{ $s <= $r->rating ? '-filled' : '' }}" style="font-size:.7rem;color:#f59e0b;"></i>@endfor
-                                        @if($r->property) &middot; {{ $r->property->city ?? '' }} @endif
-                                    </div>
-                                </div>
-                                <form action="{{ route('reviews.approve', $r) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button class="btn btn-sm btn-success" title="Approve"><i class="ti ti-check"></i></button>
-                                </form>
-                            </div>
-                        </li>
-                        @empty
-                        <li class="text-center text-secondary py-4 small">No pending reviews. <span class="urdu">(کوئی زیر التواء نہیں)</span></li>
-                        @endforelse
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5 class="mb-0"><i class="ti ti-users-group me-1"></i> Recent Referrals <span class="urdu">(حالیہ ریفرلز)</span></h5>
                     <a href="{{ route('referrals.index') }}" class="small text-decoration-none fw-medium">View all</a>
                 </div>
@@ -470,8 +597,6 @@
                                 <td>
                                     @if($p->invoice && $p->invoice->invoice_number)
                                         <a href="{{ route('invoices.show', $p->invoice) }}" class="text-decoration-none fw-medium">{{ $p->invoice->invoice_number }}</a>
-                                    @elseif($p->rentAgreement)
-                                        <a href="{{ route('rent-agreements.show', $p->rentAgreement) }}" class="text-decoration-none fw-medium">Agreement #{{ $p->rentAgreement->id }}</a>
                                     @else
                                         <span class="text-secondary">-</span>
                                     @endif
@@ -696,7 +821,6 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h5 class="mb-0"><i class="ti ti-info-circle me-1"></i> Quick Links <span class="urdu">(فوری روابط)</span></h5>
-                <span class="small text-secondary">Posts: {{ $postsPublished }} published / {{ $postsDraft }} draft</span>
             </div>
             <div class="card-body">
                 <div class="row g-2">
@@ -714,12 +838,6 @@
                     </div>
                     <div class="col-6">
                         <a href="{{ route('quotations.create') }}" class="btn btn-outline-secondary w-100 justify-content-center text-start text-sm-center"><i class="ti ti-plus"></i> <span class="d-none d-sm-inline">New </span>Quote <span class="urdu d-none d-md-inline">(نئی)</span></a>
-                    </div>
-                    <div class="col-6">
-                        <a href="{{ route('posts.create') }}" class="btn btn-outline-secondary w-100 justify-content-center text-start text-sm-center"><i class="ti ti-article"></i> <span class="d-none d-sm-inline">New </span>Post <span class="urdu d-none d-md-inline">(نیا بلاگ)</span></a>
-                    </div>
-                    <div class="col-6">
-                        <a href="{{ route('rent-payments.index') }}" class="btn btn-outline-secondary w-100 justify-content-center text-start text-sm-center"><i class="ti ti-cash"></i> <span class="d-none d-sm-inline">Rent </span>Overview <span class="urdu d-none d-md-inline">(کرایہ)</span></a>
                     </div>
                 </div>
             </div>

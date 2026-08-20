@@ -328,3 +328,54 @@ Terminate HTTPS at the web server / load balancer. The app trusts proxies automa
 ## License
 
 Proprietary. All rights reserved.
+
+---
+
+## CMS Working Flowchart
+
+> **Note:** This system was refactored into an **internal Property CMS for a single agency**. The public website, client/tenant/owner portals, full rent-management, and installment modules described in the earlier sections above have been removed. The flow below reflects the **current working system**.
+
+### High-level flow (Mermaid)
+
+```mermaid
+flowchart TD
+    A[Staff / Agent / Owner Login] --> B[Dashboard]
+
+    B --> C[Properties]
+    C --> C1[Add / Edit Property<br/>category • transaction_type • status]
+    C1 --> C2{status?}
+    C2 -->|available| C3[Available Properties page]
+    C2 -->|sold| C4[Deal closed]
+    C2 -->|rented| C5[Rental Record created]
+
+    B --> D[Clients]
+    D --> D1[Sellers page]
+    D --> D2[Buyers page]
+
+    B --> E[Call Logs]
+    E --> E1[Log incoming call:<br/>caller • requirement • follow-up]
+    E1 --> E2[Auto-link / create Client]
+    E1 --> E3[Match available properties]
+    E1 --> E4[Follow-up reminder]
+
+    B --> F[Deals]
+    F --> F1[Quotation] --> F2[Invoice] --> F3[Payment]
+
+    B --> G[Rental Records]
+    G --> G1[Whose property • by whom • duration]
+    G1 -. 6 / 9 / 12 month cron .-> G2[Agency verification email]
+
+    E4 -. daily cron .-> E5[Follow-up notification to agent]
+
+    B --> H[Reports / Activity Log / Global Search]
+```
+
+### Text flow
+
+1. **Login & access** — Only agency staff log in (Owner / Admin / Agent roles & permissions). No public site, no client portals.
+2. **Properties** — Add a property with `category` (house, plot, farmhouse, agricultural land, flat, studio apartment, office, shop), `transaction_type` (sale, buy, rent, installment) and `status` (available, rented, sold). Available properties feed the *Available Properties* page.
+3. **Clients** — Managed as **Sellers** and **Buyers** via dedicated pages. A caller in a Call Log is auto-linked to an existing client, or a new client is created on the fly.
+4. **Call Logs (core)** — Every incoming call is recorded with the caller, requirement, and a follow-up date. The *Match* view links the requirement to currently available properties so no lead is lost. A daily cron sends follow-up reminders to agents.
+5. **Deals & financials** — Deals produce Quotations → Invoices → Payments. Commissions, agent payouts, and expenses are tracked.
+6. **Rental Records (slim)** — When a property is rented, a simple Rental Record captures *whose property, rented by whom, for how long* — no rent payments. A staggered 6/9/12-month cron emails the agency to verify the property is still rented.
+7. **Dashboard, search & crons** — Unified dashboard shows KPIs (properties, sellers/buyers, call logs, follow-ups due, rentals). Global search spans modules. Crons: `rent:verify-status`, `call:followups`, recurring invoices, backup.

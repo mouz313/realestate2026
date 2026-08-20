@@ -51,7 +51,7 @@
                         <textarea class="form-control" name="notes" rows="2">{{ old('notes', $client->notes) }}</textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Portal Password <span class="urdu">(پورٹل پاس ورڈ)</span> <span class="text-secondary small"><span class="urdu">(موجودہ رکھنے کے لیے خالی چھوڑیں)</span></span></label>
+                        <label class="form-label">Password <span class="urdu">(پاس ورڈ)</span></label>
                         <input type="password" class="form-control" name="password" placeholder="Enter new password to change <span class="urdu">(نیا پاس ورڈ درج کریں)</span>">
                     </div>
                 </div>

@@ -19,6 +19,9 @@
     </div>
     <form action="{{ route('deals.store') }}" method="POST">
         @csrf
+        @if(!empty($prefill['call_log_id']))
+        <input type="hidden" name="call_log_id" value="{{ $prefill['call_log_id'] }}">
+        @endif
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-6">
@@ -43,24 +46,50 @@
                         @error('property_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Buyer <span class="urdu">(خریدار)</span> <span class="text-danger">*</span></label>
-                        <select class="form-select @error('buyer_id') is-invalid @enderror" name="buyer_id" required>
-                            <option value=""><span class="urdu">(خریدار منتخب کریں)</span></option>
+                        <label class="form-label">Buyer <span class="urdu">(خریدار)</span></label>
+                        <select class="form-select" name="buyer_select" id="buyer_select">
+                            <option value="">— Select existing —</option>
+                            <option value="__new__" @selected(old('buyer_name', $prefill['buyer_name'] ?? null))>➕ Add new buyer <span class="urdu">(نیا خریدار)</span></option>
                             @foreach($clients ?? [] as $client)
-                                <option value="{{ $client->id }}" {{ old('buyer_id') == $client->id ? 'selected' : '' }}>{{ $client->name }}</option>
+                                <option value="{{ $client->id }}" @selected(old('buyer_id', $prefill['buyer_id'] ?? null) == $client->id)>{{ $client->name }}</option>
                             @endforeach
                         </select>
-                        @error('buyer_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <input type="hidden" name="buyer_id" id="buyer_id" value="{{ old('buyer_id', $prefill['buyer_id'] ?? '') }}">
+                        @error('buyer_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        <div class="row g-2 mt-2" id="buyer_new" style="display:@if(old('buyer_name', $prefill['buyer_name'] ?? null)) block @else none @endif;">
+                            <div class="col">
+                                <input type="text" class="form-control @error('buyer_name') is-invalid @enderror" name="buyer_name" placeholder="Buyer name" value="{{ old('buyer_name', $prefill['buyer_name'] ?? '') }}">
+                                @error('buyer_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col">
+                                <input type="text" class="form-control @error('buyer_phone') is-invalid @enderror" name="buyer_phone" placeholder="Buyer phone" value="{{ old('buyer_phone', $prefill['buyer_phone'] ?? '') }}">
+                                @error('buyer_phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                        <div class="form-text">Client is created only when this deal is saved.</div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Seller <span class="urdu">(فروخت کنندہ)</span> <span class="text-danger">*</span></label>
-                        <select class="form-select @error('seller_id') is-invalid @enderror" name="seller_id" required>
-                            <option value=""><span class="urdu">(فروخت کنندہ منتخب کریں)</span></option>
+                        <label class="form-label">Seller <span class="urdu">(فروخت کنندہ)</span></label>
+                        <select class="form-select" name="seller_select" id="seller_select">
+                            <option value="">— Select existing —</option>
+                            <option value="__new__" @selected(old('seller_name', $prefill['seller_name'] ?? null))>➕ Add new seller <span class="urdu">(نیا فروخت کنندہ)</span></option>
                             @foreach($clients ?? [] as $client)
-                                <option value="{{ $client->id }}" {{ old('seller_id') == $client->id ? 'selected' : '' }}>{{ $client->name }}</option>
+                                <option value="{{ $client->id }}" @selected(old('seller_id', $prefill['seller_id'] ?? null) == $client->id)>{{ $client->name }}</option>
                             @endforeach
                         </select>
-                        @error('seller_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <input type="hidden" name="seller_id" id="seller_id" value="{{ old('seller_id', $prefill['seller_id'] ?? '') }}">
+                        @error('seller_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        <div class="row g-2 mt-2" id="seller_new" style="display:@if(old('seller_name', $prefill['seller_name'] ?? null)) block @else none @endif;">
+                            <div class="col">
+                                <input type="text" class="form-control @error('seller_name') is-invalid @enderror" name="seller_name" placeholder="Seller name" value="{{ old('seller_name', $prefill['seller_name'] ?? '') }}">
+                                @error('seller_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col">
+                                <input type="text" class="form-control @error('seller_phone') is-invalid @enderror" name="seller_phone" placeholder="Seller phone" value="{{ old('seller_phone', $prefill['seller_phone'] ?? '') }}">
+                                @error('seller_phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                        <div class="form-text">Client is created only when this deal is saved.</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Agent <span class="urdu">(ایجنٹ)</span></label>
@@ -168,4 +197,27 @@
         </div>
     </form>
 </div>
+
+@push('scripts')
+<script>
+    function bindClientToggle(selectId, idField, newBox) {
+        const select = document.getElementById(selectId);
+        const hidden = document.getElementById(idField);
+        const box = document.getElementById(newBox);
+        function apply() {
+            if (select.value === '__new__') {
+                hidden.value = '';
+                box.style.display = 'flex';
+            } else {
+                hidden.value = select.value;
+                box.style.display = 'none';
+            }
+        }
+        select.addEventListener('change', apply);
+        apply();
+    }
+    bindClientToggle('buyer_select', 'buyer_id', 'buyer_new');
+    bindClientToggle('seller_select', 'seller_id', 'seller_new');
+</script>
+@endpush
 @endsection

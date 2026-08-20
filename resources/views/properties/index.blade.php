@@ -46,7 +46,7 @@
                 <tr>
                     <td class="fw-semibold text-secondary">{{ $property->property_code ?? $property->id }}</td>
                     <td class="fw-medium">{{ $property->title }}</td>
-                    <td>{{ ucfirst($property->type ?? '-') }}</td>
+                    <td>{{ $property->category ? \App\Helpers\Status::categoryLabel($property->category) : '-' }}</td>
                     <td class="fw-medium">{{ number_format($property->price, 0) }}</td>
                     <td>{{ $property->city ?? '-' }}</td>
                     <td>

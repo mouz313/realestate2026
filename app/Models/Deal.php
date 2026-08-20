@@ -8,7 +8,6 @@ use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Deal extends Model
@@ -73,11 +72,6 @@ class Deal extends Model
         return $this->hasMany(Token::class);
     }
 
-    public function installmentPlan(): HasOne
-    {
-        return $this->hasOne(InstallmentPlan::class);
-    }
-
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
@@ -86,10 +80,5 @@ class Deal extends Model
     public function commissions(): HasMany
     {
         return $this->hasMany(Commission::class);
-    }
-
-    public function rentAgreement(): HasOne
-    {
-        return $this->hasOne(RentAgreement::class);
     }
 }

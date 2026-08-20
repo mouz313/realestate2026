@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\GatewayPayment;
-use App\Models\Installment;
 use App\Models\Invoice;
-use App\Models\RentPayment;
 use App\Models\Token;
 use App\Services\PaymentGateway;
 use Illuminate\Http\Request;
@@ -19,7 +17,7 @@ class GatewayPaymentController extends Controller
         $request->validate([
             'gateway' => 'required|string|in:jazzcash,easypaisa,raast',
             'amount' => 'required|numeric|min:1',
-            'payable_type' => 'required|string|in:invoice,rent_payment,token,installment',
+            'payable_type' => 'required|string|in:invoice,token',
             'payable_id' => 'required|integer|min:1',
         ]);
 
@@ -138,24 +136,10 @@ class GatewayPaymentController extends Controller
                 'payment_status' => $newPaid >= $recipient->total ? 'paid'
                     : ($newPaid > 0 ? 'partial' : 'pending'),
             ]);
-        } elseif ($recipient instanceof RentPayment) {
-            $recipient->update([
-                'status' => 'paid',
-                'paid_date' => now(),
-                'payment_method' => 'online',
-                'reference_no' => $record->order_id,
-            ]);
         } elseif ($recipient instanceof Token) {
             $recipient->update([
                 'status' => $recipient->status === 'pending' ? 'received' : $recipient->status,
                 'payment_method' => 'online',
-            ]);
-        } elseif ($recipient instanceof Installment) {
-            $recipient->update([
-                'status' => 'paid',
-                'paid_date' => now(),
-                'payment_method' => 'online',
-                'reference_no' => $record->order_id,
             ]);
         }
     }
@@ -164,9 +148,7 @@ class GatewayPaymentController extends Controller
     {
         return match ($request->payable_type) {
             'invoice' => Invoice::with('client')->findOrFail($request->payable_id),
-            'rent_payment' => RentPayment::with('rentAgreement')->findOrFail($request->payable_id),
             'token' => Token::with('deal')->findOrFail($request->payable_id),
-            'installment' => Installment::with('plan')->findOrFail($request->payable_id),
             default => abort(400, 'Invalid payable type.'),
         };
     }
@@ -175,9 +157,7 @@ class GatewayPaymentController extends Controller
     {
         return match ($type) {
             'invoice' => 'INV-'.$payable->invoice_number,
-            'rent_payment' => 'RP-'.$payable->id.'-'.$payable->month.'/'.$payable->year,
             'token' => 'TKN-'.$payable->id,
-            'installment' => 'INST-'.$payable->id,
             default => 'PAY-'.$payable->id,
         };
     }
@@ -186,9 +166,7 @@ class GatewayPaymentController extends Controller
     {
         return match ($type) {
             'invoice' => 'Invoice '.$payable->invoice_number.' payment',
-            'rent_payment' => 'Rent payment for '.($payable->month_name ?? 'N/A'),
             'token' => 'Token payment',
-            'installment' => 'Installment payment',
             default => 'Agency payment',
         };
     }
@@ -207,10 +185,6 @@ class GatewayPaymentController extends Controller
 
         if ($recipient instanceof Invoice) {
             return redirect()->route('invoices.show', $recipient)->with('success', $message);
-        }
-
-        if ($recipient instanceof RentPayment) {
-            return redirect()->route('rent-agreements.show', $recipient->rent_agreement_id)->with('success', $message);
         }
 
         return redirect()->route('admin.dashboard')->with('success', $message);

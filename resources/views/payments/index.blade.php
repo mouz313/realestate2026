@@ -49,9 +49,8 @@
                         @else
                         <span class="badge bg-info text-dark">Security Deposit</span>
                         @endif
-                        <a href="{{ route('rent-agreements.show', $payment->rentAgreement) }}" class="text-decoration-none fw-medium">Agreement #{{ $payment->rentAgreement->id }}</a>
                     </td>
-                    <td>{{ $payment->rentAgreement->tenant->name ?? '-' }}</td>
+                    <td>-</td>
                     @endif
                     <td class="fw-medium {{ $payment->payment_type === 'security_deposit_return' ? 'text-danger' : 'text-success' }}">{{ $payment->payment_type === 'security_deposit_return' ? '- ' : '' }}{{ number_format($payment->amount, 0) }}</td>
                     <td class="d-none d-sm-table-cell">{{ $payment->method ?: '-' }}</td>
@@ -61,10 +60,6 @@
                         <div class="action-btns flex-nowrap">
                             @if($payment->invoice_id)
                             <a href="{{ route('invoices.show', $payment->invoice) }}" class="btn btn-sm btn-outline-secondary" title="View Invoice">
-                                <i class="ti ti-eye"></i>
-                            </a>
-                            @else
-                            <a href="{{ route('rent-agreements.show', $payment->rentAgreement) }}" class="btn btn-sm btn-outline-secondary" title="View Agreement">
                                 <i class="ti ti-eye"></i>
                             </a>
                             @endif

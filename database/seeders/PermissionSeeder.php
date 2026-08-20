@@ -40,11 +40,6 @@ class PermissionSeeder extends Seeder
             ['slug' => 'payments.edit', 'name' => 'Edit Payments', 'group' => 'Payments'],
             ['slug' => 'payments.delete', 'name' => 'Delete Payments', 'group' => 'Payments'],
 
-            ['slug' => 'rent_agreements.view', 'name' => 'View Rent Agreements', 'group' => 'Rent Agreements'],
-            ['slug' => 'rent_agreements.create', 'name' => 'Create Rent Agreements', 'group' => 'Rent Agreements'],
-            ['slug' => 'rent_agreements.edit', 'name' => 'Edit Rent Agreements', 'group' => 'Rent Agreements'],
-            ['slug' => 'rent_agreements.renew', 'name' => 'Renew Rent Agreements', 'group' => 'Rent Agreements'],
-
             ['slug' => 'reports.view', 'name' => 'View Reports', 'group' => 'Reports'],
             ['slug' => 'settings.view', 'name' => 'View Settings', 'group' => 'Settings'],
             ['slug' => 'activity_log.view', 'name' => 'View Activity Log', 'group' => 'Settings'],

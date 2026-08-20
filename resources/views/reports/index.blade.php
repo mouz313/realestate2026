@@ -58,19 +58,5 @@
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-xl-3">
-        <div class="card stat-card" style="--accent-clients: #f59e0b;">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <div class="stat-label">Rent Roll <span class="urdu">(کرایہ رول)</span></div>
-                        <p class="text-secondary small mb-2">Active rentals, deposits, monthly income <span class="urdu">(فعال کرایہ، جمع رقم، ماہانہ آمدنی)</span></p>
-                        <a href="{{ route('reports.rent-roll') }}" class="btn btn-sm btn-dark">View Report <span class="urdu">(رپورٹ دیکھیں)</span></a>
-                    </div>
-                    <i class="ti ti-home-2" style="font-size:2rem;opacity:0.15;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 @endsection

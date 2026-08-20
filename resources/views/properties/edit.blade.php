@@ -33,25 +33,23 @@
                         @error('property_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Type <span class="urdu">(قسم)</span> <span class="text-danger">*</span></label>
-                        <select class="form-select @error('type') is-invalid @enderror" name="type" required>
+                        <label class="form-label">Category <span class="urdu">(قسم)</span> <span class="text-danger">*</span></label>
+                        <select class="form-select @error('category') is-invalid @enderror" name="category" required>
                             <option value=""><span class="urdu">(قسم منتخب کریں)</span></option>
-                            <option value="house" {{ old('type', $property->type) == 'house' ? 'selected' : '' }}>House</option>
-                            <option value="flat" {{ old('type', $property->type) == 'flat' ? 'selected' : '' }}>Flat</option>
-                            <option value="plot" {{ old('type', $property->type) == 'plot' ? 'selected' : '' }}>Plot</option>
-                            <option value="commercial" {{ old('type', $property->type) == 'commercial' ? 'selected' : '' }}>Commercial</option>
-                            <option value="farmhouse" {{ old('type', $property->type) == 'farmhouse' ? 'selected' : '' }}>Farmhouse</option>
-                            <option value="penthouse" {{ old('type', $property->type) == 'penthouse' ? 'selected' : '' }}>Penthouse</option>
+                            @foreach($types as $t)
+                            <option value="{{ $t }}" {{ old('category', $property->category) == $t ? 'selected' : '' }}>{{ \App\Helpers\Status::categoryLabel($t) }}</option>
+                            @endforeach
                         </select>
-                        @error('type') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        @error('category') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Transaction Type <span class="urdu">(لین دین کی قسم)</span></label>
                         <select class="form-select @error('transaction_type') is-invalid @enderror" name="transaction_type">
                             <option value="">Select</option>
                             <option value="sale" {{ old('transaction_type', $property->transaction_type) == 'sale' ? 'selected' : '' }}>Sale <span class="urdu">(فروخت)</span></option>
+                            <option value="buy" {{ old('transaction_type', $property->transaction_type) == 'buy' ? 'selected' : '' }}>Buy <span class="urdu">(خریداری)</span></option>
                             <option value="rent" {{ old('transaction_type', $property->transaction_type) == 'rent' ? 'selected' : '' }}>Rent <span class="urdu">(کرایہ)</span></option>
-                            <option value="lease" {{ old('transaction_type', $property->transaction_type) == 'lease' ? 'selected' : '' }}>Lease <span class="urdu">(لیز)</span></option>
+                            <option value="installment" {{ old('transaction_type', $property->transaction_type) == 'installment' ? 'selected' : '' }}>Installment <span class="urdu">(اقساط)</span></option>
                         </select>
                         @error('transaction_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
@@ -59,11 +57,8 @@
                         <label class="form-label">Status <span class="urdu">(کیفیت)</span></label>
                         <select class="form-select @error('status') is-invalid @enderror" name="status">
                             <option value="available" {{ old('status', $property->status) == 'available' ? 'selected' : '' }}>Available</option>
-                            <option value="under_offer" {{ old('status', $property->status) == 'under_offer' ? 'selected' : '' }}>Under Offer</option>
-                            <option value="sold" {{ old('status', $property->status) == 'sold' ? 'selected' : '' }}>Sold</option>
                             <option value="rented" {{ old('status', $property->status) == 'rented' ? 'selected' : '' }}>Rented</option>
-                            <option value="under_construction" {{ old('status', $property->status) == 'under_construction' ? 'selected' : '' }}>Under Construction</option>
-                            <option value="off_market" {{ old('status', $property->status) == 'off_market' ? 'selected' : '' }}>Off Market</option>
+                            <option value="sold" {{ old('status', $property->status) == 'sold' ? 'selected' : '' }}>Sold</option>
                         </select>
                         @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
@@ -296,13 +291,26 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Owner <span class="urdu">(مالک)</span></label>
-                        <select class="form-select @error('owner_id') is-invalid @enderror" name="owner_id">
-                            <option value=""><span class="urdu">(مالک منتخب کریں)</span></option>
+                        <select class="form-select" name="owner_select" id="owner_select">
+                            <option value="">— Select existing —</option>
+                            <option value="__new__" @selected(old('owner_name'))>➕ Add new owner <span class="urdu">(نیا مالک)</span></option>
                             @foreach($clients ?? [] as $client)
-                                <option value="{{ $client->id }}" {{ old('owner_id', $property->owner_id) == $client->id ? 'selected' : '' }}>{{ $client->name }}</option>
+                                <option value="{{ $client->id }}" @selected(old('owner_id', $property->owner_id) == $client->id)>{{ $client->name }}</option>
                             @endforeach
                         </select>
-                        @error('owner_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <input type="hidden" name="owner_id" id="owner_id" value="{{ old('owner_id', $property->owner_id) }}">
+                        @error('owner_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        <div class="row g-2 mt-2" id="owner_new" style="display:@if(old('owner_name')) flex @else none @endif;">
+                            <div class="col">
+                                <input type="text" class="form-control @error('owner_name') is-invalid @enderror" name="owner_name" placeholder="Owner name" value="{{ old('owner_name') }}">
+                                @error('owner_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col">
+                                <input type="text" class="form-control @error('owner_phone') is-invalid @enderror" name="owner_phone" placeholder="Owner phone" value="{{ old('owner_phone') }}">
+                                @error('owner_phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                        <div class="form-text">Client is created only when this property is saved.</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Assigned Agent <span class="urdu">(مقرر کردہ ایجنٹ)</span></label>
@@ -631,6 +639,23 @@
         });
     }
 })();
+</script>
+@endpush
+
+@push('scripts')
+<script>
+    function bindClientToggle(selectId, idField, newBox) {
+        const select = document.getElementById(selectId);
+        const hidden = document.getElementById(idField);
+        const box = document.getElementById(newBox);
+        function apply() {
+            if (select.value === '__new__') { hidden.value = ''; box.style.display = 'flex'; }
+            else { hidden.value = select.value; box.style.display = 'none'; }
+        }
+        select.addEventListener('change', apply);
+        apply();
+    }
+    bindClientToggle('owner_select', 'owner_id', 'owner_new');
 </script>
 @endpush
 @endsection

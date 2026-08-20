@@ -54,7 +54,7 @@
                                     data-title="{{ $p->title }}"
                                     data-price="{{ $p->price }}"
                                     data-location="{{ $p->location_address ?? '' }}, {{ $p->city ?? '' }}"
-                                    data-type="{{ ucfirst($p->type) }}"
+                                    data-type="{{ \App\Helpers\Status::categoryLabel($p->category) }}"
                                     data-size="{{ $p->plot_size ? $p->plot_size . ' ' . ($p->plot_size_unit ?? '') : '' }}"
                                     {{ old('property_id') == $p->id ? 'selected' : '' }}>
                                     {{ $p->title }} — {{ $p->city ?? '' }} (Rs. {{ number_format($p->price, 0) }})

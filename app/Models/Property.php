@@ -19,7 +19,7 @@ class Property extends Model
     }
 
     protected $fillable = [
-        'company_id', 'property_code', 'title', 'type', 'transaction_type', 'status',
+        'company_id', 'property_code', 'title', 'category', 'transaction_type', 'status',
         'possession_status', 'possession_year',
         'price', 'price_per_sqft', 'currency', 'location_address', 'city', 'city_id',
         'sector_town', 'block', 'plot_size', 'plot_size_unit', 'land_area',
@@ -75,22 +75,12 @@ class Property extends Model
         return $this->hasMany(PropertyDocument::class);
     }
 
-    public function reviews(): HasMany
-    {
-        return $this->hasMany(Review::class);
-    }
-
-    public function approvedReviews(): HasMany
-    {
-        return $this->hasMany(Review::class)->where('approved', true);
-    }
-
     public function comparisonSpecs(): array
     {
         $specs = [
             ['icon' => 'ti-tag', 'label' => 'Price', 'value' => $this->price ? 'Rs. '.number_format($this->price, 0) : null],
             ['icon' => 'ti-exchange', 'label' => 'Transaction', 'value' => $this->transaction_type ? ucfirst($this->transaction_type) : null],
-            ['icon' => 'ti-home', 'label' => 'Type', 'value' => $this->type ? ucfirst($this->type) : null],
+            ['icon' => 'ti-home', 'label' => 'Type', 'value' => $this->category ? ucfirst(str_replace('_', ' ', $this->category)) : null],
             ['icon' => 'ti-check', 'label' => 'Status', 'value' => $this->status ? ucfirst($this->status) : null],
             ['icon' => 'ti-map-pin', 'label' => 'City', 'value' => $this->city],
             ['icon' => 'ti-map-pin', 'label' => 'Location', 'value' => $this->location_address],
@@ -130,11 +120,6 @@ class Property extends Model
     public function city(): BelongsTo
     {
         return $this->belongsTo(City::class);
-    }
-
-    public function rentAgreements(): HasMany
-    {
-        return $this->hasMany(RentAgreement::class);
     }
 
     public function quotations(): HasMany

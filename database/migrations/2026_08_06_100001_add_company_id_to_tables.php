@@ -20,6 +20,9 @@ return new class extends Migration
         ];
 
         foreach ($tables as $table) {
+            if (! Schema::hasTable($table)) {
+                continue;
+            }
             Schema::table($table, function (Blueprint $t) use ($table) {
                 $t->unsignedBigInteger('company_id')->nullable()->index();
             });
@@ -41,6 +44,9 @@ return new class extends Migration
         }
 
         foreach ($tables as $table) {
+            if (! Schema::hasTable($table)) {
+                continue;
+            }
             DB::table($table)->whereNull('company_id')->update(['company_id' => $defaultCompanyId]);
         }
     }

@@ -78,14 +78,4 @@ class Sms
     {
         return 'Token/Bayana of PKR '.number_format($token->amount, 0)." received for Deal {$deal->deal_number}. Thank you!";
     }
-
-    public static function installmentDue($installment): string
-    {
-        return "Reminder: Installment #{$installment->installment_no} of PKR ".number_format($installment->amount, 0)." is due on {$installment->due_date->format('d M Y')}. Please pay on time.";
-    }
-
-    public static function rentOverdue($agreement): string
-    {
-        return 'Reminder: Your rent of PKR '.number_format($agreement->rent_amount, 0).' is overdue. Please pay at the earliest to avoid late fees.';
-    }
 }

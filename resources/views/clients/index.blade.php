@@ -25,6 +25,14 @@
     </a>
 </div>
 
+<div class="mb-3">
+    <div class="btn-group" role="group" aria-label="Client type filter">
+        <a href="{{ route('clients.index') }}" class="btn btn-sm {{ !request('type') ? 'btn-dark' : 'btn-outline-dark' }}">All <span class="urdu">(تمام)</span></a>
+        <a href="{{ route('clients.index', ['type' => 'seller']) }}" class="btn btn-sm {{ request('type') == 'seller' ? 'btn-dark' : 'btn-outline-dark' }}">Sellers <span class="urdu">(بیچنے والے)</span></a>
+        <a href="{{ route('clients.index', ['type' => 'buyer']) }}" class="btn btn-sm {{ request('type') == 'buyer' ? 'btn-dark' : 'btn-outline-dark' }}">Buyers <span class="urdu">(خریدار)</span></a>
+    </div>
+</div>
+
 <div class="card table-card">
     <div class="table-responsive">
         <table class="table table-hover">

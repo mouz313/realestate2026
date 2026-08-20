@@ -2192,7 +2192,6 @@
   }
   body {
     padding-top: 56px;
-    padding-bottom: 0 !important;
   }
   .filter-sidebar-creative {
     position: static !important;
@@ -2525,4 +2524,39 @@
   margin-left: auto;
   font-weight: 600;
   text-align: right;
+}
+
+/* About page experience badge */
+.experience-badge {
+  position: absolute;
+  bottom: -20px;
+  right: -20px;
+  background: var(--sky-amber);
+  color: var(--sky-bg);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  box-shadow: 0 8px 30px rgba(212, 162, 78, 0.3);
+  z-index: 3;
+}
+@media (max-width: 767.98px) {
+  .experience-badge {
+    bottom: 12px;
+    right: 12px;
+    font-size: 0.95rem;
+    padding: 0.6rem 1rem;
+  }
+}
+
+/* Testimonial carousel — show one comfortable card per view on phones */
+@media (max-width: 575.98px) {
+  .tc-slide {
+    flex: 0 0 88%;
+    min-width: 0;
+  }
+  .tc-nav {
+    display: none;
+  }
 }

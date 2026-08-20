@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="{{ asset('assets/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/tabler-icons.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/skyline-theme.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="{{ asset('assets/css/app.css') }}">
     <style>
         .auth-page {
             min-height: 100vh;
@@ -183,6 +183,28 @@
             font-size: 0.82em;
             opacity: 0.6;
         }
+        /* Unified brand overrides for the creative login (indigo) */
+        .auth-visual {
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 55%, #0ea5e9 120%);
+        }
+        .auth-visual-content .brand-logo,
+        .auth-visual-content .brand-logo span { color: #fff; }
+        .auth-visual-content .brand-logo span { color: #c7d2fe; }
+        .auth-visual-content h3 { color: #fff; }
+        .auth-visual-content p { color: rgba(255,255,255,0.82); }
+        .auth-form-wrap .auth-link { color: var(--primary); }
+        .auth-form-wrap .auth-link:hover { color: var(--primary-dark); }
+        .auth-form-wrap h2, .auth-form-wrap .auth-subtitle { color: var(--gray-800); }
+        .auth-form-wrap .auth-subtitle { color: var(--text-muted); }
+        .btn-amber {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+        .btn-amber:hover { background: var(--primary-dark); border-color: var(--primary-dark); color: #fff; }
+        .auth-form-side { border-left: 1px solid var(--border); }
+        .auth-page { background: var(--surface); }
+        .auth-form-side { background: var(--surface); }
         .invalid-feedback {
             color: #ef4444;
             font-size: 0.8rem;
@@ -255,10 +277,8 @@
     </div>
 
     <script src="{{ asset('assets/bootstrap.bundle.min.js') }}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    @include('partials.toastr')
     <script>
-        toastr.options = { positionClass: 'toast-top-right', timeOut: 4000, progressBar: true };
         @if (session()->has('toastr'))
             @php $t = session('toastr'); @endphp
             toastr.{{ $t['type'] }}(@json($t['message']));

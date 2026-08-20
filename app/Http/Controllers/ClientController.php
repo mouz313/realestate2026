@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
-use App\Notifications\PortalAccessGranted;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -11,7 +10,12 @@ class ClientController extends Controller
 {
     public function index()
     {
-        $clients = Client::latest()->paginate(15);
+        $type = request('type'); // 'seller' | 'buyer' | null
+
+        $clients = Client::query()
+            ->when($type, fn ($q) => $q->where('client_type', $type))
+            ->latest()->paginate(15)
+            ->withQueryString();
 
         return view('clients.index', compact('clients'));
     }
@@ -43,10 +47,6 @@ class ClientController extends Controller
         }
 
         $client = Client::create($data);
-
-        if ($request->filled('password') && $client->email) {
-            notify_company($client, PortalAccessGranted::class, [$client], [$client]);
-        }
 
         toastr()->success('Client added successfully.');
 
@@ -83,10 +83,6 @@ class ClientController extends Controller
         }
 
         $client->update($data);
-
-        if ($request->filled('password') && $client->email && $client->wasChanged('password')) {
-            notify_company($client, PortalAccessGranted::class, [$client], [$client]);
-        }
 
         toastr()->success('Client updated successfully.');
 
