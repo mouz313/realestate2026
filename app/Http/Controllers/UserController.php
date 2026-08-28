@@ -12,7 +12,12 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::with('roles')->orderBy('name')->get();
+        $companyId = current_company_id();
+
+        $users = User::with('roles')
+            ->where('company_id', $companyId)
+            ->orderBy('name')
+            ->get();
 
         return view('admin.users.index', compact('users'));
     }
@@ -22,6 +27,7 @@ class UserController extends Controller
         $companyId = current_company_id();
 
         $roles = Role::where(fn ($q) => $q->whereNull('company_id')->orWhere('company_id', $companyId))
+            ->where('is_system', false)
             ->orderByRaw('is_system DESC, name')
             ->get();
 
@@ -48,6 +54,7 @@ class UserController extends Controller
             ->filter(function ($id) use ($companyId) {
                 return Role::where('id', $id)
                     ->where(fn ($q) => $q->whereNull('company_id')->orWhere('company_id', $companyId))
+                    ->where('is_system', false)
                     ->exists();
             })
             ->values()
@@ -91,7 +98,12 @@ class UserController extends Controller
     {
         $companyId = current_company_id();
 
+        if ($user->company_id && $user->company_id !== $companyId) {
+            abort(403, 'You can only manage users for your company.');
+        }
+
         $roles = Role::where(fn ($q) => $q->whereNull('company_id')->orWhere('company_id', $companyId))
+            ->where('is_system', false)
             ->orderByRaw('is_system DESC, name')
             ->get();
 
@@ -116,10 +128,15 @@ class UserController extends Controller
 
         $companyId = current_company_id();
 
+        if ($user->company_id && $user->company_id !== $companyId) {
+            abort(403, 'You can only manage users for your company.');
+        }
+
         $roleIds = collect($request->input('roles', []))
             ->filter(function ($id) use ($companyId) {
                 return Role::where('id', $id)
                     ->where(fn ($q) => $q->whereNull('company_id')->orWhere('company_id', $companyId))
+                    ->where('is_system', false)
                     ->exists();
             })
             ->values()

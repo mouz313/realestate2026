@@ -20,6 +20,8 @@
     <form action="{{ route('call-logs.store') }}" method="POST">
         @csrf
         <div class="card-body">
+            @include('call_logs._duplicate_warning')
+            <div class="row g-3">
             <div class="row g-3">
                 <div class="col-md-6">
                     <div class="mb-3">

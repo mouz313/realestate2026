@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\AgentScope;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class CallLog extends Model
 {
     use BelongsToCompany, SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new AgentScope('assigned_agent_id'));
+    }
 
     protected $fillable = [
         'company_id', 'client_id', 'created_by', 'assigned_agent_id', 'property_id', 'deal_id',

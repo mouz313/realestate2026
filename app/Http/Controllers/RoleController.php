@@ -61,42 +61,62 @@ class RoleController extends Controller
             'description' => 'nullable|string',
         ]);
 
+        $companyId = current_company_id();
+        $slug = $this->uniqueSlug($request->name, $companyId);
+
         Role::create([
-            'company_id' => current_company_id(),
+            'company_id' => $companyId,
             'name' => $request->name,
-            'slug' => Str::slug($request->name),
+            'slug' => $slug,
             'description' => $request->description,
             'is_system' => false,
         ]);
 
-        return redirect()->route('roles.index')
-            ->with('success', 'Role created successfully.');
+        toastr()->success('Role created successfully.');
+
+        return redirect()->route('roles.index');
+    }
+
+    protected function uniqueSlug(string $name, ?int $companyId): string
+    {
+        $base = Str::slug($name);
+        $slug = $base;
+        $i = 1;
+
+        while (Role::where('slug', $slug)
+            ->where(fn ($q) => $q->whereNull('company_id')->orWhere('company_id', $companyId))
+            ->exists()
+        ) {
+            $slug = $base.'-'.$i++;
+        }
+
+        return $slug;
     }
 
     public function edit(Role $role)
     {
-        $this->authorizeRoleOwnership($role);
+        $this->authorizeRoleSettings($role);
 
         return view('admin.roles.edit', compact('role'));
     }
 
     public function assignPermissionsForm(Role $role)
     {
-        $this->authorizeRoleOwnership($role);
+        $this->authorizeRolePermissions($role);
 
         $permissions = Permission::where(function ($q) {
             $q->whereNull('company_id')->orWhere('company_id', current_company_id());
         })->orderBy('group')->orderBy('name')->get()
             ->groupBy('group');
 
-        $rolePermissionIds = $role->permissions->pluck('id');
+        $rolePermissionIds = $role->permissions->pluck('id')->toArray();
 
         return view('admin.roles.permissions', compact('role', 'permissions', 'rolePermissionIds'));
     }
 
     public function update(Request $request, Role $role)
     {
-        $this->authorizeRoleOwnership($role);
+        $this->authorizeRoleSettings($role);
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -110,44 +130,62 @@ class RoleController extends Controller
             'is_active' => $request->boolean('is_active'),
         ]);
 
-        return redirect()->route('roles.index')
-            ->with('success', 'Role updated successfully.');
+        toastr()->success('Role updated successfully.');
+
+        return redirect()->route('roles.index');
     }
 
     public function destroy(Role $role)
     {
-        $this->authorizeRoleOwnership($role);
-
-        // Only block deletion of system roles (e.g., owner)
-        if ($role->is_system && $role->slug === 'owner') {
-            return back()->with('error', 'Cannot delete the system owner role.');
-        }
+        $this->authorizeRoleSettings($role);
 
         $role->permissions()->detach();
         $role->users()->detach();
         $role->delete();
 
-        return redirect()->route('roles.index')
-            ->with('success', 'Role deleted successfully.');
+        toastr()->success('Role deleted successfully.');
+
+        return redirect()->route('roles.index');
     }
 
     public function assignPermissions(Request $request, Role $role)
     {
-        $this->authorizeRoleOwnership($role);
+        $this->authorizeRolePermissions($role);
 
         $permissionIds = $request->input('permissions', []);
-        $role->permissions()->sync($permissionIds);
 
-        return back()->with('success', 'Permissions assigned to role.');
+        // Only attach permissions that belong to the current company or are
+        // global, preventing cross-tenant permission assignment (IDOR).
+        $allowedIds = Permission::forCompany(current_company_id())
+            ->whereIn('id', $permissionIds)
+            ->pluck('id')
+            ->all();
+
+        $role->permissions()->sync($allowedIds);
+
+        toastr()->success('Permissions assigned to role.');
+
+        return back();
     }
 
-    protected function authorizeRoleOwnership(Role $role): void
+    protected function authorizeRoleSettings(Role $role): void
     {
-        // Only the owner role is truly immutable
-        if ($role->is_system && $role->slug === 'owner') {
-            abort(403, 'Cannot modify the system owner role.');
+        // System role settings (name, active, deletion) are immutable.
+        // Only permission assignment is allowed via authorizeRolePermissions.
+        if ($role->is_system) {
+            abort(403, 'Cannot modify settings of a system role.');
         }
 
+        $companyId = current_company_id();
+        if ($role->company_id && $role->company_id !== $companyId) {
+            abort(403, 'You can only manage roles for your company.');
+        }
+    }
+
+    protected function authorizeRolePermissions(Role $role): void
+    {
+        // Permission assignment is allowed for any role (including the system
+        // owner role), as long as it belongs to the current company.
         $companyId = current_company_id();
         if ($role->company_id && $role->company_id !== $companyId) {
             abort(403, 'You can only manage roles for your company.');

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Contact;
+use App\Models\CallLog;
 use App\Models\Deal;
 use App\Scopes\AgentScope;
 use App\Traits\BelongsToCompany;
@@ -19,7 +19,7 @@ class PropertyVisit extends Model
     }
 
     protected $fillable = [
-        'company_id', 'property_id', 'client_id', 'contact_id', 'agent_id', 'deal_id', 'scheduled_date',
+        'company_id', 'property_id', 'client_id', 'call_log_id', 'agent_id', 'deal_id', 'scheduled_date',
         'status', 'feedback', 'rating', 'notes',
     ];
 
@@ -41,9 +41,9 @@ class PropertyVisit extends Model
         return $this->belongsTo(Client::class);
     }
 
-    public function contact(): BelongsTo
+    public function callLog(): BelongsTo
     {
-        return $this->belongsTo(Contact::class);
+        return $this->belongsTo(CallLog::class, 'call_log_id');
     }
 
     public function deal(): BelongsTo

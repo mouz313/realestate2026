@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
@@ -62,33 +63,55 @@ class SettingsController extends Controller
             'sms_sender' => 'nullable|string|max:50',
         ]);
 
-        foreach ($request->except('_token') as $key => $value) {
-            if ($key === 'brand_logo' && $request->hasFile('brand_logo')) {
-                $old = Setting::where('key', 'brand_logo')->value('value');
-                if ($old && Storage::disk('public')->exists($old)) {
-                    Storage::disk('public')->delete($old);
-                }
-                $path = $request->file('brand_logo')->store('brand', 'public');
-                Setting::updateOrCreate(['key' => 'brand_logo'], ['value' => $path]);
+        // Allowlist of persistable text keys (prevents arbitrary key injection).
+        $textKeys = [
+            'business_name', 'business_email', 'business_phone', 'business_address',
+            'tax_rate', 'tax_label', 'currency',
+            'mail_driver', 'mail_host', 'mail_port', 'mail_username', 'mail_password',
+            'mail_encryption', 'mail_from_address', 'mail_from_name',
+            'payment_terms', 'payment_methods', 'bank_name', 'bank_account', 'bank_iban',
+            'bank_swift', 'default_commission_rate', 'default_agent_commission_share',
+            'token_percentage', 'listing_expiry_days', 'default_city',
+            'property_viewing_duration', 'rental_commission_months',
+            'enable_cnic_verification', 'sms_provider', 'sms_username', 'sms_password',
+            'sms_sender',
+        ];
 
+        // Secrets are encrypted at rest; only updated when a new value is supplied
+        // so saving the form without re-entering them does not blank them out.
+        $secretKeys = ['mail_password', 'sms_password', 'mail_username', 'sms_username'];
+        $booleanKeys = ['enable_cnic_verification'];
+
+        foreach ($textKeys as $key) {
+            if ($request->hasFile($key)) {
                 continue;
             }
 
-            if ($key === 'brand_favicon' && $request->hasFile('brand_favicon')) {
-                $old = Setting::where('key', 'brand_favicon')->value('value');
+            if (in_array($key, $booleanKeys, true)) {
+                $value = $request->boolean($key) ? '1' : '0';
+            } elseif (in_array($key, $secretKeys, true)) {
+                if ($request->filled($key)) {
+                    $value = Crypt::encryptString($request->input($key));
+                } else {
+                    continue; // keep previously stored (encrypted) value
+                }
+            } else {
+                $value = $request->input($key, '');
+            }
+
+            Setting::updateOrCreate(['key' => $key], ['value' => $value ?? '']);
+        }
+
+        // Branding files stored as file paths (not encrypted).
+        foreach (['brand_logo', 'brand_favicon'] as $fileKey) {
+            if ($request->hasFile($fileKey)) {
+                $old = Setting::where('key', $fileKey)->value('value');
                 if ($old && Storage::disk('public')->exists($old)) {
                     Storage::disk('public')->delete($old);
                 }
-                $path = $request->file('brand_favicon')->store('brand', 'public');
-                Setting::updateOrCreate(['key' => 'brand_favicon'], ['value' => $path]);
-
-                continue;
+                $path = $request->file($fileKey)->store('brand', 'public');
+                Setting::updateOrCreate(['key' => $fileKey], ['value' => $path]);
             }
-
-            Setting::updateOrCreate(
-                ['key' => $key],
-                ['value' => $value ?? '']
-            );
         }
 
         toastr()->success('Settings saved successfully.');

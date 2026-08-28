@@ -62,8 +62,4 @@ class Quotation extends Model
         return $this->hasMany(Invoice::class);
     }
 
-    public function versions(): HasMany
-    {
-        return $this->hasMany(QuotationVersion::class);
-    }
 }

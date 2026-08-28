@@ -61,8 +61,4 @@ class Client extends Model
         return $this->hasMany(PropertyVisit::class);
     }
 
-    public function documents(): HasMany
-    {
-        return $this->hasMany(ClientDocument::class);
-    }
 }

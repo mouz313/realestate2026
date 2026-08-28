@@ -23,9 +23,9 @@
             <i class="ti ti-plus"></i> Add Agent
         </a>
         @endcan
-        @can('manage_users')
-        <a href="{{ route('users.create') }}" class="btn btn-outline-dark">
-            <i class="ti ti-user-plus"></i> Add Staff / User
+        @can('manage_staff')
+        <a href="{{ route('team.staff.create') }}" class="btn btn-outline-dark">
+            <i class="ti ti-user-plus"></i> Add Staff
         </a>
         @endcan
     </div>
@@ -88,11 +88,19 @@
                         @endif
                     </td>
                     <td class="text-end">
-                        @can('manage_users')
-                        <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-outline-secondary" title="Roles & Permissions">
-                            <i class="ti ti-user-cog"></i>
-                        </a>
-                        @endcan
+                        <div class="action-btns flex-nowrap">
+                            @can('manage_staff')
+                            <a href="{{ route('team.staff.edit', $user) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                <i class="ti ti-edit"></i>
+                            </a>
+                            <form action="{{ route('team.staff.destroy', $user) }}" method="POST" onsubmit="return confirm('Remove this staff member?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove">
+                                    <i class="ti ti-trash"></i>
+                                </button>
+                            </form>
+                            @endcan
+                        </div>
                     </td>
                 </tr>
                 @empty
@@ -101,8 +109,8 @@
                         <div class="empty-state">
                             <i class="ti ti-user-cog"></i>
                             <p>No staff members yet.</p>
-                            @can('manage_users')
-                            <a href="{{ route('users.create') }}" class="text-decoration-none fw-medium">Add your first staff member</a>
+                            @can('manage_staff')
+                            <a href="{{ route('team.staff.create') }}" class="text-decoration-none fw-medium">Add your first staff member</a>
                             @endcan
                         </div>
                     </td>

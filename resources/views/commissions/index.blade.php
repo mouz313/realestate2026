@@ -31,7 +31,9 @@
                     <th>Agent <span class="urdu">(ایجنٹ)</span></th>
                     <th class="d-none d-sm-table-cell">Type <span class="urdu">(قسم)</span></th>
                     <th class="d-none d-sm-table-cell">Percentage <span class="urdu">(فیصد)</span></th>
-                    <th>Amount <span class="urdu">(رقم)</span></th>
+                    <th class="d-none d-sm-table-cell">Source <span class="urdu">(ذریعہ)</span></th>
+                    <th class="d-none d-sm-table-cell">Agency (90%) <span class="urdu">(ایجنسی)</span></th>
+                    <th>Agent (10%) <span class="urdu">(ایجنٹ)</span></th>
                     <th>Status <span class="urdu">(کیفیت)</span></th>
                     <th class="d-none d-md-table-cell">Paid Date <span class="urdu">(ادائیگی کی تاریخ)</span></th>
                     <th class="text-end">Actions <span class="urdu">(کارروائیاں)</span></th>
@@ -50,7 +52,9 @@
                     <td>{{ $commission->agent->name ?? '-' }}</td>
                     <td class="d-none d-sm-table-cell">{{ ucfirst($commission->type ?? '-') }}</td>
                     <td class="d-none d-sm-table-cell">{{ $commission->percentage ? $commission->percentage . '%' : '-' }}</td>
-                    <td class="fw-semibold">{{ number_format($commission->amount, 0) }}</td>
+                    <td class="d-none d-sm-table-cell"><span class="badge bg-light text-dark">{{ ucfirst($commission->source ?? ($commission->type ?? '-')) }}</span></td>
+                    <td class="d-none d-sm-table-cell fw-semibold">{{ number_format($commission->agency_amount ?? 0, 0) }}</td>
+                    <td class="fw-semibold">{{ number_format($commission->agent_amount ?? $commission->amount, 0) }}</td>
                     <td>
                         @php $sc = \App\Helpers\Status::classes('commission'); @endphp
                         <span class="badge {{ $sc[$commission->status] ?? 'status-pending' }}">{{ ucfirst($commission->status ?? 'pending') }}</span>
@@ -83,7 +87,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8">
+                    <td colspan="10">
                         <div class="empty-state">
                             <i class="ti ti-percentage"></i>
                             <p>No commissions yet. <span class="urdu">(کوئی کمیشن نہیں)</span></p>

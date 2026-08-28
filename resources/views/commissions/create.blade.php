@@ -58,8 +58,9 @@
                         @error('percentage') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Amount <span class="urdu">(رقم)</span> <span class="text-danger">*</span></label>
+                        <label class="form-label">Total Fee <span class="urdu">(کل فیس)</span> <span class="text-danger">*</span></label>
                         <input type="number" step="0.01" class="form-control @error('amount') is-invalid @enderror" name="amount" value="{{ old('amount') }}" required>
+                        <small class="text-secondary">Total fee collected; agency keeps 90%, agent receives 10%.</small>
                         @error('amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">

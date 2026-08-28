@@ -93,7 +93,11 @@ trait HasRoles
 
     public function revokePermission(string $slug): self
     {
-        $permission = Permission::where('slug', $slug)->first();
+        $permission = Permission::where('slug', $slug)
+            ->where(function ($q) {
+                $q->whereNull('company_id')->orWhere('company_id', $this->company_id ?? null);
+            })
+            ->first();
 
         if ($permission) {
             $this->permissions()->detach($permission->id);
@@ -141,20 +145,25 @@ trait HasRoles
 
     public function isClient(): bool
     {
-        return false;
+        return $this->hasRole('client');
     }
 
     public function hasRoleAccess(string $role): bool
     {
         $hierarchy = ['agent' => 1, 'staff' => 2, 'admin' => 3, 'owner' => 4];
 
-        $userLevel = $hierarchy['agent'] ?? 0;
+        // Unknown roles (e.g. 'client') are not part of the hierarchy, so deny.
+        if (! isset($hierarchy[$role])) {
+            return false;
+        }
+
+        $userLevel = 0;
 
         foreach ($this->roles()->pluck('slug') as $slug) {
             $userLevel = max($userLevel, $hierarchy[$slug] ?? 0);
         }
 
-        $required = $hierarchy[$role] ?? 0;
+        $required = $hierarchy[$role];
 
         return $userLevel >= $required;
     }

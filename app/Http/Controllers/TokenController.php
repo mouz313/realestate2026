@@ -89,7 +89,14 @@ class TokenController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $token->update($request->all());
+        $data = $request->all();
+
+        // Only admins may change a token's status (mirrors store() guard).
+        if (! auth()->user()->isAdmin()) {
+            $data['status'] = 'pending';
+        }
+
+        $token->update($data);
         toastr()->success('Token updated successfully.');
 
         return redirect()->route('tokens.index');

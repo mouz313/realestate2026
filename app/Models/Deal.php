@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Contact;
 use App\Scopes\AgentScope;
 use App\Traits\BelongsToCompany;
 use App\Traits\LogsActivity;
@@ -48,9 +47,9 @@ class Deal extends Model
         return $this->belongsTo(Property::class);
     }
 
-    public function contact(): BelongsTo
+    public function callLog(): BelongsTo
     {
-        return $this->belongsTo(Contact::class);
+        return $this->belongsTo(CallLog::class, 'call_log_id');
     }
 
     public function buyer(): BelongsTo

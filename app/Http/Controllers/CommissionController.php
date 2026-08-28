@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Agent;
 use App\Models\Commission;
 use App\Models\Deal;
+use App\Services\CommissionCalculator;
 use Illuminate\Http\Request;
 
 class CommissionController extends Controller
@@ -53,6 +54,13 @@ class CommissionController extends Controller
             $data['status'] = 'pending';
         }
 
+        // Split the entered total fee 90/10 (agency/agent) per the locked spec.
+        $split = CommissionCalculator::split((float) ($data['amount'] ?? 0));
+        $data['agency_amount'] = $split['agency_amount'];
+        $data['agent_amount'] = $split['agent_amount'];
+        $data['amount'] = $split['agent_amount']; // amount column stores the agent payout
+        $data['source'] = Deal::find($data['deal_id'])?->type ?? 'sale';
+
         Commission::create($data);
         toastr()->success('Commission added successfully.');
 
@@ -81,7 +89,25 @@ class CommissionController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $commission->update($request->all());
+        $data = $request->all();
+
+        // Mirror store() authorization: an agent may only edit their own
+        // commission, and only admins with the payout permission may set a
+        // non-pending status (prevents status / agent spoofing on update).
+        if (auth()->user()->isAgent()) {
+            $data['agent_id'] = auth()->user()->agent_id;
+        }
+        if (! auth()->user()->hasPermission('mark_commission_paid')) {
+            $data['status'] = 'pending';
+        }
+
+        $split = CommissionCalculator::split((float) ($data['amount'] ?? 0));
+        $data['agency_amount'] = $split['agency_amount'];
+        $data['agent_amount'] = $split['agent_amount'];
+        $data['amount'] = $split['agent_amount']; // amount column stores the agent payout
+        $data['source'] = Deal::find($data['deal_id'])?->type ?? 'sale';
+
+        $commission->update($data);
         toastr()->success('Commission updated successfully.');
 
         return redirect()->route('commissions.index');
@@ -99,6 +125,11 @@ class CommissionController extends Controller
     public function markPaid(Commission $commission)
     {
         $this->authorizeAgentAccess($commission);
+
+        if (! auth()->user()->hasPermission('mark_commission_paid')) {
+            abort(403, 'You do not have permission to mark commissions as paid.');
+        }
+
         $commission->update([
             'status' => 'paid',
             'paid_date' => now(),
@@ -106,5 +137,21 @@ class CommissionController extends Controller
         toastr()->success('Commission marked as paid.');
 
         return redirect()->back();
+    }
+
+    /**
+     * AJAX preview: returns split for a property + deal type + amount.
+     */
+    public function preview(Request $request)
+    {
+        $request->validate([
+            'property_id' => 'required|exists:properties,id',
+            'type' => 'required|string|in:sale,buy,rent,installment',
+            'amount' => 'required|numeric|min:0',
+        ]);
+
+        $split = CommissionCalculator::split((float) $request->amount);
+
+        return response()->json($split);
     }
 }

@@ -101,8 +101,6 @@ class SmsService
 
     protected function get(string $key, $default = null)
     {
-        $value = Setting::where('key', $key)->value('value');
-
-        return ($value === null || $value === '') ? $default : $value;
+        return Setting::decryptedValue($key, $default);
     }
 }

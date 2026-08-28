@@ -15,6 +15,12 @@ class DashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
+
+        // Staff use a separate, permission-scoped dashboard.
+        if ($user->isStaff()) {
+            return redirect()->route('staff.dashboard');
+        }
+
         $isAgent = $user->isAgent();
 
         $monthSql = DB::connection()->getDriverName() === 'sqlite'
@@ -54,5 +60,41 @@ class DashboardController extends Controller
         $recentQuotations = Quotation::with('client')->latest()->take(6)->get();
 
         return view('dashboard.index', compact('stats', 'recentPayments', 'recentQuotations'));
+    }
+
+    public function staffIndex()
+    {
+        $user = auth()->user();
+
+        $monthSql = DB::connection()->getDriverName() === 'sqlite'
+            ? "strftime('%Y-%m', created_at)"
+            : "DATE_FORMAT(created_at, '%Y-%m')";
+
+        // Staff see company-wide aggregates; the staff dashboard view uses
+        // @can(...) to reveal only what the staff member's permissions allow.
+        $stats = [
+            'total_clients' => Client::count(),
+            'total_quotations' => Quotation::count(),
+            'pending_quotations' => Quotation::whereIn('status', ['draft', 'sent'])->count(),
+            'total_invoices' => Invoice::count(),
+            'unpaid_invoices' => Invoice::where('payment_status', '!=', 'paid')->count(),
+            'overdue_invoices' => Invoice::overdue()->count(),
+            'total_revenue' => Payment::sum('amount'),
+            'outstanding' => Invoice::where('payment_status', '!=', 'paid')->sum(DB::raw('total - paid_amount')),
+            'active_deals' => Deal::whereNotIn('status', ['cancelled', 'completed'])->count(),
+            'active_properties' => Property::where('status', 'available')->count(),
+            'monthly_quotations' => Quotation::where('created_at', '>=', now()->subMonths(6))
+                ->select(DB::raw("{$monthSql} as month"), DB::raw('count(*) as total'))
+                ->groupBy('month')->orderBy('month')->pluck('total', 'month'),
+            'monthly_invoices' => Invoice::where('created_at', '>=', now()->subMonths(6))
+                ->select(DB::raw("{$monthSql} as month"), DB::raw('count(*) as total'))
+                ->groupBy('month')->orderBy('month')->pluck('total', 'month'),
+        ];
+
+        $recentPayments = Payment::with('invoice.client')->latest()->take(6)->get();
+        $recentQuotations = Quotation::with('client')->latest()->take(6)->get();
+        $recentInvoices = Invoice::with('client')->latest()->take(6)->get();
+
+        return view('dashboard.staff', compact('stats', 'recentPayments', 'recentQuotations', 'recentInvoices'));
     }
 }

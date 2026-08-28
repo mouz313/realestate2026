@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Status;
+use App\Helpers\WhatsApp;
 use App\Models\Agent;
 use App\Models\CallLog;
 use App\Models\City;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Property;
+use App\Services\DuplicateDetector;
 use Illuminate\Http\Request;
 
 class CallLogController extends Controller
@@ -67,11 +69,25 @@ class CallLogController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $clients = Client::orderBy('name')->get();
         $agents = Agent::orderBy('name')->get();
         $cities = City::where('is_active', true)->orderBy('name')->get();
+
+        // Pre-fill from query string (click-to-call / duplicate deep-link)
+        $prefill = [
+            'name' => $request->old('name') ?? $request->query('name'),
+            'phone' => $request->old('phone') ?? $request->query('phone'),
+            'category' => $request->old('category') ?? $request->query('category'),
+            'transaction_type' => $request->old('transaction_type') ?? $request->query('transaction_type'),
+        ];
+
+        // Duplicate check
+        $duplicates = [];
+        if ($prefill['phone']) {
+            $duplicates = DuplicateDetector::sameDay($prefill['phone']);
+        }
 
         return view('call_logs.create', [
             'clients' => $clients,
@@ -81,6 +97,8 @@ class CallLogController extends Controller
             'leadSources' => $this->leadSources,
             'categories' => $this->categories,
             'transactionTypes' => $this->transactionTypes,
+            'prefill' => $prefill,
+            'duplicates' => $duplicates,
         ]);
     }
 
@@ -107,10 +125,23 @@ class CallLogController extends Controller
             'property_id' => 'nullable|exists:properties,id',
             'client_id' => 'nullable|exists:clients,id',
             'caller_role' => 'nullable|in:seller,buyer',
+            'force_save' => 'nullable|boolean',
         ]);
+
+        // Duplicate guard (skip if user explicitly forces save)
+        if (! $request->boolean('force_save')) {
+            $dups = DuplicateDetector::sameDay($data['phone']);
+            if (count($dups) > 0) {
+                toastr()->warning('Duplicate enquiry detected for this phone today. Review existing record or set force_save=1.');
+                return back()
+                    ->withInput()
+                    ->withErrors(['phone' => 'Same phone already called today ('.count($dups).' record'.(count($dups)>1?'s':'').'). Confirm duplicate to proceed.']);
+            }
+        }
 
         $data['company_id'] = current_company_id();
         $data['created_by'] = auth()->user()->agent_id ?? null;
+        unset($data['force_save']);
 
         CallLog::create($data);
 
@@ -241,5 +272,60 @@ class CallLogController extends Controller
 
         toastr()->success('Call log deleted successfully.');
         return redirect()->route('call-logs.index');
+    }
+
+    /**
+     * Kanban board: enquiries grouped by status.
+     */
+    public function kanban(Request $request)
+    {
+        $columns = [
+            'new' => ['label' => 'New', 'color' => 'primary'],
+            'contacted' => ['label' => 'Contacted', 'color' => 'info'],
+            'callback' => ['label' => 'Callback', 'color' => 'warning'],
+            'matched' => ['label' => 'Matched', 'color' => 'secondary'],
+            'converted' => ['label' => 'Converted', 'color' => 'success'],
+            'lost' => ['label' => 'Lost', 'color' => 'danger'],
+        ];
+
+        $query = CallLog::with(['assignedAgent', 'property']);
+
+        if ($request->input('due') == 1) {
+            $query->whereNotNull('follow_up_date')
+                  ->where('follow_up_date', '<=', today())
+                  ->whereNotIn('status', ['converted', 'lost']);
+        }
+
+        if ($agentId = $request->input('agent_id')) {
+            $query->where('assigned_agent_id', $agentId);
+        }
+
+        $all = $query->latest('call_datetime')->limit(500)->get();
+
+        $board = [];
+        foreach ($columns as $key => $meta) {
+            $board[$key] = [
+                'meta' => $meta,
+                'cards' => $all->where('status', $key)->take(50)->values(),
+            ];
+        }
+
+        $agents = Agent::orderBy('name')->get();
+
+        return view('call_logs.kanban', compact('board', 'agents'));
+    }
+
+    /**
+     * AJAX: update status (drag-drop on kanban).
+     */
+    public function updateStatus(Request $request, CallLog $callLog)
+    {
+        $request->validate([
+            'status' => 'required|string|in:' . implode(',', $this->statuses),
+        ]);
+
+        $callLog->update(['status' => $request->input('status')]);
+
+        return response()->json(['ok' => true, 'status' => $callLog->status]);
     }
 }

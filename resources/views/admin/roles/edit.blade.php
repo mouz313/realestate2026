@@ -22,8 +22,13 @@
     <div class="card">
         <div class="card-body">
             @if($role->is_system)
-            <div class="alert alert-info mb-3">
-                <i class="ti ti-info-circle me-1"></i> This is a system role. You can manage permissions but cannot change system settings.
+            <div class="alert alert-info mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <span>
+                    <i class="ti ti-info-circle me-1"></i> This is a system role. You can manage permissions but cannot change system settings.
+                </span>
+                <a href="{{ route('roles.permissions', $role) }}" class="btn btn-sm btn-outline-info">
+                    <i class="ti ti-key me-1"></i> Manage Permissions
+                </a>
             </div>
             @endif
 

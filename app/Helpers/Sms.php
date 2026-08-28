@@ -10,7 +10,7 @@ class Sms
 {
     public static function send(string $to, string $message): bool
     {
-        $settings = Setting::pluck('value', 'key')->toArray();
+        $settings = Setting::decryptedMap();
         $provider = $settings['sms_provider'] ?? 'log';
 
         return match ($provider) {

@@ -38,8 +38,9 @@ class PermissionController extends Controller
             'is_system' => false,
         ]);
 
-        return redirect()->route('permissions.index')
-            ->with('success', 'Permission created successfully.');
+        toastr()->success('Permission created successfully.');
+
+        return redirect()->route('permissions.index');
     }
 
     public function edit(Permission $permission)
@@ -66,8 +67,9 @@ class PermissionController extends Controller
             'is_active' => $request->boolean('is_active'),
         ]);
 
-        return redirect()->route('permissions.index')
-            ->with('success', 'Permission updated successfully.');
+        toastr()->success('Permission updated successfully.');
+
+        return redirect()->route('permissions.index');
     }
 
     public function destroy(Permission $permission)
@@ -75,15 +77,18 @@ class PermissionController extends Controller
         $this->authorizePermissionOwnership($permission);
 
         if ($permission->is_system) {
-            return back()->with('error', 'Cannot delete a system permission.');
+            toastr()->error('Cannot delete a system permission.');
+
+            return back();
         }
 
         $permission->roles()->detach();
         $permission->users()->detach();
         $permission->delete();
 
-        return redirect()->route('permissions.index')
-            ->with('success', 'Permission deleted successfully.');
+        toastr()->success('Permission deleted successfully.');
+
+        return redirect()->route('permissions.index');
     }
 
     protected function authorizePermissionOwnership(Permission $permission): void

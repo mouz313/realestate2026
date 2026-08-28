@@ -6,14 +6,12 @@ use App\Models\Agent;
 use App\Models\CallLog;
 use App\Models\Client;
 use App\Models\Commission;
-use App\Models\Contact;
 use App\Models\Deal;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Property;
 use App\Models\PropertyVisit;
 use App\Models\Quotation;
-use App\Models\Referral;
 use App\Models\RentalRecord;
 use App\Models\Token;
 use Illuminate\Http\Request;
@@ -40,22 +38,6 @@ class SearchController extends Controller
                 'sub' => trim(($c->client_type ? ucfirst($c->client_type).' · ' : '').($c->email ?: $c->phone ?: ''), ' · '),
                 'url' => route('clients.show', $c),
                 'icon' => 'ti ti-users',
-            ]);
-
-        $contacts = Contact::where('name', 'like', "%{$q}%")
-            ->orWhere('email', 'like', "%{$q}%")
-            ->orWhere('phone', 'like', "%{$q}%")
-            ->orWhere('property_title', 'like', "%{$q}%")
-            ->orWhere('city', 'like', "%{$q}%")
-            ->orWhere('message', 'like', "%{$q}%")
-            ->limit(5)
-            ->get()
-            ->map(fn ($c) => [
-                'type' => 'Enquiry',
-                'label' => $c->name ?: ($c->property_title ?: 'Enquiry'),
-                'sub' => trim(($c->lead_source ?: '').($c->city ? ' · '.$c->city : ''), ' · '),
-                'url' => route('contacts.show', $c),
-                'icon' => 'ti ti-message-circle',
             ]);
 
         $properties = Property::where('title', 'like', "%{$q}%")
@@ -241,25 +223,8 @@ class SearchController extends Controller
                 'icon' => 'ti ti-walk',
             ]);
 
-        $referrals = Referral::where('referrer_name', 'like', "%{$q}%")
-            ->orWhere('referred_name', 'like', "%{$q}%")
-            ->orWhere('referred_phone', 'like', "%{$q}%")
-            ->orWhere('referred_email', 'like', "%{$q}%")
-            ->orWhere('status', 'like', "%{$q}%")
-            ->orWhere('notes', 'like', "%{$q}%")
-            ->limit(5)
-            ->get()
-            ->map(fn ($rf) => [
-                'type' => 'Referral',
-                'label' => $rf->referred_name ?: 'Referral',
-                'sub' => trim(($rf->status ?: '').($rf->referrer_name ? ' · By: '.$rf->referrer_name : ''), ' · '),
-                'url' => route('referrals.index'),
-                'icon' => 'ti ti-share',
-            ]);
-
         $results = collect()
             ->concat($clients)
-            ->concat($contacts)
             ->concat($properties)
             ->concat($deals)
             ->concat($quotations)
@@ -270,8 +235,7 @@ class SearchController extends Controller
             ->concat($rentals)
             ->concat($commissions)
             ->concat($tokens)
-            ->concat($visits)
-            ->concat($referrals);
+            ->concat($visits);
 
         return response()->json($results);
     }

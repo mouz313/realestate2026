@@ -91,7 +91,52 @@
             <div class="card-body">
                 <p class="text-secondary mb-0">{{ $agentPayout->notes ?? '-' }}</p>
             </div>
+            </div>
+        </div>
+    </div>
+
+@php
+    $linkedCommissions = $agentPayout->commission_ids
+        ? App\Models\Commission::with(['deal', 'agent'])->whereIn('id', $agentPayout->commission_ids)->get()
+        : collect();
+@endphp
+
+@if($linkedCommissions->isNotEmpty())
+<div class="card mt-4">
+    <div class="card-header">
+        <h5><i class="ti ti-percentage me-1"></i> Linked Commissions <span class="urdu">(منسلک کمیشنز)</span></h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Deal # <span class="urdu">(ڈیل نمبر)</span></th>
+                        <th>Agent <span class="urdu">(ایجنٹ)</span></th>
+                        <th>Source <span class="urdu">(ذریعہ)</span></th>
+                        <th>Agency (90%) <span class="urdu">(ایجنسی)</span></th>
+                        <th>Agent (10%) <span class="urdu">(ایجنٹ)</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($linkedCommissions as $c)
+                    <tr>
+                        <td class="fw-semibold">
+                            @if($c->deal)
+                                <a href="{{ route('deals.show', $c->deal) }}" class="text-decoration-none">{{ $c->deal->deal_number }}</a>
+                            @else - @endif
+                        </td>
+                        <td>{{ $c->agent->name ?? '-' }}</td>
+                        <td><span class="badge bg-light text-dark">{{ ucfirst($c->source ?? ($c->type ?? '-')) }}</span></td>
+                        <td class="fw-semibold">{{ number_format($c->agency_amount ?? 0, 2) }}</td>
+                        <td class="fw-semibold">{{ number_format($c->agent_amount ?? $c->amount, 2) }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+@endif
+
 @endsection

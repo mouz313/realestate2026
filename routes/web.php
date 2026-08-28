@@ -9,7 +9,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommissionController;
-use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CallLogController;
 use App\Http\Controllers\RentalRecordController;
 use App\Http\Controllers\CronController;
@@ -17,7 +16,6 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ForgotPasswordController;
-use App\Http\Controllers\GatewayPaymentController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ItemTemplateController;
 use App\Http\Controllers\NotificationController;
@@ -27,7 +25,6 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\PropertyVisitController;
 use App\Http\Controllers\QuotationController;
-use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\RoleController;
@@ -43,7 +40,7 @@ Route::get('/cron/{job}', [CronController::class, 'run'])->name('cron.run');
 
 Route::get('/', function () {
     return auth()->check()
-        ? redirect()->route('admin.dashboard')
+        ? redirect()->route(dashboard_route())
         : redirect()->route('login');
 });
 
@@ -78,16 +75,6 @@ Route::middleware('auth')->group(function () {
             Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log');
         });
 
-        Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
-        Route::get('/contacts/create', [ContactController::class, 'create'])->name('contacts.create');
-        Route::post('/contacts', [ContactController::class, 'store'])->name('contacts.store');
-        Route::get('/contacts/{contact}/edit', [ContactController::class, 'edit'])->name('contacts.edit');
-        Route::put('/contacts/{contact}', [ContactController::class, 'update'])->name('contacts.update');
-        Route::get('/contacts/{contact}', [ContactController::class, 'show'])->name('contacts.show');
-        Route::delete('/contacts/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
-
-        Route::get('/referrals', [ReferralController::class, 'index'])->name('referrals.index');
-
         Route::resource('expenses', ExpenseController::class)->except(['show']);
         Route::resource('cities', CityController::class);
         Route::resource('item-templates', ItemTemplateController::class)->except(['show', 'create']);
@@ -114,29 +101,40 @@ Route::middleware('auth')->group(function () {
     // Shared routes — /admin prefix (admin + staff + agent)
     Route::prefix('admin')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+        Route::get('/staff-dashboard', [DashboardController::class, 'staffIndex'])->name('staff.dashboard')->middleware('role:staff');
 
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/mark-read', [NotificationController::class, 'markRead'])->name('notifications.mark-read');
 
-        Route::get('/team', [TeamController::class, 'index'])->middleware('permission:view_agents|view_staff')->name('team.index');
+        Route::prefix('team')->name('team.')->group(function () {
+            Route::get('/', [TeamController::class, 'index'])->middleware('permission:view_agents|view_staff')->name('index');
+            Route::get('/staff/create', [TeamController::class, 'staffCreate'])->middleware('permission:manage_staff')->name('staff.create');
+            Route::post('/staff', [TeamController::class, 'staffStore'])->middleware('permission:manage_staff')->name('staff.store');
+            Route::get('/staff/{user}/edit', [TeamController::class, 'staffEdit'])->middleware('permission:manage_staff')->name('staff.edit');
+            Route::put('/staff/{user}', [TeamController::class, 'staffUpdate'])->middleware('permission:manage_staff')->name('staff.update');
+            Route::delete('/staff/{user}', [TeamController::class, 'staffDestroy'])->middleware('permission:manage_staff')->name('staff.destroy');
+        });
         Route::resource('agents', AgentController::class)->except(['index', 'show'])->middleware('permission:manage_agents');
         Route::get('/agents/{agent}', [AgentController::class, 'show'])->middleware('permission:view_agents')->name('agents.show');
         Route::get('/clients/export-excel', [ClientController::class, 'exportExcel'])->middleware('permission:export_reports')->name('clients.export-excel');
         Route::resource('clients', ClientController::class)->middleware('permission:view_clients');
-        // Records: Available properties — before the properties resource
+        // Records: Available properties
         Route::get('/properties/available', [PropertyController::class, 'available'])->middleware('permission:view_properties|view_own_properties')->name('properties.available');
         Route::get('/properties/export', [PropertyController::class, 'exportExcel'])->middleware('permission:export_reports')->name('properties.export-excel');
-        Route::resource('properties', PropertyController::class)
-            ->only(['index', 'show'])
-            ->middleware('permission:view_properties|view_own_properties');
+        // Explicit property write routes declared before the resource so {property} does not capture "create"/"edit"
         Route::get('/properties/create', [PropertyController::class, 'create'])->middleware('permission:create_properties')->name('properties.create');
         Route::post('/properties', [PropertyController::class, 'store'])->middleware('permission:create_properties')->name('properties.store');
         Route::get('/properties/{property}/edit', [PropertyController::class, 'edit'])->middleware('permission:edit_any_properties|edit_own_properties')->name('properties.edit');
         Route::put('/properties/{property}', [PropertyController::class, 'update'])->middleware('permission:edit_any_properties|edit_own_properties')->name('properties.update');
         Route::delete('/properties/{property}', [PropertyController::class, 'destroy'])->middleware('permission:delete_properties')->name('properties.destroy');
+        Route::resource('properties', PropertyController::class)
+            ->only(['index', 'show'])
+            ->middleware('permission:view_properties|view_own_properties');
         // Records: Rented Records + Call Logs
         Route::resource('rental-records', RentalRecordController::class)->middleware('permission:view_deals');
         // Declared before the call-logs resource so {call_log} does not capture this literal
+        Route::get('/call-logs/kanban', [CallLogController::class, 'kanban'])->middleware('permission:view_clients')->name('call-logs.kanban');
+        Route::patch('/call-logs/{call_log}/status', [CallLogController::class, 'updateStatus'])->middleware('permission:view_clients')->name('call-logs.status');
         Route::get('/call-logs/{call_log}/convert', [DealController::class, 'create'])->middleware('permission:view_clients')->name('call-logs.convert');
         Route::get('/call-logs/{call_log}/add-property', [PropertyController::class, 'create'])->middleware('permission:view_clients')->name('call-logs.add-property');
         Route::resource('call-logs', CallLogController::class)->middleware('permission:view_clients');
@@ -197,6 +195,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/commissions/{commission}', [CommissionController::class, 'update'])->middleware('permission:manage_commissions')->name('commissions.update');
         Route::delete('/commissions/{commission}', [CommissionController::class, 'destroy'])->middleware('permission:manage_commissions')->name('commissions.destroy');
         Route::patch('/commissions/{commission}/mark-paid', [CommissionController::class, 'markPaid'])->middleware('permission:mark_commission_paid')->name('commissions.mark-paid');
+        Route::post('/commissions/preview', [CommissionController::class, 'preview'])->name('commissions.preview');
         Route::resource('agent-payouts', AgentPayoutController::class)
             ->only(['index', 'show'])
             ->middleware('permission:view_payouts');
@@ -231,16 +230,6 @@ Route::middleware('auth')->group(function () {
             return view('payments.raast-redirect', compact('amount', 'reference', 'iban'));
         })->name('payments.raast.redirect');
 
-        Route::post('/payments/gateway/{gateway}', [GatewayPaymentController::class, 'create'])
-            ->middleware('permission:view_all_payments')
-            ->name('gateway.create');
     });
 });
 
-// Gateway callback/return are reached via server-to-server traffic (callback)
-// and browser redirect (return). Verification happens via order_id lookup +
-// driver::verify() so these stay unauthenticated but must match a pending order.
-Route::group(['prefix' => 'gateway'], function () {
-    Route::post('/{gateway}/callback', [GatewayPaymentController::class, 'callback'])->name('gateway.callback');
-    Route::get('/{gateway}/return', [GatewayPaymentController::class, 'return'])->name('gateway.return');
-});

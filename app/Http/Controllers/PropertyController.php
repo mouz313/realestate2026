@@ -98,6 +98,11 @@ class PropertyController extends Controller
             'floor_number' => 'nullable|integer|min:0',
             'total_floors' => 'nullable|integer|min:0',
             'furnished' => 'nullable|boolean',
+            'furnished_type' => 'nullable|in:furnished,semi_furnished,unfurnished',
+            'property_condition' => 'nullable|in:new,resale',
+            'year_built' => 'nullable|integer|min:1900|max:2100',
+            'road_width' => 'nullable|numeric|min:0',
+            'facing' => 'nullable|string|max:50',
             'parking_spaces' => 'nullable|integer|min:0',
             'features' => 'nullable|string',
             'additional_rooms' => 'nullable|array',
@@ -130,6 +135,24 @@ class PropertyController extends Controller
         ]);
 
         $data = $request->except(['images', 'video']);
+        $data['furnished'] = in_array($request->input('furnished_type'), ['furnished', 'semi_furnished']);
+
+        // Empty form inputs arrive as "" (or null). Numeric columns that are NOT NULL with a
+        // default (parking_spaces default 0, kitchens default 1, price default 0) must be omitted
+        // so the DB default applies; nullable columns can take null; string/enum columns get null.
+        $numericFields = ['plot_size', 'land_area', 'covered_area', 'price_per_sqft', 'year_built',
+            'road_width', 'bedrooms', 'bathrooms', 'kitchens', 'floors', 'floor_number',
+            'total_floors', 'parking_spaces', 'possession_year', 'latitude', 'longitude',
+            'commission_rate', 'price'];
+        foreach ($data as $k => $v) {
+            if ($v === '') {
+                if (in_array($k, $numericFields, true)) {
+                    unset($data[$k]);
+                } else {
+                    $data[$k] = null;
+                }
+            }
+        }
         $data['features'] = $request->has('features') ? array_map('trim', explode(',', $request->features)) : null;
         $data['additional_rooms'] = $request->has('additional_rooms') ? $request->additional_rooms : null;
         $data['building_features'] = $request->has('building_features') ? $request->building_features : null;
@@ -232,6 +255,11 @@ class PropertyController extends Controller
             'floor_number' => 'nullable|integer|min:0',
             'total_floors' => 'nullable|integer|min:0',
             'furnished' => 'nullable|boolean',
+            'furnished_type' => 'nullable|in:furnished,semi_furnished,unfurnished',
+            'property_condition' => 'nullable|in:new,resale',
+            'year_built' => 'nullable|integer|min:1900|max:2100',
+            'road_width' => 'nullable|numeric|min:0',
+            'facing' => 'nullable|string|max:50',
             'parking_spaces' => 'nullable|integer|min:0',
             'features' => 'nullable|string',
             'additional_rooms' => 'nullable|array',
@@ -264,6 +292,24 @@ class PropertyController extends Controller
         ]);
 
         $data = $request->except(['images', 'video']);
+        $data['furnished'] = in_array($request->input('furnished_type'), ['furnished', 'semi_furnished']);
+
+        // Empty form inputs arrive as "" (or null). Numeric columns that are NOT NULL with a
+        // default (parking_spaces default 0, kitchens default 1, price default 0) must be omitted
+        // so the DB default applies; nullable columns can take null; string/enum columns get null.
+        $numericFields = ['plot_size', 'land_area', 'covered_area', 'price_per_sqft', 'year_built',
+            'road_width', 'bedrooms', 'bathrooms', 'kitchens', 'floors', 'floor_number',
+            'total_floors', 'parking_spaces', 'possession_year', 'latitude', 'longitude',
+            'commission_rate', 'price'];
+        foreach ($data as $k => $v) {
+            if ($v === '') {
+                if (in_array($k, $numericFields, true)) {
+                    unset($data[$k]);
+                } else {
+                    $data[$k] = null;
+                }
+            }
+        }
         $data['features'] = $request->has('features') ? array_map('trim', explode(',', $request->features)) : null;
         $data['additional_rooms'] = $request->has('additional_rooms') ? $request->additional_rooms : null;
         $data['building_features'] = $request->has('building_features') ? $request->building_features : null;
@@ -336,23 +382,6 @@ class PropertyController extends Controller
 
     private function handleMediaUploads(Request $request, Property $property)
     {
-        if ($request->hasFile('images')) {
-            $sortOrder = $property->media()->max('sort_order') ?? 0;
-            $hasPrimary = $property->media()->where('type', 'image')->where('is_primary', true)->exists();
-
-            foreach ($request->file('images') as $file) {
-                $path = $file->store('property-media', 'public');
-                $sortOrder++;
-                PropertyMedia::create([
-                    'property_id' => $property->id,
-                    'type' => 'image',
-                    'file_path' => $path,
-                    'is_primary' => ! $hasPrimary && $sortOrder === 1,
-                    'sort_order' => $sortOrder,
-                ]);
-            }
-        }
-
         if ($request->hasFile('images')) {
             $sortOrder = $property->media()->max('sort_order') ?? 0;
             $hasPrimary = $property->media()->where('type', 'image')->where('is_primary', true)->exists();

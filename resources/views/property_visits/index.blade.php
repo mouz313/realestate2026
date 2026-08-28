@@ -22,19 +22,19 @@
     </a>
 </div>
 
-@if(!empty($enquiries) && $enquiries->isNotEmpty())
+@if(!empty($leads) && $leads->isNotEmpty())
 <form method="GET" action="{{ route('property-visits.index') }}" class="mb-3">
     <div class="row g-2 align-items-end">
         <div class="col-auto">
-            <label class="form-label small mb-1">Enquiry <span class="urdu">(انکوائری)</span></label>
-            <select name="contact_id" class="form-select" onchange="this.form.submit()">
+            <label class="form-label small mb-1">Lead <span class="urdu">(لیڈ)</span></label>
+            <select name="call_log_id" class="form-select" onchange="this.form.submit()">
                 <option value="">All <span class="urdu">(تمام)</span></option>
-                @foreach($enquiries as $enquiry)
-                    <option value="{{ $enquiry->id }}" {{ request('contact_id') == $enquiry->id ? 'selected' : '' }}>{{ $enquiry->name }}</option>
+                @foreach($leads as $lead)
+                    <option value="{{ $lead->id }}" {{ request('call_log_id') == $lead->id ? 'selected' : '' }}>{{ $lead->name }}</option>
                 @endforeach
             </select>
         </div>
-        @if(request('contact_id'))
+        @if(request('call_log_id'))
         <div class="col-auto">
             <a href="{{ route('property-visits.index') }}" class="btn btn-outline-secondary">Clear <span class="urdu">(کلیئر)</span></a>
         </div>
@@ -48,7 +48,7 @@
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th>Enquiry <span class="urdu">(انکوائری)</span></th>
+                    <th>Lead <span class="urdu">(لیڈ)</span></th>
                     <th>Property <span class="urdu">(جائیداد)</span></th>
                     <th>Client <span class="urdu">(گاہک)</span></th>
                     <th class="d-none d-sm-table-cell">Agent <span class="urdu">(ایجنٹ)</span></th>
@@ -62,8 +62,8 @@
                 @forelse($propertyVisits as $visit)
                 <tr>
                     <td>
-                        @if($visit->contact)
-                            <a href="{{ route('contacts.show', $visit->contact) }}">{{ $visit->contact->name }}</a>
+                        @if($visit->callLog)
+                            <a href="{{ route('call-logs.show', $visit->callLog) }}">{{ $visit->callLog->name }}</a>
                         @else
                             <span class="text-secondary">—</span>
                         @endif

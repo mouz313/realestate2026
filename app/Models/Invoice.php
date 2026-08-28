@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\AgentScope;
 use App\Traits\BelongsToCompany;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Invoice extends Model
 {
     use LogsActivity, BelongsToCompany;
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new AgentScope('agent_id'));
+    }
 
     protected $fillable = [
         'company_id', 'quotation_id', 'deal_id', 'agent_id', 'invoice_type', 'client_id', 'invoice_number', 'status',

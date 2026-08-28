@@ -242,7 +242,7 @@
         <div class="card-body">
             <div class="row g-2">
                 <div class="col-6 col-md-3">
-                    <a href="{{ route('contacts.create') }}" class="btn btn-outline-secondary w-100 justify-content-center text-start text-sm-center"><i class="ti ti-plus"></i> <span class="d-none d-sm-inline">Add </span>Enquiry <span class="urdu d-none d-md-inline">(نئی انکوائری)</span></a>
+                    <a href="{{ route('call-logs.create') }}" class="btn btn-outline-secondary w-100 justify-content-center text-start text-sm-center"><i class="ti ti-plus"></i> <span class="d-none d-sm-inline">Add </span>Lead <span class="urdu d-none d-md-inline">(نئی لیڈ)</span></a>
                 </div>
                 <div class="col-6 col-md-3">
                     <a href="{{ route('properties.create') }}" class="btn btn-outline-secondary w-100 justify-content-center text-start text-sm-center"><i class="ti ti-plus"></i> <span class="d-none d-sm-inline">Add </span>Property <span class="urdu d-none d-md-inline">(شامل)</span></a>

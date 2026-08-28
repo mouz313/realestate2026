@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\AgentScope;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +12,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Agent extends Model
 {
     use SoftDeletes, BelongsToCompany;
+
+    protected static function booted(): void
+    {
+        // Agents may only see/edit their own agent record; admins/staff see all.
+        static::addGlobalScope(new AgentScope('id'));
+    }
 
     protected $fillable = [
         'company_id', 'user_id', 'name', 'role', 'phone', 'whatsapp', 'email', 'cnic', 'cnic_front', 'cnic_back',

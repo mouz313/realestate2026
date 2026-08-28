@@ -34,7 +34,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Category <span class="urdu">(قسم)</span> <span class="text-danger">*</span></label>
-                        <select class="form-select @error('category') is-invalid @enderror" name="category" required>
+                        <select class="form-select @error('category') is-invalid @enderror" name="category" id="categoryField" required>
                             <option value=""><span class="urdu">(قسم منتخب کریں)</span></option>
                             @foreach($types as $t)
                             <option value="{{ $t }}" {{ old('category', $property->category) == $t ? 'selected' : '' }}>{{ \App\Helpers\Status::categoryLabel($t) }}</option>
@@ -151,106 +151,7 @@
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">Plot Size <span class="urdu">(پلاٹ کا سائز)</span></label>
-                        <input type="number" step="0.01" class="form-control @error('plot_size') is-invalid @enderror" name="plot_size" value="{{ old('plot_size', $property->plot_size) }}">
-                        @error('plot_size') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Plot Size Unit <span class="urdu">(پلاٹ سائز یونٹ)</span></label>
-                        <select class="form-select @error('plot_size_unit') is-invalid @enderror" name="plot_size_unit">
-                            <option value="">Select Unit</option>
-                            <option value="marla" {{ old('plot_size_unit', $property->plot_size_unit) == 'marla' ? 'selected' : '' }}>Marla</option>
-                            <option value="kanal" {{ old('plot_size_unit', $property->plot_size_unit) == 'kanal' ? 'selected' : '' }}>Kanal</option>
-                            <option value="sqft" {{ old('plot_size_unit', $property->plot_size_unit) == 'sqft' ? 'selected' : '' }}>Sq. Ft.</option>
-                            <option value="sqm" {{ old('plot_size_unit', $property->plot_size_unit) == 'sqm' ? 'selected' : '' }}>Sq. M.</option>
-                            <option value="acre" {{ old('plot_size_unit', $property->plot_size_unit) == 'acre' ? 'selected' : '' }}>Acre</option>
-                        </select>
-                        @error('plot_size_unit') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Land Area <span class="urdu">(رقبہ)</span></label>
-                        <input type="text" class="form-control @error('land_area') is-invalid @enderror" name="land_area" value="{{ old('land_area', $property->land_area) }}">
-                        @error('land_area') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Covered Area <span class="urdu">(تعمیر شدہ رقبہ)</span> <span class="text-secondary small">(built-up)</span></label>
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <input type="number" step="0.01" class="form-control @error('covered_area') is-invalid @enderror" name="covered_area" value="{{ old('covered_area', $property->covered_area) }}" placeholder="Size">
-                            </div>
-                            <div class="col-6">
-                                <select class="form-select @error('covered_area_unit') is-invalid @enderror" name="covered_area_unit">
-                                    <option value="">Unit</option>
-                                    <option value="sqft" {{ old('covered_area_unit', $property->covered_area_unit) == 'sqft' ? 'selected' : '' }}>Sq. Ft.</option>
-                                    <option value="sqm" {{ old('covered_area_unit', $property->covered_area_unit) == 'sqm' ? 'selected' : '' }}>Sq. M.</option>
-                                    <option value="marla" {{ old('covered_area_unit', $property->covered_area_unit) == 'marla' ? 'selected' : '' }}>Marla</option>
-                                </select>
-                            </div>
-                        </div>
-                        @error('covered_area') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        @error('covered_area_unit') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="row">
-                        <div class="col-6">
-                            <div class="mb-3">
-                                <label class="form-label">Bedrooms <span class="urdu">(بیڈروم)</span></label>
-                                <input type="number" min="0" class="form-control @error('bedrooms') is-invalid @enderror" name="bedrooms" value="{{ old('bedrooms', $property->bedrooms) }}">
-                                @error('bedrooms') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="mb-3">
-                                <label class="form-label">Bathrooms <span class="urdu">(باتھ روم)</span></label>
-                                <input type="number" min="0" class="form-control @error('bathrooms') is-invalid @enderror" name="bathrooms" value="{{ old('bathrooms', $property->bathrooms) }}">
-                                @error('bathrooms') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-6">
-                            <div class="mb-3">
-                                <label class="form-label">Kitchens <span class="urdu">(کچن)</span></label>
-                                <input type="number" min="0" class="form-control @error('kitchens') is-invalid @enderror" name="kitchens" value="{{ old('kitchens', $property->kitchens) }}">
-                                @error('kitchens') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="mb-3">
-                                <label class="form-label">Floors <span class="urdu">(منزلیں)</span> <span class="text-secondary small">(in unit)</span></label>
-                                <input type="number" min="0" class="form-control @error('floors') is-invalid @enderror" name="floors" value="{{ old('floors', $property->floors) }}">
-                                @error('floors') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-6">
-                            <div class="mb-3">
-                                <label class="form-label">Floor # <span class="urdu">(منزل نمبر)</span></label>
-                                <input type="number" min="0" class="form-control @error('floor_number') is-invalid @enderror" name="floor_number" value="{{ old('floor_number', $property->floor_number) }}" placeholder="e.g. 3">
-                                @error('floor_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="mb-3">
-                                <label class="form-label">Total Floors in Building <span class="urdu">(عمارت میں کل منزلیں)</span></label>
-                                <input type="number" min="0" class="form-control @error('total_floors') is-invalid @enderror" name="total_floors" value="{{ old('total_floors', $property->total_floors) }}" placeholder="e.g. 15">
-                                @error('total_floors') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input @error('furnished') is-invalid @enderror" name="furnished" value="1" id="furnished" {{ old('furnished', $property->furnished) ? 'checked' : '' }}>
-                            <label class="form-check-label" for="furnished">Furnished <span class="urdu">(فرنشڈ)</span></label>
-                            @error('furnished') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Parking Spaces <span class="urdu">(پارکنگ کی جگہیں)</span></label>
-                        <input type="number" min="0" class="form-control @error('parking_spaces') is-invalid @enderror" name="parking_spaces" value="{{ old('parking_spaces', $property->parking_spaces) }}">
-                        @error('parking_spaces') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
+                    @include('properties.partials.specs')
                     <div class="mb-3">
                         <label class="form-label">Features <span class="urdu">(خصوصیات)</span> <span class="text-secondary small">(comma separated)</span></label>
                         <textarea class="form-control @error('features') is-invalid @enderror" name="features" rows="2">{{ old('features', is_array($property->features) ? implode(', ', $property->features) : $property->features) }}</textarea>
@@ -354,39 +255,6 @@
                         <textarea class="form-control @error('notes') is-invalid @enderror" name="notes" rows="2">{{ old('notes', $property->notes) }}</textarea>
                         @error('notes') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                </div>
-            </div>
-
-            <div class="row g-3 mt-2">
-                <div class="col-md-6">
-                    <div class="form-section">Additional Rooms <span class="urdu">(اضافی کمرے)</span></div>
-                    <div class="row g-2">
-                        @php $selectedRooms = old('additional_rooms', $property->additional_rooms ?? []); @endphp
-                        @foreach(['Servant Quarters', 'Drawing Room', 'Dining Room', 'Study Room', 'Prayer Room', 'Powder Room', 'Lounge', 'Laundry Room', 'Store Rooms', 'Steam Room'] as $i => $room)
-                        <div class="col-6">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" name="additional_rooms[]" value="{{ $room }}" id="ar_{{ $i }}" {{ in_array($room, $selectedRooms) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="ar_{{ $i }}">{{ $room }}</label>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                    @error('additional_rooms') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                </div>
-                <div class="col-md-6">
-                    <div class="form-section">Building Features <span class="urdu">(عمارت کی خصوصیات)</span></div>
-                    <div class="row g-2">
-                        @php $selectedBf = old('building_features', $property->building_features ?? []); @endphp
-                        @foreach(['Elevator', 'Lobby', 'Double Glazed Windows', 'Central AC', 'Central Heating', 'Flooring', 'Electricity Backup', 'Waste Disposal'] as $i => $feat)
-                        <div class="col-6">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" name="building_features[]" value="{{ $feat }}" id="bf_{{ $i }}" {{ in_array($feat, $selectedBf) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="bf_{{ $i }}">{{ $feat }}</label>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                    @error('building_features') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                 </div>
             </div>
 
@@ -667,6 +535,25 @@
         apply();
     }
     bindClientToggle('owner_select', 'owner_id', 'owner_new');
+</script>
+@endpush
+
+@push('scripts')
+<script>
+    (function() {
+        const categoryField = document.getElementById('categoryField');
+        function applyTypeConditional() {
+            const cat = categoryField ? categoryField.value : '';
+            document.querySelectorAll('[data-cat]').forEach(el => {
+                const cats = (el.getAttribute('data-cat') || '').split(' ').filter(Boolean);
+                el.style.display = cats.includes(cat) ? '' : 'none';
+            });
+        }
+        if (categoryField) {
+            categoryField.addEventListener('change', applyTypeConditional);
+            applyTypeConditional();
+        }
+    })();
 </script>
 @endpush
 @endsection

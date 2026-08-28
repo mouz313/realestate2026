@@ -114,6 +114,12 @@ if (! function_exists('crop_and_save')) {
 if (! function_exists('dashboard_route')) {
     function dashboard_route(): string
     {
+        $user = auth()->user();
+
+        if ($user && $user->isStaff()) {
+            return 'staff.dashboard';
+        }
+
         return 'admin.dashboard';
     }
 }

@@ -103,7 +103,25 @@ class AgentPayoutController extends Controller
         ]);
 
         $data = $request->all();
-        $data['commission_ids'] = $request->has('commission_ids') ? json_encode($request->commission_ids) : null;
+
+        // Mirror store() authorization: an agent may only update their own
+        // payout, and referenced commissions must belong to that agent.
+        if (auth()->user()->isAgent()) {
+            $data['agent_id'] = auth()->user()->agent_id;
+        }
+
+        if ($request->has('commission_ids')) {
+            $ids = $request->commission_ids;
+            if (auth()->user()->isAgent()) {
+                $allowed = Commission::where('agent_id', $data['agent_id'])
+                    ->where('company_id', $data['company_id'] ?? current_company_id())
+                    ->pluck('id')->all();
+                $ids = collect($ids)->intersect($allowed)->values()->all();
+            }
+            $data['commission_ids'] = json_encode($ids);
+        } else {
+            $data['commission_ids'] = null;
+        }
 
         $agentPayout->update($data);
         toastr()->success('Agent payout updated successfully.');

@@ -299,7 +299,9 @@
                         <th>Agent <span class="urdu">(ایجنٹ)</span></th>
                         <th>Type <span class="urdu">(قسم)</span></th>
                         <th>Percentage <span class="urdu">(فیصد)</span></th>
-                        <th>Amount <span class="urdu">(رقم)</span></th>
+                        <th>Source <span class="urdu">(ذریعہ)</span></th>
+                        <th>Agency (90%) <span class="urdu">(ایجنسی)</span></th>
+                        <th>Agent (10%) <span class="urdu">(ایجنٹ)</span></th>
                         <th>Status <span class="urdu">(کیفیت)</span></th>
                         <th>Paid Date <span class="urdu">(ادائیگی کی تاریخ)</span></th>
                     </tr>
@@ -310,14 +312,16 @@
                         <td>{{ $commission->agent->name ?? '-' }}</td>
                         <td>{{ ucfirst($commission->type ?? '-') }}</td>
                         <td>{{ $commission->percentage ? $commission->percentage . '%' : '-' }}</td>
-                        <td class="fw-semibold">{{ number_format($commission->amount, 2) }}</td>
+                        <td><span class="badge bg-light text-dark">{{ ucfirst($commission->source ?? '-') }}</span></td>
+                        <td class="fw-semibold">{{ number_format($commission->agency_amount ?? 0, 2) }}</td>
+                        <td class="fw-semibold">{{ number_format($commission->agent_amount ?? $commission->amount, 2) }}</td>
                         <td>
                             <span class="badge status-{{ $commission->status ?? 'pending' }}">{{ ucfirst($commission->status ?? 'pending') }}</span>
                         </td>
                         <td>{{ $commission->paid_date ? $commission->paid_date->format('d M Y') : '-' }}</td>
                     </tr>
                     @empty
-                    <tr><td colspan="6"><div class="empty-state"><i class="ti ti-currency-dollar"></i><span><span class="urdu">(اس ڈیل کے لیے کوئی کمیشن نہیں)</span></span></div></td></tr>
+                    <tr><td colspan="8"><div class="empty-state"><i class="ti ti-currency-dollar"></i><span><span class="urdu">(اس ڈیل کے لیے کوئی کمیشن نہیں)</span></span></div></td></tr>
                     @endforelse
                 </tbody>
             </table>

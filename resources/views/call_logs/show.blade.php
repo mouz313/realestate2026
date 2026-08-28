@@ -19,7 +19,21 @@
         <div class="page-header-sub">{{ $callLog->phone }}</div>
     </div>
     <div class="d-flex gap-2">
-        <span class="badge bg-light text-dark" style="font-size:0.8rem;">{{ ucfirst(str_replace('_', ' ', $callLog->status)) }}</span>
+        <x-status-badge :status="$callLog->status" size="md" />
+        <a href="{{ WhatsApp::shareLink($callLog->phone, 'Assalam o Alaikum '.$callLog->name.', this is regarding your enquiry. How can we help you?') }}"
+           target="_blank"
+           class="btn btn-success"
+           title="Chat on WhatsApp">
+            <i class="ti ti-brand-whatsapp"></i> WhatsApp
+        </a>
+        @if($callLog->alternate_phone)
+        <a href="{{ WhatsApp::shareLink($callLog->alternate_phone, 'Assalam o Alaikum '.$callLog->name.', this is regarding your enquiry.') }}"
+           target="_blank"
+           class="btn btn-outline-success"
+           title="Chat on alternate WhatsApp">
+            <i class="ti ti-brand-whatsapp"></i> Alt
+        </a>
+        @endif
         @if($callLog->deal)
         <a href="{{ route('deals.show', $callLog->deal) }}" class="btn btn-success">
             <i class="ti ti-building-store"></i> View Deal <span class="urdu">(ڈیل دیکھیں)</span>

@@ -25,6 +25,18 @@ class AppServiceProvider extends ServiceProvider
 
         Company::observe(CompanyObserver::class);
 
+        // Delegate any ability that is a real permission slug to the model so
+        // Blade @can('any_permission_slug') works for every (incl. admin-created)
+        // permission. Return null when denied so the explicitly-defined gates
+        // below (admin, owner, view_team, manage_*, ...) still take effect.
+        Gate::before(function ($user, $ability) {
+            if (method_exists($user, 'hasPermission')) {
+                return $user->hasPermission($ability) ?: null;
+            }
+
+            return null;
+        });
+
         Gate::define('owner', fn ($user) => $user->isOwner());
         Gate::define('admin', fn ($user) => $user->isAdmin());
 

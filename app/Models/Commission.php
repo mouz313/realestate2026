@@ -19,6 +19,7 @@ class Commission extends Model
 
     protected $fillable = [
         'company_id', 'deal_id', 'agent_id', 'type', 'percentage', 'amount',
+        'agency_amount', 'agent_amount', 'source',
         'status', 'paid_date', 'notes',
     ];
 
@@ -27,6 +28,8 @@ class Commission extends Model
         return [
             'percentage' => 'decimal:2',
             'amount' => 'decimal:2',
+            'agency_amount' => 'decimal:2',
+            'agent_amount' => 'decimal:2',
             'paid_date' => 'date',
         ];
     }

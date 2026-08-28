@@ -107,6 +107,30 @@ class RoleBasedAccessTest extends TestCase
         $this->get(route('properties.index'))->assertStatus(200);
     }
 
+    public function test_owner_role_permissions_can_be_edited_but_settings_cannot(): void
+    {
+        $owner = $this->makeUser('owner');
+        $this->actingAs($owner);
+
+        $ownerRole = Role::where('slug', 'owner')->whereNull('company_id')->first();
+        $this->assertNotNull($ownerRole);
+
+        // Permission management is allowed for the owner role.
+        $this->get(route('roles.permissions', $ownerRole))->assertStatus(200);
+
+        $permission = \App\Models\Permission::whereNull('company_id')->first();
+        $this->post(route('roles.permissions.assign', $ownerRole), [
+            'permissions' => $permission ? [$permission->id] : [],
+        ])->assertSessionHasNoErrors();
+
+        // Settings (name/active) remain immutable for the owner role.
+        $this->get(route('roles.edit', $ownerRole))->assertForbidden();
+        $this->put(route('roles.update', $ownerRole), [
+            'name' => 'Owner',
+        ])->assertForbidden();
+        $this->delete(route('roles.destroy', $ownerRole))->assertForbidden();
+    }
+
     public function test_unauthenticated_user_redirected_to_login(): void
     {
         $this->get(route('admin.dashboard'))->assertRedirect(route('login'));

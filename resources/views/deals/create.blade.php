@@ -22,9 +22,6 @@
         @if(!empty($prefill['call_log_id']))
         <input type="hidden" name="call_log_id" value="{{ $prefill['call_log_id'] }}">
         @endif
-        @if(!empty($prefill['contact_id']))
-        <input type="hidden" name="contact_id" value="{{ $prefill['contact_id'] }}">
-        @endif
         @if(!empty($prefill['visit_id']))
         <input type="hidden" name="visit_id" value="{{ $prefill['visit_id'] }}">
         @endif

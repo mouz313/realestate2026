@@ -41,7 +41,7 @@ class ReportController extends Controller
         $dealCount = $deals->count();
 
         $monthlyData = Deal::select(
-            DB::raw("strftime('%Y-%m', created_at) as month"),
+            DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
             DB::raw('count(*) as count'),
             DB::raw('COALESCE(sum(sale_price), 0) as volume'),
             DB::raw('COALESCE(sum(commission_amount), 0) as commission')

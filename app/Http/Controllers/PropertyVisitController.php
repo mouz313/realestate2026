@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Agent;
+use App\Models\CallLog;
 use App\Models\Client;
-use App\Models\Contact;
 use App\Models\Property;
 use App\Models\PropertyVisit;
 use Illuminate\Http\Request;
@@ -14,15 +14,15 @@ class PropertyVisitController extends Controller
     public function index(Request $request)
     {
         $agentId = auth()->user()->isAgent() ? auth()->user()->agent_id : null;
-        $propertyVisits = PropertyVisit::with(['property', 'client', 'agent', 'contact'])
+        $propertyVisits = PropertyVisit::with(['property', 'client', 'agent', 'callLog'])
             ->when($agentId, fn ($q) => $q->where('agent_id', $agentId))
-            ->when($request->contact_id, fn ($q) => $q->where('contact_id', $request->contact_id))
+            ->when($request->call_log_id, fn ($q) => $q->where('call_log_id', $request->call_log_id))
             ->latest()->paginate(15)->withQueryString();
 
-        $enquiries = Contact::whereIn('status', [Contact::STATUS_OPEN, Contact::STATUS_PENDING])
+        $leads = CallLog::whereNotIn('status', ['converted', 'lost'])
             ->orderBy('name')->get();
 
-        return view('property_visits.index', compact('propertyVisits', 'enquiries'));
+        return view('property_visits.index', compact('propertyVisits', 'leads'));
     }
 
     public function create()
@@ -30,10 +30,10 @@ class PropertyVisitController extends Controller
         $properties = Property::orderBy('title')->get();
         $clients = Client::orderBy('name')->get();
         $agents = Agent::orderBy('name')->get();
-        $enquiries = Contact::whereIn('status', [Contact::STATUS_OPEN, Contact::STATUS_PENDING])
+        $leads = CallLog::whereNotIn('status', ['converted', 'lost'])
             ->orderBy('name')->get();
 
-        return view('property_visits.create', compact('properties', 'clients', 'agents', 'enquiries'));
+        return view('property_visits.create', compact('properties', 'clients', 'agents', 'leads'));
     }
 
     public function store(Request $request)
@@ -41,7 +41,7 @@ class PropertyVisitController extends Controller
         $data = $request->validate([
             'property_id' => 'required|exists:properties,id',
             'client_id' => 'nullable|exists:clients,id',
-            'contact_id' => 'nullable|exists:contacts,id',
+            'call_log_id' => 'nullable|exists:call_logs,id',
             'agent_id' => 'nullable|exists:agents,id',
             'scheduled_date' => 'required|date',
             'status' => 'required|string|in:scheduled,completed,cancelled,no_show,rescheduled',
@@ -49,24 +49,24 @@ class PropertyVisitController extends Controller
         ]);
 
         try {
-            if ($request->filled('contact_id')) {
-                $contact = Contact::find($request->input('contact_id'));
-                $client = $contact?->client();
+            if ($request->filled('call_log_id')) {
+                $callLog = CallLog::find($request->input('call_log_id'));
+                $client = $callLog?->client;
 
                 if (! $client) {
                     $client = Client::firstOrCreate(
-                        ['phone' => $contact->phone, 'company_id' => current_company_id()],
+                        ['phone' => $callLog->phone, 'company_id' => current_company_id()],
                         [
-                            'name' => $contact->name,
-                            'email' => $contact->email,
-                            'client_type' => $contact->purpose === 'rent' ? 'tenant' : 'buyer',
-                            'notes' => 'Created from enquiry #'.$contact->id,
+                            'name' => $callLog->name,
+                            'email' => $callLog->email,
+                            'client_type' => $callLog->transaction_type === 'rent' ? 'tenant' : 'buyer',
+                            'notes' => 'Created from lead #'.$callLog->id,
                         ]
                     );
                 }
 
                 $data['client_id'] = $client->id;
-                $data['contact_id'] = $contact->id;
+                $data['call_log_id'] = $callLog->id;
             }
 
             if (! $request->filled('agent_id') && auth()->user()->isAgent()) {
@@ -81,10 +81,10 @@ class PropertyVisitController extends Controller
             return redirect()->back()->withInput();
         }
 
-        if ($request->filled('contact_id')) {
+        if ($request->filled('call_log_id')) {
             toastr()->success('Property visit added successfully.');
 
-            return redirect()->route('contacts.show', $request->input('contact_id'));
+            return redirect()->route('call-logs.show', $request->input('call_log_id'));
         }
 
         toastr()->success('Property visit added successfully.');

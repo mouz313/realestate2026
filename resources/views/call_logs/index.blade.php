@@ -12,15 +12,18 @@
 @endsection
 
 @section('content')
-<div class="page-header flex-wrap gap-2">
-    <div>
-        <h3>Call Logs <span class="urdu">(کال لاگ)</span></h3>
-        <div class="page-header-sub">{{ $callLogs->total() }} <span class="urdu">(کل کالز)</span></div>
-    </div>
+<x-page-header
+    title="Call Logs"
+    :urdu="'کال لاگ'"
+    :subtitle="$callLogs->total() . ' total'"
+    icon="ti-phone-call">
+    <a href="{{ route('call-logs.kanban') }}" class="btn btn-outline-dark">
+        <i class="ti ti-layout-kanban"></i> Kanban <span class="urdu">(کنبان)</span>
+    </a>
     <a href="{{ route('call-logs.create') }}" class="btn btn-dark">
         <i class="ti ti-phone-plus"></i> Log Call <span class="urdu">(کال درج کریں)</span>
     </a>
-</div>
+</x-page-header>
 
 <div class="card mb-3">
     <div class="card-body">
@@ -110,34 +113,27 @@
                     </td>
                     <td>{{ $call->follow_up_date ? $call->follow_up_date->format('d M Y') : '-' }}</td>
                     <td>
-                        <span class="badge bg-light text-dark">{{ ucfirst(str_replace('_', ' ', $call->status)) }}</span>
+                        <x-status-badge :status="$call->status" />
                     </td>
                     <td class="text-end">
-                        <div class="action-btns flex-nowrap">
-                            <a href="{{ route('call-logs.show', $call) }}" class="btn btn-sm btn-outline-secondary" title="View">
-                                <i class="ti ti-eye"></i>
-                            </a>
-                            <a href="{{ route('call-logs.edit', $call) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
-                                <i class="ti ti-edit"></i>
-                            </a>
-                            <form action="{{ route('call-logs.destroy', $call) }}" method="POST" onsubmit="return confirm('Delete this call log?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-                                    <i class="ti ti-trash"></i>
-                                </button>
-                            </form>
-                        </div>
+                    <x-action-buttons
+                        :show="['view','edit','delete','whatsapp']"
+                        :whatsapp-phone="$call->phone"
+                            :whatsapp-msg="'Assalam o Alaikum '.$call->name.', regarding your enquiry...'"
+                            :view-url="route('call-logs.show', $call)"
+                            :edit-url="route('call-logs.edit', $call)"
+                            :delete-url="route('call-logs.destroy', $call)" />
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="9">
-                        <div class="empty-state">
-                            <i class="ti ti-phone-call"></i>
-                            <p>No call logs yet. <span class="urdu">(ابھی تک کوئی کال لاگ نہیں)</span></p>
-                            <a href="{{ route('call-logs.create') }}" class="text-decoration-none fw-medium"><span class="urdu">(پہلی کال درج کریں)</span></a>
-                        </div>
-                    </td>
+                    <x-empty-state
+                        icon="ti-phone-call"
+                        title="No call logs yet."
+                        urdu="ابھی تک کوئی کال لاگ نہیں"
+                        :action-url="route('call-logs.create')"
+                        action-label="Log first call (پہلی کال درج کریں)"
+                        colspan="9" />
                 </tr>
                 @endforelse
             </tbody>

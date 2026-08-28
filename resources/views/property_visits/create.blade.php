@@ -23,15 +23,15 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label class="form-label">Enquiry <span class="urdu">(انکوائری)</span> <span class="text-secondary fw-normal">(optional)</span></label>
-                        <select class="form-select @error('contact_id') is-invalid @enderror" name="contact_id" id="contact_id">
-                            <option value="">— Select Enquiry <span class="urdu">(انکوائری منتخب)</span> —</option>
-                            @foreach($enquiries ?? [] as $enquiry)
-                                <option value="{{ $enquiry->id }}" {{ (request('contact_id') ?? old('contact_id')) == $enquiry->id ? 'selected' : '' }}>{{ $enquiry->name }} ({{ ucfirst($enquiry->status) }})</option>
+                        <label class="form-label">Lead <span class="urdu">(لیڈ)</span> <span class="text-secondary fw-normal">(optional)</span></label>
+                        <select class="form-select @error('call_log_id') is-invalid @enderror" name="call_log_id" id="call_log_id">
+                            <option value="">— Select Lead <span class="urdu">(لیڈ منتخب)</span> —</option>
+                            @foreach($leads ?? [] as $lead)
+                                <option value="{{ $lead->id }}" {{ (request('call_log_id') ?? old('call_log_id')) == $lead->id ? 'selected' : '' }}>{{ $lead->name }} ({{ ucfirst($lead->status) }})</option>
                             @endforeach
                         </select>
-                        <div class="form-text">Linking an enquiry auto-fills the client and property.</div>
-                        @error('contact_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <div class="form-text">Linking a lead auto-fills the client and property.</div>
+                        @error('call_log_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Property <span class="urdu">(جائیداد)</span> <span class="text-danger">*</span></label>
@@ -44,7 +44,7 @@
                         @error('property_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Client <span class="urdu">(گاہک)</span> <span class="text-secondary fw-normal">(auto from enquiry)</span></label>
+                        <label class="form-label">Client <span class="urdu">(گاہک)</span> <span class="text-secondary fw-normal">(auto from lead)</span></label>
                         <select class="form-select @error('client_id') is-invalid @enderror" name="client_id" id="client_id">
                             <option value="">Select Client <span class="urdu">(گاہک منتخب)</span></option>
                             @foreach($clients ?? [] as $client)
@@ -99,22 +99,22 @@
 @push('scripts')
 <script>
     (function () {
-        const enquiries = @json(($enquiries ?? collect())->mapWithKeys(fn ($e) => [$e->id => ['client_id' => optional($e->client())->id, 'property_id' => $e->property_id]]));
-        const contactSelect = document.getElementById('contact_id');
+        const leads = @json(($leads ?? collect())->mapWithKeys(fn ($e) => [$e->id => ['client_id' => optional($e->client())->id, 'property_id' => $e->property_id]]));
+        const leadSelect = document.getElementById('call_log_id');
         const clientSelect = document.getElementById('client_id');
         const propertySelect = document.getElementById('property_id');
 
-        if (! contactSelect) return;
+        if (! leadSelect) return;
 
-        function applyEnquiry() {
-            const data = enquiries[contactSelect.value];
+        function applyLead() {
+            const data = leads[leadSelect.value];
             if (! data) return;
             if (data.client_id) clientSelect.value = data.client_id;
             if (data.property_id) propertySelect.value = data.property_id;
         }
 
-        contactSelect.addEventListener('change', applyEnquiry);
-        applyEnquiry();
+        leadSelect.addEventListener('change', applyLead);
+        applyLead();
     })();
 </script>
 @endpush

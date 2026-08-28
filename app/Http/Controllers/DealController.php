@@ -7,7 +7,6 @@ use App\Helpers\Status;
 use App\Models\Agent;
 use App\Models\CallLog;
 use App\Models\Client;
-use App\Models\Contact;
 use App\Models\Deal;
 use App\Models\Property;
 use App\Models\PropertyVisit;
@@ -70,19 +69,6 @@ class DealController extends Controller
             }
         }
 
-        if ($contact = Contact::find(request('contact_id'))) {
-            $prefill['contact_id'] = $contact->id;
-            $prefill['lead_source'] = $prefill['lead_source'] ?? $contact->lead_source;
-            $prefill['property_id'] = $prefill['property_id'] ?? $contact->property_id;
-            if ($client = $contact->client) {
-                $prefill['buyer_id'] = $client->id;
-                $prefill['buyer_name'] = $client->name;
-            } elseif ($contact->phone) {
-                $prefill['buyer_name'] = $contact->name;
-                $prefill['buyer_phone'] = $contact->phone;
-            }
-        }
-
         if ($visit = PropertyVisit::find(request('visit_id'))) {
             $prefill['visit_id'] = $visit->id;
             $prefill['property_id'] = $prefill['property_id'] ?? $visit->property_id;
@@ -106,7 +92,6 @@ class DealController extends Controller
         $request->validate([
             'lead_source' => ['nullable', 'string', Rule::in(array_keys(Status::leadSources()))],
             'call_log_id' => 'nullable|exists:call_logs,id',
-            'contact_id' => 'nullable|exists:contacts,id',
             'visit_id' => 'nullable|exists:property_visits,id',
             'property_id' => 'required|exists:properties,id',
             'buyer_id' => 'nullable|exists:clients,id',
@@ -145,8 +130,6 @@ class DealController extends Controller
         if (auth()->user()->isAgent() && empty($data['agent_id'])) {
             $data['agent_id'] = auth()->user()->agent_id;
         }
-
-        $data['contact_id'] = $request->input('contact_id');
 
         $data['deal_number'] = DB::transaction(function () {
             $last = Deal::withTrashed()->lockForUpdate()->orderBy('id', 'desc')->first();
@@ -212,7 +195,7 @@ class DealController extends Controller
         if ($visitId = $request->input('visit_id')) {
             PropertyVisit::where('id', $visitId)->update([
                 'deal_id' => $deal->id,
-                'contact_id' => $deal->contact_id ?? null,
+                'call_log_id' => $deal->call_log_id ?? null,
             ]);
         }
 
@@ -220,29 +203,15 @@ class DealController extends Controller
             return;
         }
 
-        $percentage = $deal->commission_percentage ?? optional($deal->property)->commission_rate;
-        $base = $deal->sale_price ?: optional($deal->property)->price;
+        $split = \App\Services\CommissionCalculator::forDeal($deal);
 
-        if (is_null($percentage) && is_null($deal->commission_amount)) {
+        if ($split['commission_amount'] <= 0) {
             return;
         }
 
-        $total = $deal->commission_amount;
-        if (is_null($total) && $base && ! is_null($percentage)) {
-            $total = $base * $percentage / 100;
-        }
-        if (is_null($total)) {
-            return;
-        }
-        $total = round((float) $total, 2);
-
-        $agentPayoutRate = 0.10;
-        $agentCommission = round($total * $agentPayoutRate, 2);
-        $agencyShare = round($total - $agentCommission, 2);
-
-        $deal->commission_amount = $total;
-        $deal->agent_commission = $agentCommission;
-        $deal->agency_share = $agencyShare;
+        $deal->commission_amount = $split['commission_amount'];
+        $deal->agent_commission = $split['agent_amount'];
+        $deal->agency_share = $split['agency_amount'];
         $deal->save();
 
         $deal->commissions()->updateOrCreate(
@@ -250,8 +219,11 @@ class DealController extends Controller
             [
                 'company_id' => $deal->company_id,
                 'type' => $deal->type ?? 'sale',
-                'percentage' => $percentage,
-                'amount' => $agentCommission,
+                'percentage' => $split['rate'],
+                'amount' => $split['agent_amount'],
+                'agency_amount' => $split['agency_amount'],
+                'agent_amount' => $split['agent_amount'],
+                'source' => $deal->type ?? 'sale',
                 'status' => 'pending',
             ]
         );
@@ -282,7 +254,6 @@ class DealController extends Controller
         $this->authorizeAgentAccess($deal);
         $request->validate([
             'lead_source' => ['nullable', 'string', Rule::in(array_keys(Status::leadSources()))],
-            'contact_id' => 'nullable|exists:contacts,id',
             'visit_id' => 'nullable|exists:property_visits,id',
             'property_id' => 'required|exists:properties,id',
             'buyer_id' => 'nullable|exists:clients,id',
