@@ -120,6 +120,11 @@ class Status
             'buy' => 'Buy',
             'rent' => 'Rent',
         ],
+        'contact' => [
+            'open' => 'status-active',
+            'pending' => 'status-pending',
+            'closed' => 'status-completed',
+        ],
     ];
 
     public static function classes(string $group): array

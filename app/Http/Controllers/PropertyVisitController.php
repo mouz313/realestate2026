@@ -4,20 +4,25 @@ namespace App\Http\Controllers;
 
 use App\Models\Agent;
 use App\Models\Client;
+use App\Models\Contact;
 use App\Models\Property;
 use App\Models\PropertyVisit;
 use Illuminate\Http\Request;
 
 class PropertyVisitController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $agentId = auth()->user()->isAgent() ? auth()->user()->agent_id : null;
-        $propertyVisits = PropertyVisit::with(['property', 'client', 'agent'])
+        $propertyVisits = PropertyVisit::with(['property', 'client', 'agent', 'contact'])
             ->when($agentId, fn ($q) => $q->where('agent_id', $agentId))
-            ->latest()->paginate(15);
+            ->when($request->contact_id, fn ($q) => $q->where('contact_id', $request->contact_id))
+            ->latest()->paginate(15)->withQueryString();
 
-        return view('property_visits.index', compact('propertyVisits'));
+        $enquiries = Contact::whereIn('status', [Contact::STATUS_OPEN, Contact::STATUS_PENDING])
+            ->orderBy('name')->get();
+
+        return view('property_visits.index', compact('propertyVisits', 'enquiries'));
     }
 
     public function create()
@@ -25,22 +30,63 @@ class PropertyVisitController extends Controller
         $properties = Property::orderBy('title')->get();
         $clients = Client::orderBy('name')->get();
         $agents = Agent::orderBy('name')->get();
+        $enquiries = Contact::whereIn('status', [Contact::STATUS_OPEN, Contact::STATUS_PENDING])
+            ->orderBy('name')->get();
 
-        return view('property_visits.create', compact('properties', 'clients', 'agents'));
+        return view('property_visits.create', compact('properties', 'clients', 'agents', 'enquiries'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'property_id' => 'required|exists:properties,id',
-            'client_id' => 'required|exists:clients,id',
+            'client_id' => 'nullable|exists:clients,id',
+            'contact_id' => 'nullable|exists:contacts,id',
             'agent_id' => 'nullable|exists:agents,id',
             'scheduled_date' => 'required|date',
-            'status' => 'required|string|in:scheduled,completed,cancelled,no_show',
+            'status' => 'required|string|in:scheduled,completed,cancelled,no_show,rescheduled',
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        PropertyVisit::create($request->all());
+        try {
+            if ($request->filled('contact_id')) {
+                $contact = Contact::find($request->input('contact_id'));
+                $client = $contact?->client();
+
+                if (! $client) {
+                    $client = Client::firstOrCreate(
+                        ['phone' => $contact->phone, 'company_id' => current_company_id()],
+                        [
+                            'name' => $contact->name,
+                            'email' => $contact->email,
+                            'client_type' => $contact->purpose === 'rent' ? 'tenant' : 'buyer',
+                            'notes' => 'Created from enquiry #'.$contact->id,
+                        ]
+                    );
+                }
+
+                $data['client_id'] = $client->id;
+                $data['contact_id'] = $contact->id;
+            }
+
+            if (! $request->filled('agent_id') && auth()->user()->isAgent()) {
+                $data['agent_id'] = auth()->user()->agent_id;
+            }
+
+            PropertyVisit::create($data);
+        } catch (\Throwable $e) {
+            report($e);
+            toastr()->error('Something went wrong while saving the visit. Please try again.');
+
+            return redirect()->back()->withInput();
+        }
+
+        if ($request->filled('contact_id')) {
+            toastr()->success('Property visit added successfully.');
+
+            return redirect()->route('contacts.show', $request->input('contact_id'));
+        }
+
         toastr()->success('Property visit added successfully.');
 
         return redirect()->route('property-visits.index');
@@ -71,7 +117,7 @@ class PropertyVisitController extends Controller
             'client_id' => 'required|exists:clients,id',
             'agent_id' => 'nullable|exists:agents,id',
             'scheduled_date' => 'required|date',
-            'status' => 'required|string|in:scheduled,completed,cancelled,no_show',
+            'status' => 'required|string|in:scheduled,completed,cancelled,no_show,rescheduled',
             'notes' => 'nullable|string|max:1000',
         ]);
 

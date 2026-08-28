@@ -22,6 +22,12 @@
         @if(!empty($prefill['call_log_id']))
         <input type="hidden" name="call_log_id" value="{{ $prefill['call_log_id'] }}">
         @endif
+        @if(!empty($prefill['contact_id']))
+        <input type="hidden" name="contact_id" value="{{ $prefill['contact_id'] }}">
+        @endif
+        @if(!empty($prefill['visit_id']))
+        <input type="hidden" name="visit_id" value="{{ $prefill['visit_id'] }}">
+        @endif
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-6">
@@ -40,7 +46,7 @@
                         <select class="form-select @error('property_id') is-invalid @enderror" name="property_id" required>
                             <option value=""><span class="urdu">(جائیداد منتخب کریں)</span></option>
                             @foreach($properties ?? [] as $property)
-                                <option value="{{ $property->id }}" {{ old('property_id') == $property->id ? 'selected' : '' }}>{{ $property->title }} ({{ $property->property_code ?? $property->id }})</option>
+                                <option value="{{ $property->id }}" {{ (old('property_id', $prefill['property_id'] ?? null)) == $property->id ? 'selected' : '' }}>{{ $property->title }} ({{ $property->property_code ?? $property->id }})</option>
                             @endforeach
                         </select>
                         @error('property_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -96,7 +102,7 @@
                         <select class="form-select @error('agent_id') is-invalid @enderror" name="agent_id">
                             <option value=""><span class="urdu">(ایجنٹ منتخب کریں)</span></option>
                             @foreach($agents ?? [] as $agent)
-                                <option value="{{ $agent->id }}" {{ old('agent_id', $defaultAgentId ?? null) == $agent->id ? 'selected' : '' }}>{{ $agent->name }}</option>
+                                <option value="{{ $agent->id }}" {{ old('agent_id', $prefill['agent_id'] ?? $defaultAgentId ?? null) == $agent->id ? 'selected' : '' }}>{{ $agent->name }}</option>
                             @endforeach
                         </select>
                         @error('agent_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -128,7 +134,7 @@
                         <select class="form-select @error('lead_source') is-invalid @enderror" name="lead_source">
                             <option value=""><span class="urdu">(ذریعہ منتخب کریں)</span></option>
                             @foreach($leadSources ?? [] as $key => $label)
-                                <option value="{{ $key }}" {{ old('lead_source') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                                <option value="{{ $key }}" {{ old('lead_source', $prefill['lead_source'] ?? null) == $key ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
                         </select>
                         @error('lead_source') <div class="invalid-feedback">{{ $message }}</div> @enderror

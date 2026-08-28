@@ -77,6 +77,14 @@
                     <textarea name="message" class="form-control" rows="3">{{ old('message', $contact->message) }}</textarea>
                 </div>
                 <div class="col-12">
+                    <label class="form-label">Status <span class="urdu">(حالت)</span></label>
+                    <select name="status" class="form-select">
+                        @foreach(\App\Models\Contact::statusOptions() as $key => $label)
+                            <option value="{{ $key }}" {{ old('status', $contact->status ?? 'open') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-12">
                     <button type="submit" class="btn btn-dark"><i class="ti ti-device-floppy"></i> Update Enquiry</button>
                 </div>
             </div>

@@ -95,6 +95,15 @@
                     <div class="row g-2">
                         <div class="col-6">
                             <div class="mb-3">
+                                <label class="form-label">Commission Rate <span class="urdu">(کمیشن ریٹ)</span> (%)</label>
+                                <input type="number" step="0.01" min="0" max="100" class="form-control @error('commission_rate') is-invalid @enderror" name="commission_rate" value="{{ old('commission_rate') }}" placeholder="e.g. 2">
+                                <div class="form-text"><span class="urdu">(ڈیل مکمل ہونے پر ایجنٹ کا کمیشن)</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="mb-3">
                                 <label class="form-label">Possession Status <span class="urdu">(قبضے کی کیفیت)</span></label>
                                 <select class="form-select @error('possession_status') is-invalid @enderror" name="possession_status">
                                     <option value="">Select</option>

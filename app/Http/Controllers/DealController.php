@@ -7,8 +7,10 @@ use App\Helpers\Status;
 use App\Models\Agent;
 use App\Models\CallLog;
 use App\Models\Client;
+use App\Models\Contact;
 use App\Models\Deal;
 use App\Models\Property;
+use App\Models\PropertyVisit;
 use App\Notifications\DealStatusChanged;
 use App\Services\ExcelWriter;
 use Illuminate\Http\Request;
@@ -68,6 +70,34 @@ class DealController extends Controller
             }
         }
 
+        if ($contact = Contact::find(request('contact_id'))) {
+            $prefill['contact_id'] = $contact->id;
+            $prefill['lead_source'] = $prefill['lead_source'] ?? $contact->lead_source;
+            $prefill['property_id'] = $prefill['property_id'] ?? $contact->property_id;
+            if ($client = $contact->client) {
+                $prefill['buyer_id'] = $client->id;
+                $prefill['buyer_name'] = $client->name;
+            } elseif ($contact->phone) {
+                $prefill['buyer_name'] = $contact->name;
+                $prefill['buyer_phone'] = $contact->phone;
+            }
+        }
+
+        if ($visit = PropertyVisit::find(request('visit_id'))) {
+            $prefill['visit_id'] = $visit->id;
+            $prefill['property_id'] = $prefill['property_id'] ?? $visit->property_id;
+            if ($visit->agent_id) {
+                $prefill['agent_id'] = $visit->agent_id;
+            }
+            if ($visit->client_id && ! isset($prefill['buyer_id'])) {
+                $prefill['buyer_id'] = $visit->client_id;
+                $prefill['buyer_name'] = optional($visit->client)->name;
+            } elseif ($visit->client_name && ! isset($prefill['buyer_id'])) {
+                $prefill['buyer_name'] = $visit->client_name;
+                $prefill['buyer_phone'] = $visit->client_phone;
+            }
+        }
+
         return view('deals.create', compact('properties', 'clients', 'agents', 'statuses', 'defaultAgentId', 'leadSources', 'prefill'));
     }
 
@@ -76,6 +106,8 @@ class DealController extends Controller
         $request->validate([
             'lead_source' => ['nullable', 'string', Rule::in(array_keys(Status::leadSources()))],
             'call_log_id' => 'nullable|exists:call_logs,id',
+            'contact_id' => 'nullable|exists:contacts,id',
+            'visit_id' => 'nullable|exists:property_visits,id',
             'property_id' => 'required|exists:properties,id',
             'buyer_id' => 'nullable|exists:clients,id',
             'buyer_name' => 'nullable|string|max:255',
@@ -114,6 +146,8 @@ class DealController extends Controller
             $data['agent_id'] = auth()->user()->agent_id;
         }
 
+        $data['contact_id'] = $request->input('contact_id');
+
         $data['deal_number'] = DB::transaction(function () {
             $last = Deal::withTrashed()->lockForUpdate()->orderBy('id', 'desc')->first();
             $nextId = $last ? $last->id + 1 : 1;
@@ -130,6 +164,8 @@ class DealController extends Controller
         if ($callLogId = $request->input('call_log_id')) {
             CallLog::where('id', $callLogId)->update(['deal_id' => $deal->id, 'status' => 'converted', 'matched_at' => now()]);
         }
+
+        $this->syncDealExtras($request, $deal);
 
         toastr()->success('Deal added successfully.');
 
@@ -160,6 +196,55 @@ class DealController extends Controller
         return null;
     }
 
+    /**
+     * Link a deal to its originating enquiry / visit and auto-create the
+     * closing agent's commission. The agent who closes the deal receives the
+     * full commission (agency_share = 0). Commission % defaults to the
+     * property's own commission_rate when not provided on the deal.
+     */
+    protected function syncDealExtras(Request $request, Deal $deal): void
+    {
+        if ($visitId = $request->input('visit_id')) {
+            PropertyVisit::where('id', $visitId)->update([
+                'deal_id' => $deal->id,
+                'contact_id' => $deal->contact_id ?? null,
+            ]);
+        }
+
+        if (! $deal->agent_id) {
+            return;
+        }
+
+        $percentage = $deal->commission_percentage ?? optional($deal->property)->commission_rate;
+        if (is_null($percentage) && ! $deal->commission_amount) {
+            return;
+        }
+
+        $amount = $deal->commission_amount;
+        if (is_null($amount) && $deal->sale_price && ! is_null($percentage)) {
+            $amount = $deal->sale_price * $percentage / 100;
+        }
+        if (is_null($amount)) {
+            return;
+        }
+        $amount = round((float) $amount, 2);
+
+        $deal->agent_commission = $amount;
+        $deal->agency_share = 0;
+        $deal->save();
+
+        $deal->commissions()->updateOrCreate(
+            ['agent_id' => $deal->agent_id],
+            [
+                'company_id' => $deal->company_id,
+                'type' => $deal->type ?? 'sale',
+                'percentage' => $percentage,
+                'amount' => $amount,
+                'status' => 'pending',
+            ]
+        );
+    }
+
     public function show(Deal $deal)
     {
         $this->authorizeAgentAccess($deal);
@@ -185,6 +270,8 @@ class DealController extends Controller
         $this->authorizeAgentAccess($deal);
         $request->validate([
             'lead_source' => ['nullable', 'string', Rule::in(array_keys(Status::leadSources()))],
+            'contact_id' => 'nullable|exists:contacts,id',
+            'visit_id' => 'nullable|exists:property_visits,id',
             'property_id' => 'required|exists:properties,id',
             'buyer_id' => 'nullable|exists:clients,id',
             'buyer_name' => 'nullable|string|max:255',
@@ -225,6 +312,8 @@ class DealController extends Controller
 
         $oldStatus = $deal->status;
         $deal->update($data);
+
+        $this->syncDealExtras($request, $deal);
 
         if ($oldStatus !== $deal->status) {
             $recipients = [];

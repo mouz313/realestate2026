@@ -11,11 +11,11 @@ class VerifyRentalStatusCommand extends Command
 {
     protected $signature = 'rent:verify-status';
 
-    protected $description = 'Email agencies to re-verify rented properties at 6/9/12 months.';
+    protected $description = 'Email agencies to re-verify rented properties at 3/6/12 months.';
 
     public function handle(): int
     {
-        $milestones = [6, 9, 12];
+        $milestones = [3, 6, 12];
 
         foreach (Company::all() as $company) {
             session(['company_id' => $company->id]);

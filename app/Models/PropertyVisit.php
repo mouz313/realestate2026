@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Contact;
+use App\Models\Deal;
 use App\Scopes\AgentScope;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
@@ -17,7 +19,7 @@ class PropertyVisit extends Model
     }
 
     protected $fillable = [
-        'company_id', 'property_id', 'client_id', 'agent_id', 'scheduled_date',
+        'company_id', 'property_id', 'client_id', 'contact_id', 'agent_id', 'deal_id', 'scheduled_date',
         'status', 'feedback', 'rating', 'notes',
     ];
 
@@ -37,6 +39,16 @@ class PropertyVisit extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function contact(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class);
+    }
+
+    public function deal(): BelongsTo
+    {
+        return $this->belongsTo(Deal::class);
     }
 
     public function agent(): BelongsTo

@@ -23,17 +23,24 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
+        try {
+            if (Auth::attempt($credentials, $request->boolean('remember'))) {
+                $request->session()->regenerate();
 
-            $user = Auth::user();
-            if ($user->company_id) {
-                session(['company_id' => $user->company_id]);
+                $user = Auth::user();
+                if ($user->company_id) {
+                    session(['company_id' => $user->company_id]);
+                }
+
+                toastr()->success('Welcome back!');
+
+                return redirect()->intended(route(dashboard_route()));
             }
-
-            toastr()->success('Welcome back!');
-
-            return redirect()->intended(route(dashboard_route()));
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->withErrors([
+                'email' => 'Unable to sign in right now. Please try again later.',
+            ])->onlyInput('email');
         }
 
         return back()->withErrors([
@@ -62,27 +69,35 @@ class AuthController extends Controller
             $slug = $baseSlug.'-'.$i++;
         }
 
-        $company = Company::create([
-            'name' => $request->company_name,
-            'slug' => $slug,
-            'email' => $request->email,
-            'is_active' => true,
-        ]);
+        try {
+            $company = Company::create([
+                'name' => $request->company_name,
+                'slug' => $slug,
+                'email' => $request->email,
+                'is_active' => true,
+            ]);
 
-        $user = User::create([
-            'company_id' => $company->id,
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'owner',
-        ]);
+            $user = User::create([
+                'company_id' => $company->id,
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => 'owner',
+            ]);
 
-        $user->assignRole('owner');
+            $user->assignRole('owner');
 
-        session(['company_id' => $company->id]);
+            session(['company_id' => $company->id]);
 
-        Auth::login($user);
-        $request->session()->regenerate();
+            Auth::login($user);
+            $request->session()->regenerate();
+        } catch (\Throwable $e) {
+            report($e);
+            return back()
+                ->withErrors(['email' => 'Unable to create your account right now. Please try again later.'])
+                ->withInput($request->except('password', 'password_confirmation'));
+        }
+
         toastr()->success('Company and account created successfully!');
 
         return redirect()->route(dashboard_route());
@@ -90,9 +105,13 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        try {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return redirect('/');
     }

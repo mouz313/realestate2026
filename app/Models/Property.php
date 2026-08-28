@@ -19,7 +19,7 @@ class Property extends Model
     }
 
     protected $fillable = [
-        'company_id', 'property_code', 'title', 'category', 'transaction_type', 'status',
+        'company_id', 'property_code', 'title', 'category', 'transaction_type', 'status', 'commission_rate',
         'possession_status', 'possession_year',
         'price', 'price_per_sqft', 'currency', 'location_address', 'city', 'city_id',
         'sector_town', 'block', 'plot_size', 'plot_size_unit', 'land_area',
@@ -36,6 +36,7 @@ class Property extends Model
     {
         return [
             'price' => 'decimal:2',
+            'commission_rate' => 'decimal:2',
             'price_per_sqft' => 'decimal:2',
             'plot_size' => 'decimal:2',
             'land_area' => 'decimal:2',

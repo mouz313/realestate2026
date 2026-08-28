@@ -67,6 +67,7 @@
                     <th class="d-none d-lg-table-cell">Source <span class="urdu">(ذریعہ)</span></th>
                     <th class="d-none d-lg-table-cell">Type <span class="urdu">(قسم)</span></th>
                     <th class="d-none d-md-table-cell">Purpose <span class="urdu">(مقصد)</span></th>
+                    <th class="d-none d-md-table-cell">Status <span class="urdu">(حالت)</span></th>
                     <th>Property <span class="urdu">(جائیداد)</span></th>
                     <th>Subject <span class="urdu">(موضوع)</span></th>
                     <th class="d-none d-md-table-cell">Date <span class="urdu">(تاریخ)</span></th>
@@ -105,6 +106,9 @@
                             <span class="text-secondary">-</span>
                         @endif
                     </td>
+                    <td class="d-none d-md-table-cell">
+                        <span class="badge {{ \App\Helpers\Status::classes('contact')[$contact->status] ?? 'status-pending' }}">{{ ucfirst($contact->status) }}</span>
+                    </td>
                     <td>
                         @if($contact->property)
                             <a href="{{ route('properties.show', $contact->property) }}" class="text-decoration-none fw-medium">{{ $contact->property_title ?? $contact->property->title }}</a>
@@ -113,7 +117,7 @@
                         @endif
                     </td>
                     <td class="text-secondary">{{ $contact->subject ?? 'Contact Message' }}</td>
-                    <td class="text-secondary d-none d-md-table-cell">{{ $contact->created_at->format('d M Y H:i') }}</td>
+                    <td class="text-secondary d-none d-md-table-cell">{{ $contact->created_at->format('d M Y') }}</td>
                     <td class="text-end">
                         <div class="action-btns flex-nowrap">
                             <a href="{{ route('contacts.edit', $contact) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
@@ -133,7 +137,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="9">
+                    <td colspan="10">
                         <div class="empty-state">
                             <i class="ti ti-message-report"></i>
                             <p>No enquiries yet. <span class="urdu">(ابھی تک کوئی انکوائری نہیں)</span></p>
