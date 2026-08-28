@@ -188,30 +188,7 @@ class CallLogController extends Controller
 
             return view('call_logs.show', compact('callLog', 'buyerLeads', 'buyerClients', 'matchType'));
         } else {
-            $q = Property::where('status', 'available');
-
-            if ($callLog->category) {
-                $q->where('category', $callLog->category);
-            }
-            if ($callLog->transaction_type) {
-                $q->where('transaction_type', $callLog->transaction_type);
-            }
-            if ($callLog->city_id) {
-                $q->where('city_id', $callLog->city_id);
-            } elseif ($callLog->city) {
-                $q->where('city', $callLog->city);
-            }
-            if ($callLog->bedrooms) {
-                $q->where('bedrooms', '>=', $callLog->bedrooms);
-            }
-            if ($callLog->budget_min) {
-                $q->where('price', '>=', $callLog->budget_min);
-            }
-            if ($callLog->budget_max) {
-                $q->where('price', '<=', $callLog->budget_max);
-            }
-
-            $matches = $q->take(20)->get();
+            $matches = \App\Services\PropertyMatcher::forLead($callLog);
         }
 
         return view('call_logs.show', compact('callLog', 'matches', 'matchType'));
@@ -327,5 +304,45 @@ class CallLogController extends Controller
         $callLog->update(['status' => $request->input('status')]);
 
         return response()->json(['ok' => true, 'status' => $callLog->status]);
+    }
+
+    /**
+     * AJAX: find properties matching a lead's city + category + transaction type,
+     * so an agent can attach a relevant property to the call log before saving.
+     */
+    public function matchProperties(Request $request)
+    {
+        $cityId = $request->input('city_id');
+        $category = $request->input('category');
+        $leadType = $request->input('transaction_type');
+
+        if (! $cityId || ! $category) {
+            return response()->json(['matches' => []]);
+        }
+
+        $matches = \App\Services\PropertyMatcher::buildQuery([
+            'city_id' => $cityId,
+            'category' => $category,
+            'transaction_type' => \App\Services\PropertyMatcher::propertyType($leadType),
+        ])->latest()->limit(8)->get([
+            'id', 'property_code', 'title', 'price', 'currency',
+            'city', 'sector_town', 'category', 'transaction_type', 'status',
+        ]);
+
+        return response()->json([
+            'matches' => $matches->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'label' => $p->title ?: $p->property_code,
+                    'price' => $p->price,
+                    'currency' => $p->currency ?? 'PKR',
+                    'city' => $p->city,
+                    'sector_town' => $p->sector_town,
+                    'category' => $p->category,
+                    'transaction_type' => $p->transaction_type,
+                    'url' => route('properties.show', $p),
+                ];
+            }),
+        ]);
     }
 }

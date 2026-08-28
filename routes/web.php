@@ -137,6 +137,7 @@ Route::middleware('auth')->group(function () {
         Route::patch('/call-logs/{call_log}/status', [CallLogController::class, 'updateStatus'])->middleware('permission:view_clients')->name('call-logs.status');
         Route::get('/call-logs/{call_log}/convert', [DealController::class, 'create'])->middleware('permission:view_clients')->name('call-logs.convert');
         Route::get('/call-logs/{call_log}/add-property', [PropertyController::class, 'create'])->middleware('permission:view_clients')->name('call-logs.add-property');
+        Route::get('/call-logs/match-properties', [CallLogController::class, 'matchProperties'])->middleware('permission:view_clients')->name('call-logs.match-properties');
         Route::resource('call-logs', CallLogController::class)->middleware('permission:view_clients');
         Route::get('/properties/export', [PropertyController::class, 'exportExcel'])->middleware('permission:export_reports')->name('properties.export-excel');
         Route::post('/properties/media/{media}/primary', [PropertyController::class, 'setPrimary'])->middleware('permission:manage_property_media')->name('properties.media.primary');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\DealExport;
 use App\Helpers\Status;
+use App\Http\Requests\DealRequest;
 use App\Models\Agent;
 use App\Models\CallLog;
 use App\Models\Client;
@@ -15,7 +16,6 @@ use App\Services\ExcelWriter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
-use Illuminate\Validation\Rule;
 
 class DealController extends Controller
 {
@@ -46,7 +46,7 @@ class DealController extends Controller
 
     public function create()
     {
-        $properties = Property::where('status', 'available')->orderBy('title')->get();
+        $properties = Property::available()->orderBy('title')->get();
         $clients = Client::orderBy('name')->get();
         $agents = Agent::orderBy('name')->get();
         $statuses = ['inquiry', 'visit_scheduled', 'offer_made', 'token_received', 'agreement_signed', 'in_progress', 'completed', 'cancelled'];
@@ -87,40 +87,17 @@ class DealController extends Controller
         return view('deals.create', compact('properties', 'clients', 'agents', 'statuses', 'defaultAgentId', 'leadSources', 'prefill'));
     }
 
-    public function store(Request $request)
+    public function store(DealRequest $request)
     {
-        $request->validate([
-            'lead_source' => ['nullable', 'string', Rule::in(array_keys(Status::leadSources()))],
-            'call_log_id' => 'nullable|exists:call_logs,id',
-            'visit_id' => 'nullable|exists:property_visits,id',
-            'property_id' => 'required|exists:properties,id',
-            'buyer_id' => 'nullable|exists:clients,id',
-            'buyer_name' => 'nullable|string|max:255',
-            'buyer_phone' => 'nullable|string|max:50',
-            'seller_id' => 'nullable|exists:clients,id',
-            'seller_name' => 'nullable|string|max:255',
-            'seller_phone' => 'nullable|string|max:50',
-            'agent_id' => 'nullable|exists:agents,id',
-            'sale_price' => 'required|numeric|min:0',
-            'commission_percentage' => 'nullable|numeric|min:0|max:100',
-            'commission_amount' => 'nullable|numeric|min:0',
-            'agent_commission' => 'nullable|numeric|min:0',
-            'agency_share' => 'nullable|numeric|min:0',
-            'status' => 'required|string|in:inquiry,visit_scheduled,offer_made,token_received,agreement_signed,in_progress,completed,cancelled',
-            'agreement_date' => 'nullable|date',
-            'possession_date' => 'nullable|date',
-            'notes' => 'nullable|string|max:1000',
-        ]);
+        $data = $request->validated();
 
-        $data = $request->all();
-
-        $data['buyer_id'] = $this->resolveClient(
+        $data['buyer_id'] = Client::resolveOrCreate(
             $request->input('buyer_id'),
             $request->input('buyer_name'),
             $request->input('buyer_phone'),
             'buyer'
         );
-        $data['seller_id'] = $this->resolveClient(
+        $data['seller_id'] = Client::resolveOrCreate(
             $request->input('seller_id'),
             $request->input('seller_name'),
             $request->input('seller_phone'),
@@ -131,12 +108,7 @@ class DealController extends Controller
             $data['agent_id'] = auth()->user()->agent_id;
         }
 
-        $data['deal_number'] = DB::transaction(function () {
-            $last = Deal::withTrashed()->lockForUpdate()->orderBy('id', 'desc')->first();
-            $nextId = $last ? $last->id + 1 : 1;
-
-            return 'DL-'.str_pad($nextId, 5, '0', STR_PAD_LEFT);
-        });
+        $data['deal_number'] = \App\Services\SequenceService::deal();
 
         if (! empty($data['sale_price']) && ! empty($data['commission_percentage']) && empty($data['commission_amount'])) {
             $data['commission_amount'] = $data['sale_price'] * $data['commission_percentage'] / 100;
@@ -159,26 +131,6 @@ class DealController extends Controller
      * Resolve a client from either an existing id or inline name/phone.
      * A client is created only when an actual deal happens (no id given but name present).
      */
-    protected function resolveClient(?string $id, ?string $name, ?string $phone, string $type): ?int
-    {
-        if (! empty($id)) {
-            return (int) $id;
-        }
-
-        if (! empty($name)) {
-            $client = Client::create([
-                'name' => $name,
-                'phone' => $phone,
-                'client_type' => $type,
-                'company_id' => current_company_id(),
-            ]);
-
-            return $client->id;
-        }
-
-        return null;
-    }
-
     /**
      * Link a deal to its originating enquiry / visit and auto-create the
      * closing agent's commission.
@@ -231,7 +183,7 @@ class DealController extends Controller
 
     public function show(Deal $deal)
     {
-        $this->authorizeAgentAccess($deal);
+        $this->authorize('update', $deal);
         $deal->load(['property', 'buyer', 'seller', 'agent', 'tokens', 'invoices', 'commissions']);
 
         return view('deals.show', compact('deal'));
@@ -239,7 +191,7 @@ class DealController extends Controller
 
     public function edit(Deal $deal)
     {
-        $this->authorizeAgentAccess($deal);
+        $this->authorize('update', $deal);
         $properties = Property::orderBy('title')->get();
         $clients = Client::orderBy('name')->get();
         $agents = Agent::orderBy('name')->get();
@@ -249,40 +201,18 @@ class DealController extends Controller
         return view('deals.edit', compact('deal', 'properties', 'clients', 'agents', 'statuses', 'leadSources'));
     }
 
-    public function update(Request $request, Deal $deal)
+    public function update(DealRequest $request, Deal $deal)
     {
-        $this->authorizeAgentAccess($deal);
-        $request->validate([
-            'lead_source' => ['nullable', 'string', Rule::in(array_keys(Status::leadSources()))],
-            'visit_id' => 'nullable|exists:property_visits,id',
-            'property_id' => 'required|exists:properties,id',
-            'buyer_id' => 'nullable|exists:clients,id',
-            'buyer_name' => 'nullable|string|max:255',
-            'buyer_phone' => 'nullable|string|max:50',
-            'seller_id' => 'nullable|exists:clients,id',
-            'seller_name' => 'nullable|string|max:255',
-            'seller_phone' => 'nullable|string|max:50',
-            'agent_id' => 'nullable|exists:agents,id',
-            'sale_price' => 'required|numeric|min:0',
-            'commission_percentage' => 'nullable|numeric|min:0|max:100',
-            'commission_amount' => 'nullable|numeric|min:0',
-            'agent_commission' => 'nullable|numeric|min:0',
-            'agency_share' => 'nullable|numeric|min:0',
-            'status' => 'required|string|in:inquiry,visit_scheduled,offer_made,token_received,agreement_signed,in_progress,completed,cancelled',
-            'agreement_date' => 'nullable|date',
-            'possession_date' => 'nullable|date',
-            'notes' => 'nullable|string|max:1000',
-        ]);
+        $this->authorize('update', $deal);
+        $data = $request->validated();
 
-        $data = $request->all();
-
-        $data['buyer_id'] = $this->resolveClient(
+        $data['buyer_id'] = Client::resolveOrCreate(
             $request->input('buyer_id'),
             $request->input('buyer_name'),
             $request->input('buyer_phone'),
             'buyer'
         );
-        $data['seller_id'] = $this->resolveClient(
+        $data['seller_id'] = Client::resolveOrCreate(
             $request->input('seller_id'),
             $request->input('seller_name'),
             $request->input('seller_phone'),
@@ -313,7 +243,7 @@ class DealController extends Controller
 
     public function destroy(Deal $deal)
     {
-        $this->authorizeAgentAccess($deal);
+        $this->authorize('update', $deal);
         $deal->delete();
         toastr()->success('Deal deleted successfully.');
 

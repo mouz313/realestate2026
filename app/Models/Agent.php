@@ -66,4 +66,18 @@ class Agent extends Model
     {
         return $this->hasMany(Property::class, 'assigned_agent_id');
     }
+
+    /**
+     * Simple performance rating derived from total commission earned per deal,
+     * normalised to a 0-5 scale. Mirrors the formula previously inlined in
+     * the reports controller.
+     */
+    public function rating(): float
+    {
+        if ($this->deals->count() === 0) {
+            return 0;
+        }
+
+        return min(5, round($this->commissions->sum('amount') / $this->deals->count() / 10000, 1));
+    }
 }

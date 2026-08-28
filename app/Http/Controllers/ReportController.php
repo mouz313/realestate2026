@@ -84,7 +84,7 @@ class ReportController extends Controller
                     'deals_count' => $agent->deals->count(),
                     'total_volume' => $agent->deals->sum('sale_price'),
                     'commission_earned' => $agent->commissions->sum('amount'),
-                    'rating' => $agent->deals->count() > 0 ? min(5, round($agent->commissions->sum('amount') / $agent->deals->count() / 10000, 1)) : 0,
+                    'rating' => $agent->rating(),
                 ];
             })
             ->sortByDesc('deals_count')

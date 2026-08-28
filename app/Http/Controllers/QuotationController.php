@@ -10,6 +10,7 @@ use App\Models\ItemTemplate;
 use App\Models\Property;
 use App\Models\Quotation;
 use App\Models\QuotationItem;
+use App\Http\Requests\QuotationRequest;
 use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -60,22 +61,8 @@ class QuotationController extends Controller
         return view('quotations.create', compact('clients', 'properties', 'taxRate', 'taxLabel', 'currency', 'templates'));
     }
 
-    public function store(Request $request)
+    public function store(QuotationRequest $request)
     {
-        $request->validate([
-            'client_id' => 'required|exists:clients,id',
-            'property_id' => 'nullable|exists:properties,id',
-            'expiry_date' => 'nullable|date',
-            'notes' => 'nullable|string',
-            'tax_rate' => 'required|numeric|min:0|max:100',
-            'discount_type' => 'nullable|in:percentage,fixed',
-            'discount_value' => 'nullable|numeric|min:0',
-            'items' => 'required|array|min:1',
-            'items.*.item_name' => 'required|string',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0',
-        ]);
-
         $subtotal = 0;
         $quotationItems = [];
 
@@ -92,17 +79,13 @@ class QuotationController extends Controller
             ];
         }
 
-        $discountType = $request->discount_type;
-        $discountValue = (float) ($request->discount_value ?? 0);
-        $discountAmount = $discountType === 'percentage'
-            ? $subtotal * ($discountValue / 100)
-            : $discountValue;
-        $discountAmount = min($discountAmount, $subtotal);
-
-        $taxRate = $request->tax_rate;
-        $taxableAmount = $subtotal - $discountAmount;
-        $taxAmount = $taxableAmount * ($taxRate / 100);
-        $total = $taxableAmount + $taxAmount;
+        $totals = \App\Services\PricingService::compute(
+            $subtotal,
+            $request->discount_type,
+            $request->discount_value,
+            $request->tax_rate
+        );
+        extract($totals);
 
         $quotation = Quotation::create([
             'client_id' => $request->client_id,
@@ -150,22 +133,8 @@ class QuotationController extends Controller
         return view('quotations.edit', compact('quotation', 'clients', 'properties', 'taxRate', 'taxLabel', 'currency', 'templates'));
     }
 
-    public function update(Request $request, Quotation $quotation)
+    public function update(QuotationRequest $request, Quotation $quotation)
     {
-        $request->validate([
-            'client_id' => 'required|exists:clients,id',
-            'property_id' => 'nullable|exists:properties,id',
-            'expiry_date' => 'nullable|date',
-            'notes' => 'nullable|string',
-            'tax_rate' => 'required|numeric|min:0|max:100',
-            'discount_type' => 'nullable|in:percentage,fixed',
-            'discount_value' => 'nullable|numeric|min:0',
-            'items' => 'required|array|min:1',
-            'items.*.item_name' => 'required|string',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0',
-        ]);
-
         $subtotal = 0;
         $quotationItems = [];
 
@@ -182,17 +151,13 @@ class QuotationController extends Controller
             ]);
         }
 
-        $discountType = $request->discount_type;
-        $discountValue = (float) ($request->discount_value ?? 0);
-        $discountAmount = $discountType === 'percentage'
-            ? $subtotal * ($discountValue / 100)
-            : $discountValue;
-        $discountAmount = min($discountAmount, $subtotal);
-
-        $taxRate = $request->tax_rate;
-        $taxableAmount = $subtotal - $discountAmount;
-        $taxAmount = $taxableAmount * ($taxRate / 100);
-        $total = $taxableAmount + $taxAmount;
+        $totals = \App\Services\PricingService::compute(
+            $subtotal,
+            $request->discount_type,
+            $request->discount_value,
+            $request->tax_rate
+        );
+        extract($totals);
 
         $quotation->update([
             'client_id' => $request->client_id,
@@ -270,10 +235,6 @@ class QuotationController extends Controller
 
     private function generateQuoteNumber(): string
     {
-        $prefix = 'Q-';
-        $last = Quotation::latest()->first();
-        $number = $last ? intval(substr($last->quote_number, 2)) + 1 : 1;
-
-        return $prefix.str_pad($number, 5, '0', STR_PAD_LEFT);
+        return \App\Services\SequenceService::quotation();
     }
 }

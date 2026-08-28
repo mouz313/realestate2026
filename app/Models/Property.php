@@ -139,4 +139,40 @@ class Property extends Model
     {
         return $this->hasMany(Quotation::class);
     }
+
+    public function scopeAvailable($query)
+    {
+        return $query->where('status', 'available');
+    }
+
+    public function scopeStatus($query, ?string $status)
+    {
+        return $status ? $query->where('status', $status) : $query;
+    }
+
+    public function scopeCity($query, $city)
+    {
+        if (empty($city)) {
+            return $query;
+        }
+
+        return is_numeric($city)
+            ? $query->where('city_id', $city)
+            : $query->where('city', $city);
+    }
+
+    public function scopeCategory($query, ?string $category)
+    {
+        return $category ? $query->where('category', $category) : $query;
+    }
+
+    public function scopeSearch($query, ?string $term)
+    {
+        return $term ? $query->where(function ($q) use ($term) {
+            $q->where('title', 'like', "%{$term}%")
+                ->orWhere('property_code', 'like', "%{$term}%")
+                ->orWhere('city', 'like', "%{$term}%")
+                ->orWhere('location', 'like', "%{$term}%");
+        }) : $query;
+    }
 }

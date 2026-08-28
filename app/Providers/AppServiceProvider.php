@@ -58,5 +58,9 @@ class AppServiceProvider extends ServiceProvider
         Blade::directive('statusBadge', function ($expression) {
             return "<?php echo \\App\\Helpers\\Status::badge($expression); ?>";
         });
+
+        Blade::directive('money', function ($expression) {
+            return "<?php echo \\App\\Helpers\\Money::format($expression); ?>";
+        });
     }
 }

@@ -33,19 +33,19 @@ class DashboardController extends Controller
             : fn ($q) => $q;
 
         $totalRevenue = Payment::whereHas('invoice', $invoiceScope)->sum('amount');
-        $outstanding = Invoice::query()->tap($invoiceScope)->where('payment_status', '!=', 'paid')->sum(DB::raw('total - paid_amount'));
+        $outstanding = Invoice::query()->tap($invoiceScope)->unpaid()->sum(DB::raw('total - paid_amount'));
 
         $stats = [
             'total_clients' => Client::count(),
             'total_quotations' => Quotation::count(),
             'pending_quotations' => Quotation::whereIn('status', ['draft', 'sent'])->count(),
             'total_invoices' => Invoice::query()->tap($invoiceScope)->count(),
-            'unpaid_invoices' => Invoice::query()->tap($invoiceScope)->where('payment_status', '!=', 'paid')->count(),
+            'unpaid_invoices' => Invoice::query()->tap($invoiceScope)->unpaid()->count(),
             'overdue_invoices' => Invoice::query()->tap($invoiceScope)->overdue()->count(),
             'total_revenue' => $totalRevenue,
             'outstanding' => $outstanding,
             'active_deals' => Deal::whereNotIn('status', ['cancelled', 'completed'])->count(),
-            'active_properties' => Property::where('status', 'available')->count(),
+            'active_properties' => Property::available()->count(),
             'monthly_quotations' => Quotation::where('created_at', '>=', now()->subMonths(6))
                 ->select(DB::raw("{$monthSql} as month"), DB::raw('count(*) as total'))
                 ->groupBy('month')->orderBy('month')->pluck('total', 'month'),
@@ -77,12 +77,12 @@ class DashboardController extends Controller
             'total_quotations' => Quotation::count(),
             'pending_quotations' => Quotation::whereIn('status', ['draft', 'sent'])->count(),
             'total_invoices' => Invoice::count(),
-            'unpaid_invoices' => Invoice::where('payment_status', '!=', 'paid')->count(),
+            'unpaid_invoices' => Invoice::unpaid()->count(),
             'overdue_invoices' => Invoice::overdue()->count(),
             'total_revenue' => Payment::sum('amount'),
-            'outstanding' => Invoice::where('payment_status', '!=', 'paid')->sum(DB::raw('total - paid_amount')),
+            'outstanding' => Invoice::unpaid()->sum(DB::raw('total - paid_amount')),
             'active_deals' => Deal::whereNotIn('status', ['cancelled', 'completed'])->count(),
-            'active_properties' => Property::where('status', 'available')->count(),
+            'active_properties' => Property::available()->count(),
             'monthly_quotations' => Quotation::where('created_at', '>=', now()->subMonths(6))
                 ->select(DB::raw("{$monthSql} as month"), DB::raw('count(*) as total'))
                 ->groupBy('month')->orderBy('month')->pluck('total', 'month'),

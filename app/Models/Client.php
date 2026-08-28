@@ -61,4 +61,28 @@ class Client extends Model
         return $this->hasMany(PropertyVisit::class);
     }
 
+    /**
+     * Resolve an existing client by id, or create a new one from name/phone.
+     * Returns null when neither an id nor a name is provided.
+     */
+    public static function resolveOrCreate(?string $id, ?string $name, ?string $phone, string $type): ?int
+    {
+        if (! empty($id)) {
+            return (int) $id;
+        }
+
+        if (! empty($name)) {
+            $client = static::create([
+                'name' => $name,
+                'phone' => $phone,
+                'client_type' => $type,
+                'company_id' => current_company_id(),
+            ]);
+
+            return $client->id;
+        }
+
+        return null;
+    }
+
 }

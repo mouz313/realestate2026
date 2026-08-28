@@ -76,6 +76,24 @@ class Sms
 
     public static function tokenReceived($deal, $token): string
     {
-        return 'Token/Bayana of PKR '.number_format($token->amount, 0)." received for Deal {$deal->deal_number}. Thank you!";
+        return 'Token/Bayana of '.Money::format($token->amount, 'PKR')." received for Deal {$deal->deal_number}. Thank you!";
+    }
+
+    public static function installmentDue($installment): string
+    {
+        $ref = is_object($installment)
+            ? ($installment->installment_number ?? $installment->id ?? 'N/A')
+            : 'N/A';
+
+        return "Reminder: your installment payment (Ref #{$ref}) is due. Please pay to avoid penalties.";
+    }
+
+    public static function rentOverdue($rental): string
+    {
+        $ref = is_object($rental)
+            ? ($rental->rental_id ?? $rental->id ?? 'N/A')
+            : 'N/A';
+
+        return "Reminder: your rent payment (Ref #{$ref}) is overdue. Please clear your dues at the earliest.";
     }
 }

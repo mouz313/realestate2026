@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CommissionRequest;
 use App\Models\Agent;
 use App\Models\Commission;
 use App\Models\Deal;
@@ -29,19 +30,9 @@ class CommissionController extends Controller
         return view('commissions.create', compact('deals', 'agents', 'types'));
     }
 
-    public function store(Request $request)
+    public function store(CommissionRequest $request)
     {
-        $request->validate([
-            'deal_id' => 'required|exists:deals,id',
-            'agent_id' => 'required|exists:agents,id',
-            'type' => 'required|string|in:percentage,fixed',
-            'percentage' => 'nullable|numeric|min:0|max:100',
-            'amount' => 'required|numeric|min:0',
-            'status' => 'nullable|string|in:pending,approved,paid,cancelled',
-            'notes' => 'nullable|string|max:1000',
-        ]);
-
-        $data = $request->all();
+        $data = $request->validated();
         $data['company_id'] = current_company_id();
 
         // Per-row authorization: an agent may only create commissions for
@@ -76,20 +67,10 @@ class CommissionController extends Controller
         return view('commissions.edit', compact('commission', 'deals', 'agents', 'types'));
     }
 
-    public function update(Request $request, Commission $commission)
+    public function update(CommissionRequest $request, Commission $commission)
     {
-        $this->authorizeAgentAccess($commission);
-        $request->validate([
-            'deal_id' => 'required|exists:deals,id',
-            'agent_id' => 'required|exists:agents,id',
-            'type' => 'required|string|in:percentage,fixed',
-            'percentage' => 'nullable|numeric|min:0|max:100',
-            'amount' => 'required|numeric|min:0',
-            'status' => 'nullable|string|in:pending,approved,paid,cancelled',
-            'notes' => 'nullable|string|max:1000',
-        ]);
-
-        $data = $request->all();
+        $this->authorize('update', $commission);
+        $data = $request->validated();
 
         // Mirror store() authorization: an agent may only edit their own
         // commission, and only admins with the payout permission may set a
@@ -115,7 +96,7 @@ class CommissionController extends Controller
 
     public function destroy(Commission $commission)
     {
-        $this->authorizeAgentAccess($commission);
+        $this->authorize('update', $commission);
         $commission->delete();
         toastr()->success('Commission deleted successfully.');
 
@@ -124,16 +105,13 @@ class CommissionController extends Controller
 
     public function markPaid(Commission $commission)
     {
-        $this->authorizeAgentAccess($commission);
+        $this->authorize('update', $commission);
 
         if (! auth()->user()->hasPermission('mark_commission_paid')) {
             abort(403, 'You do not have permission to mark commissions as paid.');
         }
 
-        $commission->update([
-            'status' => 'paid',
-            'paid_date' => now(),
-        ]);
+        $commission->markPaid();
         toastr()->success('Commission marked as paid.');
 
         return redirect()->back();

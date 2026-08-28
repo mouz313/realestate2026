@@ -55,11 +55,7 @@ class PaymentController extends Controller
             'notes' => $request->notes,
         ]);
 
-        $paidAmount = $invoice->payments()->sum('amount');
-        $invoice->update([
-            'paid_amount' => $paidAmount,
-            'payment_status' => $paidAmount >= $invoice->total ? 'paid' : ($paidAmount > 0 ? 'partial' : 'pending'),
-        ]);
+        $invoice->recomputeStatus();
 
         toastr()->success('Payment updated successfully.');
 
@@ -78,11 +74,7 @@ class PaymentController extends Controller
 
         $payment->delete();
 
-        $paidAmount = $invoice->payments()->sum('amount');
-        $invoice->update([
-            'paid_amount' => $paidAmount,
-            'payment_status' => $paidAmount >= $invoice->total ? 'paid' : ($paidAmount > 0 ? 'partial' : 'pending'),
-        ]);
+        $invoice->recomputeStatus();
 
         toastr()->success('Payment deleted successfully.');
 

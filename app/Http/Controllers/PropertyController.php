@@ -10,6 +10,7 @@ use App\Models\Property;
 use App\Models\PropertyMedia;
 use App\Models\Setting;
 use App\Notifications\PropertyStatusChanged;
+use App\Http\Requests\PropertyRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -31,7 +32,7 @@ class PropertyController extends Controller
         $agentId = auth()->user()->isAgent() ? auth()->user()->agent_id : null;
         $properties = Property::with(['owner', 'assignedAgent'])
             ->when($agentId, fn ($q) => $q->where('assigned_agent_id', $agentId))
-            ->where('status', 'available')
+            ->available()
             ->latest()->paginate(15);
 
         return view('properties.index', compact('properties'));
@@ -45,9 +46,7 @@ class PropertyController extends Controller
         $types = ['house', 'plot', 'farmhouse', 'agricultural_land', 'flat', 'studio_apartment', 'office', 'shop'];
         $transactionTypes = ['sale', 'buy', 'rent', 'installment'];
         $statuses = ['available', 'rented', 'sold'];
-        $lastProperty = Property::withTrashed()->orderBy('id', 'desc')->first();
-        $nextId = $lastProperty ? $lastProperty->id + 1 : 1;
-        $autoCode = 'PR-'.str_pad($nextId, 5, '0', STR_PAD_LEFT);
+        $autoCode = \App\Services\SequenceService::property();
 
         $prefill = [];
         if ($callLog = CallLog::find(request('call_log'))) {
@@ -69,88 +68,18 @@ class PropertyController extends Controller
         return view('properties.create', compact('clients', 'agents', 'cities', 'types', 'transactionTypes', 'statuses', 'autoCode', 'prefill'));
     }
 
-    public function store(Request $request)
+    public function store(PropertyRequest $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'category' => 'required|string|in:house,plot,farmhouse,agricultural_land,flat,studio_apartment,office,shop',
-            'transaction_type' => 'required|string|in:sale,buy,rent,installment',
-            'status' => 'required|string|in:available,rented,sold',
-            'possession_status' => 'nullable|string|in:ready,under_construction,off_plan',
-            'possession_year' => 'nullable|integer|min:1900|max:2100',
-            'price' => 'required|numeric|min:0',
-            'price_per_sqft' => 'nullable|numeric|min:0',
-            'commission_rate' => 'nullable|numeric|min:0|max:100',
-            'currency' => 'nullable|string|max:10',
-            'location_address' => 'nullable|string|max:500',
-            'city' => 'nullable|string|max:100',
-            'sector_town' => 'nullable|string|max:100',
-            'block' => 'nullable|string|max:50',
-            'plot_size' => 'nullable|numeric|min:0',
-            'plot_size_unit' => 'nullable|string|max:20',
-            'land_area' => 'nullable|numeric|min:0',
-            'covered_area' => 'nullable|numeric|min:0',
-            'covered_area_unit' => 'nullable|string|max:20',
-            'bedrooms' => 'nullable|integer|min:0',
-            'bathrooms' => 'nullable|integer|min:0',
-            'kitchens' => 'nullable|integer|min:0',
-            'floors' => 'nullable|integer|min:0',
-            'floor_number' => 'nullable|integer|min:0',
-            'total_floors' => 'nullable|integer|min:0',
-            'furnished' => 'nullable|boolean',
-            'furnished_type' => 'nullable|in:furnished,semi_furnished,unfurnished',
-            'property_condition' => 'nullable|in:new,resale',
-            'year_built' => 'nullable|integer|min:1900|max:2100',
-            'road_width' => 'nullable|numeric|min:0',
-            'facing' => 'nullable|string|max:50',
-            'parking_spaces' => 'nullable|integer|min:0',
-            'features' => 'nullable|string',
-            'additional_rooms' => 'nullable|array',
-            'additional_rooms.*' => 'string',
-            'building_features' => 'nullable|array',
-            'building_features.*' => 'string',
-            'community_amenities' => 'nullable|array',
-            'community_amenities.*' => 'string',
-            'communication_features' => 'nullable|array',
-            'communication_features.*' => 'string',
-            'nearby_landmarks' => 'nullable|string|max:1000',
-            'nearby_places' => 'nullable|array',
-            'nearby_places.*' => 'string|max:50',
-            'utilities' => 'nullable|array',
-            'utilities.*' => 'string|max:50',
-            'latitude' => 'nullable|numeric',
-            'longitude' => 'nullable|numeric',
-            'description' => 'nullable|string|max:5000',
-            'owner_id' => 'nullable|exists:clients,id',
-            'owner_name' => 'nullable|string|max:255',
-            'owner_phone' => 'nullable|string|max:50',
-            'call_log_id' => 'nullable|exists:call_logs,id',
-            'assigned_agent_id' => 'nullable|exists:agents,id',
-            'listed_date' => 'nullable|date',
-            'expiry_date' => 'nullable|date',
-            'notes' => 'nullable|string|max:1000',
-            'images' => 'nullable|array|max:20',
-            'images.*' => 'image|mimes:jpeg,png,webp|max:5120',
-            'video' => 'nullable|mimetypes:video/mp4,video/webm|max:51200',
-        ]);
-
-        $data = $request->except(['images', 'video']);
+        $data = $request->validated();
         $data['furnished'] = in_array($request->input('furnished_type'), ['furnished', 'semi_furnished']);
 
-        // Empty form inputs arrive as "" (or null). Numeric columns that are NOT NULL with a
-        // default (parking_spaces default 0, kitchens default 1, price default 0) must be omitted
-        // so the DB default applies; nullable columns can take null; string/enum columns get null.
-        $numericFields = ['plot_size', 'land_area', 'covered_area', 'price_per_sqft', 'year_built',
-            'road_width', 'bedrooms', 'bathrooms', 'kitchens', 'floors', 'floor_number',
-            'total_floors', 'parking_spaces', 'possession_year', 'latitude', 'longitude',
-            'commission_rate', 'price'];
+        // Empty form inputs arrive as "" and, after validation, may be cast to null.
+        // NOT NULL numeric columns with a DB default (kitchens => 1, parking_spaces => 0,
+        // price => 0) must keep that default; every other empty field becomes null.
+        $notNullDefaults = ['kitchens' => 1, 'parking_spaces' => 0, 'price' => 0];
         foreach ($data as $k => $v) {
-            if ($v === '') {
-                if (in_array($k, $numericFields, true)) {
-                    unset($data[$k]);
-                } else {
-                    $data[$k] = null;
-                }
+            if ($v === '' || $v === null) {
+                $data[$k] = $notNullDefaults[$k] ?? null;
             }
         }
         $data['features'] = $request->has('features') ? array_map('trim', explode(',', $request->features)) : null;
@@ -176,19 +105,14 @@ class PropertyController extends Controller
             unset($data['commission_rate']);
         }
 
-        $data['owner_id'] = $this->resolveClient(
+        $data['owner_id'] = Client::resolveOrCreate(
             $request->input('owner_id'),
             $request->input('owner_name'),
             $request->input('owner_phone'),
             'seller'
         );
 
-        $data['property_code'] = DB::transaction(function () {
-            $last = Property::withTrashed()->lockForUpdate()->orderBy('id', 'desc')->first();
-            $nextId = $last ? $last->id + 1 : 1;
-
-            return 'PR-'.str_pad($nextId, 5, '0', STR_PAD_LEFT);
-        });
+        $data['property_code'] = \App\Services\SequenceService::property();
 
         $property = Property::create($data);
         $this->handleMediaUploads($request, $property);
@@ -204,7 +128,7 @@ class PropertyController extends Controller
 
     public function show(Property $property)
     {
-        $this->authorizePropertyAccess($property);
+        $this->authorize('update', $property);
         $property->load(['owner', 'assignedAgent', 'media', 'documents']);
         $settings = Setting::pluck('value', 'key')->toArray();
 
@@ -213,7 +137,7 @@ class PropertyController extends Controller
 
     public function edit(Property $property)
     {
-        $this->authorizePropertyAccess($property);
+        $this->authorize('update', $property);
         $property->load('media');
         $clients = Client::orderBy('name')->get();
         $agents = Agent::orderBy('name')->get();
@@ -225,89 +149,19 @@ class PropertyController extends Controller
         return view('properties.edit', compact('property', 'clients', 'agents', 'cities', 'types', 'transactionTypes', 'statuses'));
     }
 
-    public function update(Request $request, Property $property)
+    public function update(PropertyRequest $request, Property $property)
     {
-        $this->authorizePropertyAccess($property);
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'category' => 'required|string|in:house,plot,farmhouse,agricultural_land,flat,studio_apartment,office,shop',
-            'transaction_type' => 'required|string|in:sale,buy,rent,installment',
-            'status' => 'required|string|in:available,rented,sold',
-            'possession_status' => 'nullable|string|in:ready,under_construction,off_plan',
-            'possession_year' => 'nullable|integer|min:1900|max:2100',
-            'price' => 'required|numeric|min:0',
-            'price_per_sqft' => 'nullable|numeric|min:0',
-            'commission_rate' => 'nullable|numeric|min:0|max:100',
-            'currency' => 'nullable|string|max:10',
-            'location_address' => 'nullable|string|max:500',
-            'city' => 'nullable|string|max:100',
-            'sector_town' => 'nullable|string|max:100',
-            'block' => 'nullable|string|max:50',
-            'plot_size' => 'nullable|numeric|min:0',
-            'plot_size_unit' => 'nullable|string|max:20',
-            'land_area' => 'nullable|numeric|min:0',
-            'covered_area' => 'nullable|numeric|min:0',
-            'covered_area_unit' => 'nullable|string|max:20',
-            'bedrooms' => 'nullable|integer|min:0',
-            'bathrooms' => 'nullable|integer|min:0',
-            'kitchens' => 'nullable|integer|min:0',
-            'floors' => 'nullable|integer|min:0',
-            'floor_number' => 'nullable|integer|min:0',
-            'total_floors' => 'nullable|integer|min:0',
-            'furnished' => 'nullable|boolean',
-            'furnished_type' => 'nullable|in:furnished,semi_furnished,unfurnished',
-            'property_condition' => 'nullable|in:new,resale',
-            'year_built' => 'nullable|integer|min:1900|max:2100',
-            'road_width' => 'nullable|numeric|min:0',
-            'facing' => 'nullable|string|max:50',
-            'parking_spaces' => 'nullable|integer|min:0',
-            'features' => 'nullable|string',
-            'additional_rooms' => 'nullable|array',
-            'additional_rooms.*' => 'string',
-            'building_features' => 'nullable|array',
-            'building_features.*' => 'string',
-            'community_amenities' => 'nullable|array',
-            'community_amenities.*' => 'string',
-            'communication_features' => 'nullable|array',
-            'communication_features.*' => 'string',
-            'nearby_landmarks' => 'nullable|string|max:1000',
-            'nearby_places' => 'nullable|array',
-            'nearby_places.*' => 'string|max:50',
-            'utilities' => 'nullable|array',
-            'utilities.*' => 'string|max:50',
-            'latitude' => 'nullable|numeric',
-            'longitude' => 'nullable|numeric',
-            'description' => 'nullable|string|max:5000',
-            'owner_id' => 'nullable|exists:clients,id',
-            'owner_name' => 'nullable|string|max:255',
-            'owner_phone' => 'nullable|string|max:50',
-            'call_log_id' => 'nullable|exists:call_logs,id',
-            'assigned_agent_id' => 'nullable|exists:agents,id',
-            'listed_date' => 'nullable|date',
-            'expiry_date' => 'nullable|date',
-            'notes' => 'nullable|string|max:1000',
-            'images' => 'nullable|array|max:20',
-            'images.*' => 'image|mimes:jpeg,png,webp|max:5120',
-            'video' => 'nullable|mimetypes:video/mp4,video/webm|max:51200',
-        ]);
-
-        $data = $request->except(['images', 'video']);
+        $this->authorize('update', $property);
+        $data = $request->validated();
         $data['furnished'] = in_array($request->input('furnished_type'), ['furnished', 'semi_furnished']);
 
-        // Empty form inputs arrive as "" (or null). Numeric columns that are NOT NULL with a
-        // default (parking_spaces default 0, kitchens default 1, price default 0) must be omitted
-        // so the DB default applies; nullable columns can take null; string/enum columns get null.
-        $numericFields = ['plot_size', 'land_area', 'covered_area', 'price_per_sqft', 'year_built',
-            'road_width', 'bedrooms', 'bathrooms', 'kitchens', 'floors', 'floor_number',
-            'total_floors', 'parking_spaces', 'possession_year', 'latitude', 'longitude',
-            'commission_rate', 'price'];
+        // Empty form inputs arrive as "" and, after validation, may be cast to null.
+        // NOT NULL numeric columns with a DB default (kitchens => 1, parking_spaces => 0,
+        // price => 0) must keep that default; every other empty field becomes null.
+        $notNullDefaults = ['kitchens' => 1, 'parking_spaces' => 0, 'price' => 0];
         foreach ($data as $k => $v) {
-            if ($v === '') {
-                if (in_array($k, $numericFields, true)) {
-                    unset($data[$k]);
-                } else {
-                    $data[$k] = null;
-                }
+            if ($v === '' || $v === null) {
+                $data[$k] = $notNullDefaults[$k] ?? null;
             }
         }
         $data['features'] = $request->has('features') ? array_map('trim', explode(',', $request->features)) : null;
@@ -324,7 +178,7 @@ class PropertyController extends Controller
             unset($data['commission_rate']);
         }
 
-        $data['owner_id'] = $this->resolveClient(
+        $data['owner_id'] = Client::resolveOrCreate(
             $request->input('owner_id'),
             $request->input('owner_name'),
             $request->input('owner_phone'),
@@ -350,7 +204,7 @@ class PropertyController extends Controller
 
     public function destroy(Property $property)
     {
-        $this->authorizePropertyAccess($property);
+        $this->authorize('update', $property);
         foreach ($property->media as $media) {
             Storage::disk('public')->delete($media->file_path);
             $media->delete();
@@ -422,23 +276,4 @@ class PropertyController extends Controller
         return \App\Services\ExcelWriter::stream('properties-'.date('Y-m-d').'.xlsx', $headers, $rows);
     }
 
-    protected function resolveClient(?string $id, ?string $name, ?string $phone, string $type): ?int
-    {
-        if (! empty($id)) {
-            return (int) $id;
-        }
-
-        if (! empty($name)) {
-            $client = Client::create([
-                'name' => $name,
-                'phone' => $phone,
-                'client_type' => $type,
-                'company_id' => current_company_id(),
-            ]);
-
-            return $client->id;
-        }
-
-        return null;
-    }
 }

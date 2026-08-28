@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Agent;
 use App\Models\AgentPayout;
 use App\Models\Commission;
+use App\Http\Requests\AgentPayoutRequest;
 use App\Notifications\CommissionPayoutMade;
 use Illuminate\Http\Request;
 
@@ -27,18 +28,9 @@ class AgentPayoutController extends Controller
         return view('agent_payouts.create', compact('agents'));
     }
 
-    public function store(Request $request)
+    public function store(AgentPayoutRequest $request)
     {
-        $request->validate([
-            'agent_id' => 'required|exists:agents,id',
-            'amount' => 'required|numeric|min:0',
-            'payout_date' => 'required|date',
-            'method' => 'nullable|string|max:50',
-            'commission_ids' => 'nullable|array',
-            'notes' => 'nullable|string|max:1000',
-        ]);
-
-        $data = $request->all();
+        $data = $request->validated();
         $data['company_id'] = current_company_id();
 
         // Per-row authorization: an agent may only create a payout for
@@ -76,7 +68,7 @@ class AgentPayoutController extends Controller
 
     public function show(AgentPayout $agentPayout)
     {
-        $this->authorizeAgentAccess($agentPayout);
+        $this->authorize('update', $agentPayout);
         $agentPayout->load('agent');
 
         return view('agent_payouts.show', compact('agentPayout'));
@@ -84,25 +76,16 @@ class AgentPayoutController extends Controller
 
     public function edit(AgentPayout $agentPayout)
     {
-        $this->authorizeAgentAccess($agentPayout);
+        $this->authorize('update', $agentPayout);
         $agents = Agent::orderBy('name')->get();
 
         return view('agent_payouts.edit', compact('agentPayout', 'agents'));
     }
 
-    public function update(Request $request, AgentPayout $agentPayout)
+    public function update(AgentPayoutRequest $request, AgentPayout $agentPayout)
     {
-        $this->authorizeAgentAccess($agentPayout);
-        $request->validate([
-            'agent_id' => 'required|exists:agents,id',
-            'amount' => 'required|numeric|min:0',
-            'payout_date' => 'required|date',
-            'method' => 'nullable|string|max:50',
-            'commission_ids' => 'nullable|array',
-            'notes' => 'nullable|string|max:1000',
-        ]);
-
-        $data = $request->all();
+        $this->authorize('update', $agentPayout);
+        $data = $request->validated();
 
         // Mirror store() authorization: an agent may only update their own
         // payout, and referenced commissions must belong to that agent.
@@ -131,7 +114,7 @@ class AgentPayoutController extends Controller
 
     public function destroy(AgentPayout $agentPayout)
     {
-        $this->authorizeAgentAccess($agentPayout);
+        $this->authorize('update', $agentPayout);
         $agentPayout->delete();
         toastr()->success('Agent payout deleted successfully.');
 

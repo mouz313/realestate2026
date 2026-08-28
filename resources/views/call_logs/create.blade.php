@@ -73,7 +73,7 @@
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label class="form-label">Category <span class="urdu">(زمرہ)</span></label>
-                        <select name="category" class="form-select">
+                        <select name="category" id="category" class="form-select">
                             <option value="">— Select —</option>
                             @foreach($categories as $c)
                                 <option value="{{ $c }}" @selected(old('category') == $c)>{{ ucfirst(str_replace('_', ' ', $c)) }}</option>
@@ -82,7 +82,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Transaction Type <span class="urdu">(قسم)</span></label>
-                        <select name="transaction_type" class="form-select">
+                        <select name="transaction_type" id="transaction_type" class="form-select">
                             <option value="">— Select —</option>
                             @foreach($transactionTypes as $t)
                                 <option value="{{ $t }}" @selected(old('transaction_type') == $t)>{{ ucfirst($t) }}</option>
@@ -91,7 +91,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">City <span class="urdu">(شہر)</span></label>
-                        <select name="city_id" class="form-select">
+                        <select name="city_id" id="city_id" class="form-select">
                             <option value="">— Select —</option>
                             @foreach($cities as $city)
                                 <option value="{{ $city->id }}" @selected(old('city_id') == $city->id)>{{ $city->name }}</option>
@@ -142,13 +142,13 @@
                 <div class="col-md-4">
                     <div class="mb-3">
                         <label class="form-label">Follow-up Date <span class="urdu">(فالو اپ کی تاریخ)</span></label>
-                        <input type="date" class="form-control" name="follow_up_date" value="{{ old('follow_up_date') }}">
+                        <input type="date" class="form-control" name="follow_up_date" id="follow_up_date" value="{{ old('follow_up_date') }}">
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="mb-3">
                         <label class="form-label">Status <span class="urdu">(کیفیت)</span></label>
-                        <select name="status" class="form-select">
+                        <select name="status" id="status" class="form-select">
                             @foreach($statuses as $s)
                                 <option value="{{ $s }}" @selected(old('status', 'new') == $s)>{{ ucfirst(str_replace('_', ' ', $s)) }}</option>
                             @endforeach
@@ -156,6 +156,8 @@
                     </div>
                 </div>
             </div>
+
+            @include('call_logs._property_matcher')
 
             <div class="mb-3">
                 <label class="form-label">Notes / Requirement <span class="urdu">(نوٹس / ضرورت)</span></label>

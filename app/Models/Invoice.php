@@ -77,4 +77,37 @@ class Invoice extends Model
         return $query->where('due_date', '<', now())
             ->where('payment_status', '!=', 'paid');
     }
+
+    public function scopeStatus($query, ?string $status)
+    {
+        return $status ? $query->where('status', $status) : $query;
+    }
+
+    public function scopePaymentStatus($query, ?string $paymentStatus)
+    {
+        return $paymentStatus ? $query->where('payment_status', $paymentStatus) : $query;
+    }
+
+    public function scopeUnpaid($query)
+    {
+        return $query->where('payment_status', '!=', 'paid');
+    }
+
+    /**
+     * Recompute paid_amount and payment_status from the linked payments.
+     * Returns $this so it can be chained after a payment create/update/delete.
+     */
+    public function recomputeStatus(): static
+    {
+        $paidAmount = $this->payments()->sum('amount');
+
+        $this->update([
+            'paid_amount' => $paidAmount,
+            'payment_status' => $paidAmount >= $this->total
+                ? 'paid'
+                : ($paidAmount > 0 ? 'partial' : 'pending'),
+        ]);
+
+        return $this;
+    }
 }

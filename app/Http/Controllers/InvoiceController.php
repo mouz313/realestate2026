@@ -8,6 +8,7 @@ use App\Mail\MailSettings;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Http\Requests\InvoiceRequest;
 use App\Models\ItemTemplate;
 use App\Models\Quotation;
 use App\Models\Setting;
@@ -23,10 +24,10 @@ class InvoiceController extends Controller
         $query = Invoice::with('client')->latest();
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $query->status($request->status);
         }
         if ($request->filled('payment_status')) {
-            $query->where('payment_status', $request->payment_status);
+            $query->paymentStatus($request->payment_status);
         }
         if ($request->filled('client_id')) {
             $query->where('client_id', $request->client_id);
@@ -63,23 +64,8 @@ class InvoiceController extends Controller
         return view('invoices.create', compact('clients', 'taxRate', 'taxLabel', 'currency', 'templates'));
     }
 
-    public function store(Request $request)
+    public function store(InvoiceRequest $request)
     {
-        $request->validate([
-            'client_id' => 'required|exists:clients,id',
-            'due_date' => 'nullable|date',
-            'notes' => 'nullable|string',
-            'tax_rate' => 'required|numeric|min:0|max:100',
-            'discount_type' => 'nullable|in:percentage,fixed',
-            'discount_value' => 'nullable|numeric|min:0',
-            'is_recurring' => 'boolean',
-            'recurring_frequency' => 'nullable|in:monthly,quarterly,yearly',
-            'items' => 'required|array|min:1',
-            'items.*.item_name' => 'required|string',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0',
-        ]);
-
         $subtotal = 0;
         $invoiceItems = [];
 
@@ -96,17 +82,13 @@ class InvoiceController extends Controller
             ];
         }
 
-        $discountType = $request->discount_type;
-        $discountValue = (float) ($request->discount_value ?? 0);
-        $discountAmount = $discountType === 'percentage'
-            ? $subtotal * ($discountValue / 100)
-            : $discountValue;
-        $discountAmount = min($discountAmount, $subtotal);
-
-        $taxRate = $request->tax_rate;
-        $taxableAmount = $subtotal - $discountAmount;
-        $taxAmount = $taxableAmount * ($taxRate / 100);
-        $total = $taxableAmount + $taxAmount;
+        $totals = \App\Services\PricingService::compute(
+            $subtotal,
+            $request->discount_type,
+            $request->discount_value,
+            $request->tax_rate
+        );
+        extract($totals);
 
         $data = [
             'client_id' => $request->client_id,
@@ -157,21 +139,8 @@ class InvoiceController extends Controller
         return view('invoices.edit', compact('invoice', 'clients', 'taxRate', 'taxLabel', 'currency', 'templates'));
     }
 
-    public function update(Request $request, Invoice $invoice)
+    public function update(InvoiceRequest $request, Invoice $invoice)
     {
-        $request->validate([
-            'client_id' => 'required|exists:clients,id',
-            'due_date' => 'nullable|date',
-            'notes' => 'nullable|string',
-            'tax_rate' => 'required|numeric|min:0|max:100',
-            'discount_type' => 'nullable|in:percentage,fixed',
-            'discount_value' => 'nullable|numeric|min:0',
-            'items' => 'required|array|min:1',
-            'items.*.item_name' => 'required|string',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0',
-        ]);
-
         $subtotal = 0;
         $invoiceItems = [];
 
@@ -188,17 +157,13 @@ class InvoiceController extends Controller
             ]);
         }
 
-        $discountType = $request->discount_type;
-        $discountValue = (float) ($request->discount_value ?? 0);
-        $discountAmount = $discountType === 'percentage'
-            ? $subtotal * ($discountValue / 100)
-            : $discountValue;
-        $discountAmount = min($discountAmount, $subtotal);
-
-        $taxRate = $request->tax_rate;
-        $taxableAmount = $subtotal - $discountAmount;
-        $taxAmount = $taxableAmount * ($taxRate / 100);
-        $total = $taxableAmount + $taxAmount;
+        $totals = \App\Services\PricingService::compute(
+            $subtotal,
+            $request->discount_type,
+            $request->discount_value,
+            $request->tax_rate
+        );
+        extract($totals);
 
         $invoice->update([
             'client_id' => $request->client_id,
@@ -327,11 +292,7 @@ class InvoiceController extends Controller
             'notes' => $request->notes,
         ]);
 
-        $paidAmount = $invoice->payments()->sum('amount');
-        $invoice->update([
-            'paid_amount' => $paidAmount,
-            'payment_status' => $paidAmount >= $invoice->total ? 'paid' : ($paidAmount > 0 ? 'partial' : 'pending'),
-        ]);
+        $invoice->recomputeStatus();
 
         toastr()->success('Payment recorded successfully.');
 
@@ -348,11 +309,7 @@ class InvoiceController extends Controller
 
     private function generateInvoiceNumber(): string
     {
-        $prefix = 'INV-';
-        $last = Invoice::latest()->first();
-        $number = $last ? intval(substr($last->invoice_number, 4)) + 1 : 1;
-
-        return $prefix.str_pad($number, 5, '0', STR_PAD_LEFT);
+        return \App\Services\SequenceService::invoice();
     }
 
     public function exportExcel(Request $request)

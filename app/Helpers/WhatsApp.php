@@ -6,12 +6,7 @@ class WhatsApp
 {
     public static function shareLink(string $phone, string $message): string
     {
-        $phone = preg_replace('/[^0-9]/', '', $phone);
-        if (substr($phone, 0, 1) === '0') {
-            $phone = '92'.substr($phone, 1);
-        } elseif (substr($phone, 0, 1) !== '92') {
-            $phone = '92'.$phone;
-        }
+        $phone = Phone::normalize($phone);
 
         return 'https://wa.me/'.$phone.'?text='.urlencode($message);
     }
@@ -21,7 +16,7 @@ class WhatsApp
         $currency = $settings['currency'] ?? 'PKR';
         $message = "Hello! I am interested in:\n";
         $message .= "Property: {$property->property_code} - {$property->title}\n";
-        $message .= "Price: {$currency} ".number_format($property->price, 0)."\n";
+        $message .= "Price: ".Money::format($property->price, $currency)."\n";
         $message .= "Location: {$property->city}".($property->sector_town ? ", {$property->sector_town}" : '')."\n";
         if ($property->bedrooms) {
             $message .= "Bedrooms: {$property->bedrooms}\n";
@@ -39,7 +34,7 @@ class WhatsApp
         $message = "Update on Deal {$deal->deal_number}:\n";
         $message .= "Property: {$deal->property?->title}\n";
         $message .= 'Status: '.str_replace('_', ' ', ucfirst($deal->status))."\n";
-        $message .= 'Amount: '.number_format($deal->sale_price ?? 0, 0);
+        $message .= 'Amount: '.Money::format($deal->sale_price ?? 0);
 
         return $message;
     }

@@ -57,13 +57,13 @@ class RentalRecordController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $data['tenant_id'] = $this->resolveClient(
+        $data['tenant_id'] = Client::resolveOrCreate(
             $request->input('tenant_id'),
             $request->input('tenant_name'),
             $request->input('tenant_phone'),
             'buyer'
         );
-        $data['landlord_id'] = $this->resolveClient(
+        $data['landlord_id'] = Client::resolveOrCreate(
             $request->input('landlord_id'),
             $request->input('landlord_name'),
             $request->input('landlord_phone'),
@@ -84,26 +84,6 @@ class RentalRecordController extends Controller
         toastr()->success('Rental record added successfully.');
 
         return redirect()->route('rental-records.index');
-    }
-
-    protected function resolveClient(?string $id, ?string $name, ?string $phone, string $type): ?int
-    {
-        if (! empty($id)) {
-            return (int) $id;
-        }
-
-        if (! empty($name)) {
-            $client = Client::create([
-                'name' => $name,
-                'phone' => $phone,
-                'client_type' => $type,
-                'company_id' => current_company_id(),
-            ]);
-
-            return $client->id;
-        }
-
-        return null;
     }
 
     public function show(RentalRecord $rentalRecord)
@@ -139,13 +119,13 @@ class RentalRecordController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $data['tenant_id'] = $this->resolveClient(
+        $data['tenant_id'] = Client::resolveOrCreate(
             $request->input('tenant_id'),
             $request->input('tenant_name'),
             $request->input('tenant_phone'),
             'buyer'
         );
-        $data['landlord_id'] = $this->resolveClient(
+        $data['landlord_id'] = Client::resolveOrCreate(
             $request->input('landlord_id'),
             $request->input('landlord_name'),
             $request->input('landlord_phone'),

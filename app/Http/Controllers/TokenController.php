@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Deal;
 use App\Models\Token;
+use App\Http\Requests\TokenRequest;
 use App\Notifications\TokenReceived;
 use Illuminate\Http\Request;
 
@@ -28,18 +29,9 @@ class TokenController extends Controller
         return view('tokens.create', compact('deals'));
     }
 
-    public function store(Request $request)
+    public function store(TokenRequest $request)
     {
-        $request->validate([
-            'deal_id' => 'required|exists:deals,id',
-            'amount' => 'required|numeric|min:0',
-            'payment_method' => 'nullable|string|max:50',
-            'received_date' => 'nullable|date',
-            'status' => 'nullable|string|in:received,pending,cancelled',
-            'notes' => 'nullable|string|max:1000',
-        ]);
-
-        $data = $request->all();
+        $data = $request->validated();
         $data['company_id'] = current_company_id();
 
         // Per-row authorization: only admins may mark a token as received;
@@ -63,7 +55,7 @@ class TokenController extends Controller
 
     public function show(Token $token)
     {
-        $this->authorizeViaDeal($token);
+        $this->authorize('update', $token);
         $token->load('deal');
 
         return view('tokens.show', compact('token'));
@@ -71,25 +63,15 @@ class TokenController extends Controller
 
     public function edit(Token $token)
     {
-        $this->authorizeViaDeal($token);
+        $this->authorize('update', $token);
         $deals = Deal::orderBy('deal_number')->get();
 
         return view('tokens.edit', compact('token', 'deals'));
     }
 
-    public function update(Request $request, Token $token)
+    public function update(TokenRequest $request, Token $token)
     {
-        $this->authorizeViaDeal($token);
-        $request->validate([
-            'deal_id' => 'required|exists:deals,id',
-            'amount' => 'required|numeric|min:0',
-            'payment_method' => 'nullable|string|max:50',
-            'received_date' => 'nullable|date',
-            'status' => 'nullable|string|in:received,pending,cancelled',
-            'notes' => 'nullable|string|max:1000',
-        ]);
-
-        $data = $request->all();
+        $data = $request->validated();
 
         // Only admins may change a token's status (mirrors store() guard).
         if (! auth()->user()->isAdmin()) {
@@ -104,7 +86,7 @@ class TokenController extends Controller
 
     public function destroy(Token $token)
     {
-        $this->authorizeViaDeal($token);
+        $this->authorize('update', $token);
         $token->delete();
         toastr()->success('Token deleted successfully.');
 
