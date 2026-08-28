@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Edit Quotation <span class="urdu">(کوٹیشن میں ترمیم)</span>')
+@section('title', 'Edit Quotation')
 
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">

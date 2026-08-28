@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Edit City <span class="urdu">(شہر کی ترمیم)</span>')
+@section('title', 'Edit City')
 
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">

@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'Commission Report <span class="urdu">(کمیشن رپورٹ)</span>')
+@section('title', 'Commission Report')
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Deleted Deals <span class="urdu">(مٹائی گئی ڈیلز)</span>')
+@section('title', 'Deleted Deals')
 
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">

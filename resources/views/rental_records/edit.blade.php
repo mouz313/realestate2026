@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Edit Rental Record <span class="urdu">(ریکارڈ ترمیم)</span>')
+@section('title', 'Edit Rental Record')
 
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">

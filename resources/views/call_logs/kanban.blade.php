@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Lead Kanban <span class="urdu">(لیڈ کنبان)</span>')
+@section('title', 'Lead Kanban')
 
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">

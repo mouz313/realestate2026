@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <title>@yield('title', 'Login') - {{ config('app.name') }}</title>
+    @php
+        $authTitleSection = \Illuminate\Support\Facades\View::getSection('title');
+        $authTitle = $authTitleSection ? strip_tags($authTitleSection) : 'Login';
+    @endphp
+    <title>{{ $authTitle }} - {{ config('app.name') }}</title>
     <link rel="stylesheet" href="{{ asset('assets/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/tabler-icons.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/skyline-theme.css') }}">

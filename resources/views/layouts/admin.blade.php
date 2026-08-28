@@ -7,7 +7,11 @@
     @php $brandFavicon = \App\Models\Setting::where('key', 'brand_favicon')->value('value'); @endphp
     <link rel="icon" type="image/x-icon" href="{{ $brandFavicon ? Storage::url($brandFavicon) : asset('favicon.ico') }}">
     @php $brandName = \App\Models\Setting::where('key', 'business_name')->value('value'); @endphp
-    <title>@yield('title', config('app.name')) - {{ $brandName ?? config('app.name') }}</title>
+    @php
+        $pageTitleSection = \Illuminate\Support\Facades\View::getSection('title');
+        $pageTitle = $pageTitleSection ? strip_tags($pageTitleSection) : config('app.name');
+    @endphp
+    <title>{{ $pageTitle }} - {{ $brandName ?? config('app.name') }}</title>
     <link href="{{ asset('assets/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/tabler-icons.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/custom.css') }}" rel="stylesheet">
@@ -24,18 +28,23 @@
     </button>
 
     {{-- Sidebar (Desktop) --}}
-    <div class="d-none d-lg-flex flex-column flex-shrink-0 p-3 sidebar" style="width: 260px; position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; z-index: 100;">
-        <a href="{{ route(dashboard_route()) }}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none gap-2 sidebar-brand">
-            @php $brand = \App\Models\Setting::whereIn('key', ['brand_logo', 'business_name'])->pluck('value', 'key'); @endphp
-            @if(($brand['brand_logo'] ?? null))
-                <img src="{{ Storage::url($brand['brand_logo']) }}" alt="{{ $brand['business_name'] ?? config('app.name') }}" class="sidebar-logo">
-            @else
-                <span class="fs-5 fw-bold">{{ $brand['business_name'] ?? config('app.name') }}</span>
-            @endif
-        </a>
-        <hr>
-        <x-sidebar />
-    </div>
+        <div class="d-none d-lg-flex flex-column flex-shrink-0 p-3 sidebar" id="desktopSidebar" style="width: 260px; position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; z-index: 100;">
+            <div class="d-flex align-items-center justify-content-between mb-2 gap-2">
+                <a href="{{ route(dashboard_route()) }}" class="d-flex align-items-center text-decoration-none gap-2 sidebar-brand min-w-0">
+                    @php $brand = \App\Models\Setting::whereIn('key', ['brand_logo', 'business_name'])->pluck('value', 'key'); @endphp
+                    @if(($brand['brand_logo'] ?? null))
+                        <img src="{{ Storage::url($brand['brand_logo']) }}" alt="{{ $brand['business_name'] ?? config('app.name') }}" class="sidebar-logo">
+                    @else
+                        <span class="fs-5 fw-bold">{{ $brand['business_name'] ?? config('app.name') }}</span>
+                    @endif
+                </a>
+                <button type="button" class="sidebar-collapse-btn d-none d-lg-inline-flex" id="sidebarCollapseBtn" title="Collapse sidebar" aria-label="Collapse sidebar">
+                    <i class="ti ti-chevrons-left"></i>
+                </button>
+            </div>
+            <hr>
+            <x-sidebar />
+        </div>
 
     {{-- Sidebar (Mobile Offcanvas) --}}
     <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
@@ -160,6 +169,24 @@
         })();
     </script>
     @include('partials.toastr')
+    @include('partials.delete-modal')
+
+    <script>
+        // Collapsible desktop sidebar (persisted in localStorage)
+        (function () {
+            const KEY = 'sidebar-collapsed';
+            const btn = document.getElementById('sidebarCollapseBtn');
+            if (btn) {
+                if (localStorage.getItem(KEY) === '1') {
+                    document.body.classList.add('sidebar-collapsed');
+                }
+                btn.addEventListener('click', function () {
+                    const collapsed = document.body.classList.toggle('sidebar-collapsed');
+                    localStorage.setItem(KEY, collapsed ? '1' : '0');
+                });
+            }
+        })();
+    </script>
     <script>
         @if (session()->has('toastr'))
             @php $t = session('toastr'); @endphp

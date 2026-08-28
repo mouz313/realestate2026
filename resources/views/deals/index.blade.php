@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Deals <span class="urdu">(ڈیلز)</span>')
+@section('title', 'Deals')
 
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">
@@ -130,7 +130,7 @@
                 <tr>
                     <td colspan="11">
                         <div class="empty-state">
-                            <i class="ti ti-handshake"></i>
+                            <i class="ti ti-businessplan"></i>
                             <p>No deals found. <span class="urdu">(کوئی ڈیل نہیں ملی)</span></p>
                             <a href="{{ route('deals.create') }}" class="text-decoration-none fw-medium"><span class="urdu">(اپنی پہلی ڈیل شامل کریں)</span></a>
                         </div>

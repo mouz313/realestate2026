@@ -72,7 +72,7 @@ class SearchController extends Controller
                 'label' => $d->deal_number,
                 'sub' => trim(($d->type ?: '').($d->buyer ? ' · Buyer: '.$d->buyer->name : ($d->seller ? ' · Seller: '.$d->seller->name : '')).($d->property ? ' · '.$d->property->title : ''), ' · '),
                 'url' => route('deals.show', $d),
-                'icon' => 'ti ti-handshake',
+                'icon' => 'ti ti-businessplan',
             ]);
 
         $quotations = Quotation::with('client')

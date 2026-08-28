@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Quotation <span class="urdu">(کوٹیشن)</span> ' . $quotation->quote_number)
+@section('title', 'Quotation ' . $quotation->quote_number)
 
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">

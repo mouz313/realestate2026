@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Token Details <span class="urdu">(ٹوکن کی تفصیلات)</span>')
+@section('title', 'Token Details')
 
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">

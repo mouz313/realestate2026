@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Log Call <span class="urdu">(کال درج کریں)</span>')
+@section('title', 'Log Call')
 
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">

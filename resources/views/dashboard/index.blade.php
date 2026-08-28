@@ -117,7 +117,7 @@
                         <div class="stat-value">{{ $stats['active_deals'] }}</div>
                         <a href="{{ route('deals.index') }}" class="stat-link">View <i class="ti ti-arrow-right"></i></a>
                     </div>
-                    <div class="stat-icon-wrap flex-shrink-0" style="background: rgba(99,102,241,0.1);color:#6366f1;"><i class="ti ti-handshake"></i></div>
+                    <div class="stat-icon-wrap flex-shrink-0" style="background: rgba(99,102,241,0.1);color:#6366f1;"><i class="ti ti-businessplan"></i></div>
                 </div>
             </div>
         </div>

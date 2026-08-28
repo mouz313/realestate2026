@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Edit Property Visit <span class="urdu">(جائیداد کے دورے میں ترمیم)</span>')
+@section('title', 'Edit Property Visit')
 
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">

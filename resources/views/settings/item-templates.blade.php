@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Item Templates <span class="urdu">(آئٹم ٹیمپلیٹس)</span>')
+@section('title', 'Item Templates')
 
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">

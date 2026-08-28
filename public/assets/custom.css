@@ -1321,3 +1321,78 @@ hr {
     border-top: 1px solid rgba(255,255,255,0.10);
     margin: 0.5rem 0;
 }
+
+/* Whole-sidebar collapse button */
+.sidebar-collapse-btn {
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    color: #c7c8da;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+.sidebar-collapse-btn:hover { color: #fff; background: rgba(255,255,255,0.12); }
+.sidebar-collapse-btn i { font-size: 1.1rem; transition: transform 0.2s ease; }
+
+/* Sidebar category dropdown toggles */
+.sidebar-group-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    background: transparent;
+    border: none;
+    border-radius: 0.4rem;
+    color: #c7c8da;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    padding: 0.6rem 0.7rem;
+    margin: 0.1rem 0;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+.sidebar-group-toggle:hover { color: #fff; background: rgba(255,255,255,0.07); }
+.sidebar-group-toggle:focus { outline: none; }
+.sidebar-group-toggle .label-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sidebar-group-toggle .sidebar-group-caret {
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+.sidebar-group-toggle[aria-expanded="false"] .sidebar-group-caret {
+    transform: rotate(-90deg);
+}
+
+/* Collapsible whole sidebar (desktop only) */
+@media (min-width: 992px) {
+    #desktopSidebar.sidebar { transition: width 0.2s ease; }
+    body.sidebar-collapsed #desktopSidebar.sidebar { width: 76px !important; }
+    body.sidebar-collapsed .main-content-area { margin-left: 76px; }
+    body.sidebar-collapsed #sidebarCollapseBtn i { transform: rotate(180deg); }
+    body.sidebar-collapsed .sidebar .sidebar-group-toggle { display: none; }
+    body.sidebar-collapsed .sidebar-brand span { display: none; }
+    body.sidebar-collapsed .sidebar .sidebar-nav-item { justify-content: center; position: relative; }
+    body.sidebar-collapsed .sidebar .sidebar-nav-item > span:not(.sidebar-nav-badge),
+    body.sidebar-collapsed .sidebar .sidebar-nav-urdu { display: none; }
+    body.sidebar-collapsed .sidebar-nav-badge {
+        margin-left: 0;
+        position: absolute;
+        top: 2px;
+        right: 8px;
+    }
+    body.sidebar-collapsed .sidebar hr { margin: 0.5rem 0; }
+}

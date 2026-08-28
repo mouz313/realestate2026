@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'Agent Performance <span class="urdu">(ایجنٹ کارکردگی)</span>')
+@section('title', 'Agent Performance')
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">

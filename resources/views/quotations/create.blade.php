@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'New Quotation <span class="urdu">(نیا کوٹیشن)</span>')
+@section('title', 'New Quotation')
 
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">

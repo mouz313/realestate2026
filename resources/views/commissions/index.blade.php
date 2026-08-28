@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Commissions <span class="urdu">(کمیشنز)</span>')
+@section('title', 'Commissions')
 
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">
@@ -66,9 +66,14 @@
                                 <i class="ti ti-file-download"></i>
                             </a>
                             @if(in_array($commission->status, ['pending', 'approved']))
-                            <form action="{{ route('commissions.mark-paid', $commission) }}" method="POST">
+                            <form action="{{ route('commissions.mark-paid', $commission) }}" method="POST" class="delete-form"
+                                  data-confirm="Mark this commission as paid?"
+                                  data-confirm-title='<i class="ti ti-check text-success"></i> <span>Mark Paid</span>'
+                                  data-confirm-btn-class="btn btn-success"
+                                  data-confirm-btn-icon='<i class="ti ti-check me-1"></i> '
+                                  data-confirm-btn-label='Mark Paid'>
                                 @csrf @method('PATCH')
-                                <button type="submit" class="btn btn-sm btn-outline-success" title="Mark Paid" onclick="return confirm('Mark this commission as paid?')">
+                                <button type="button" class="btn btn-sm btn-outline-success" title="Mark Paid" data-delete-trigger>
                                     <i class="ti ti-check"></i>
                                 </button>
                             </form>

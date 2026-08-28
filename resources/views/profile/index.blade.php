@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Profile <span class="urdu">(پروفائل)</span>')
+@section('title', 'Profile')
 
 @section('breadcrumbs')
 <nav aria-label="breadcrumb">
@@ -39,10 +39,13 @@
                         <input type="file" id="avatarInput" name="avatar" accept="image/*" class="d-none" onchange="document.getElementById('avatarForm').submit();">
                     </form>
                     @if($user->avatar)
-<form action="{{ route('profile.index') }}" method="POST">
+<form action="{{ route('profile.index') }}" method="POST" class="delete-form"
+                              data-confirm="Are you sure you want to remove your avatar?"
+                              data-confirm-title='<i class="ti ti-alert-triangle text-danger"></i> <span>Remove Avatar</span>'
+                              data-confirm-btn-label='Remove'>
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')"><i class="ti ti-trash me-1"></i> Remove Avatar <span class="urdu">(اوتار ہٹائیں)</span></button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-delete-trigger><i class="ti ti-trash me-1"></i> Remove Avatar <span class="urdu">(اوتار ہٹائیں)</span></button>
                         </form>
                     @endif
                 </div>
