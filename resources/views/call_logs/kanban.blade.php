@@ -88,7 +88,7 @@
                     </div>
                     <div class="kanban-card-meta d-flex justify-content-between align-items-center mt-1">
                         <span><i class="ti ti-user"></i> {{ $c->assignedAgent?->name ?? 'Unassigned' }}</span>
-                        <a href="{{ WhatsApp::shareLink($c->phone, 'Assalam o Alaikum '.$c->name.', regarding your enquiry...') }}"
+                        <a href="{{ \App\Helpers\WhatsApp::shareLink($c->phone, 'Assalam o Alaikum '.$c->name.', regarding your enquiry...') }}"
                            target="_blank" class="text-success" title="WhatsApp">
                             <i class="ti ti-brand-whatsapp"></i>
                         </a>

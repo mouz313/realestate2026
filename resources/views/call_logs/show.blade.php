@@ -20,14 +20,14 @@
     </div>
     <div class="d-flex gap-2">
         <x-status-badge :status="$callLog->status" size="md" />
-        <a href="{{ WhatsApp::shareLink($callLog->phone, 'Assalam o Alaikum '.$callLog->name.', this is regarding your enquiry. How can we help you?') }}"
+        <a href="{{ \App\Helpers\WhatsApp::shareLink($callLog->phone, 'Assalam o Alaikum '.$callLog->name.', this is regarding your enquiry. How can we help you?') }}"
            target="_blank"
            class="btn btn-success"
            title="Chat on WhatsApp">
             <i class="ti ti-brand-whatsapp"></i> WhatsApp
         </a>
         @if($callLog->alternate_phone)
-        <a href="{{ WhatsApp::shareLink($callLog->alternate_phone, 'Assalam o Alaikum '.$callLog->name.', this is regarding your enquiry.') }}"
+        <a href="{{ \App\Helpers\WhatsApp::shareLink($callLog->alternate_phone, 'Assalam o Alaikum '.$callLog->name.', this is regarding your enquiry.') }}"
            target="_blank"
            class="btn btn-outline-success"
            title="Chat on alternate WhatsApp">

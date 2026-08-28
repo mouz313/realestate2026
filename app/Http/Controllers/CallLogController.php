@@ -124,7 +124,7 @@ class CallLogController extends Controller
             'assigned_agent_id' => 'nullable|exists:agents,id',
             'property_id' => 'nullable|exists:properties,id',
             'client_id' => 'nullable|exists:clients,id',
-            'caller_role' => 'nullable|in:seller,buyer',
+            'caller_role' => 'nullable|in:seller,buyer,rent,installment',
             'force_save' => 'nullable|boolean',
         ]);
 
@@ -257,7 +257,7 @@ class CallLogController extends Controller
             'assigned_agent_id' => 'nullable|exists:agents,id',
             'property_id' => 'nullable|exists:properties,id',
             'client_id' => 'nullable|exists:clients,id',
-            'caller_role' => 'nullable|in:seller,buyer',
+            'caller_role' => 'nullable|in:seller,buyer,rent,installment',
         ]);
 
         $callLog->update($data);

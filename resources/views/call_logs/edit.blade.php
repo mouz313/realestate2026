@@ -24,12 +24,16 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label class="form-label">Caller is <span class="urdu">(کال کرنے والا)</span></label>
-                        <select name="caller_role" class="form-select">
-                            <option value="">— Unknown —</option>
-                            <option value="seller" @selected(old('caller_role', $callLog->caller_role) == 'seller')>Seller <span class="urdu">(بیچنے والا)</span></option>
-                            <option value="buyer" @selected(old('caller_role', $callLog->caller_role) == 'buyer')>Buyer <span class="urdu">(خریدنے والا)</span></option>
-                        </select>
+                        <label class="form-label d-block">Caller is <span class="urdu">(کال کرنے والا)</span></label>
+                        @php $cr = old('caller_role', $callLog->caller_role ?? ''); @endphp
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach([['seller','Seller','بیچنے والا'],['buyer','Buyer','خریدنے والا'],['rent','Rent','کرایہ'],['installment','Installment','قسط']] as $opt)
+                                <input type="radio" class="btn-check" name="caller_role" id="cr_edit_{{ $opt[0] }}" value="{{ $opt[0] }}" autocomplete="off" @checked($cr == $opt[0])>
+                                <label class="btn btn-outline-primary btn-sm" for="cr_edit_{{ $opt[0] }}">{{ $opt[1] }} <span class="urdu">({{ $opt[2] }})</span></label>
+                            @endforeach
+                            <input type="radio" class="btn-check" name="caller_role" id="cr_edit_unknown" value="" autocomplete="off" @checked($cr == '')>
+                            <label class="btn btn-outline-secondary btn-sm" for="cr_edit_unknown">Unknown <span class="urdu">(نامعلوم)</span></label>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Link to Existing Client <span class="urdu">(موجودہ گاہک سے جوڑیں)</span></label>
