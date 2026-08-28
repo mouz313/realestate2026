@@ -1,7 +1,9 @@
 <?php
 
 return [
-    'token' => env('CRON_TOKEN', 'skyline-cron-2026'),
+    // Must be set per deployment via CRON_TOKEN in .env. No hardcoded default:
+    // if unset, the cron endpoint rejects all requests (see CronController).
+    'token' => env('CRON_TOKEN'),
 
     'jobs' => [
         'invoices-recurring' => [

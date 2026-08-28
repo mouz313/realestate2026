@@ -126,7 +126,14 @@ Route::middleware('auth')->group(function () {
         // Records: Available properties — before the properties resource
         Route::get('/properties/available', [PropertyController::class, 'available'])->middleware('permission:view_properties|view_own_properties')->name('properties.available');
         Route::get('/properties/export', [PropertyController::class, 'exportExcel'])->middleware('permission:export_reports')->name('properties.export-excel');
-        Route::resource('properties', PropertyController::class)->middleware('permission:view_properties|view_own_properties');
+        Route::resource('properties', PropertyController::class)
+            ->only(['index', 'show'])
+            ->middleware('permission:view_properties|view_own_properties');
+        Route::get('/properties/create', [PropertyController::class, 'create'])->middleware('permission:create_properties')->name('properties.create');
+        Route::post('/properties', [PropertyController::class, 'store'])->middleware('permission:create_properties')->name('properties.store');
+        Route::get('/properties/{property}/edit', [PropertyController::class, 'edit'])->middleware('permission:edit_any_properties|edit_own_properties')->name('properties.edit');
+        Route::put('/properties/{property}', [PropertyController::class, 'update'])->middleware('permission:edit_any_properties|edit_own_properties')->name('properties.update');
+        Route::delete('/properties/{property}', [PropertyController::class, 'destroy'])->middleware('permission:delete_properties')->name('properties.destroy');
         // Records: Rented Records + Call Logs
         Route::resource('rental-records', RentalRecordController::class)->middleware('permission:view_deals');
         // Declared before the call-logs resource so {call_log} does not capture this literal
@@ -172,11 +179,32 @@ Route::middleware('auth')->group(function () {
         Route::patch('/deals/{deal}/restore', [DealController::class, 'restore'])->middleware('permission:view_deals')->name('deals.restore');
         Route::delete('/deals/{deal}/force-delete', [DealController::class, 'forceDelete'])->middleware('permission:delete_deals')->name('deals.force-delete');
 
-        Route::resource('tokens', TokenController::class)->middleware('permission:view_deals');
+        Route::resource('tokens', TokenController::class)
+            ->only(['index', 'show'])
+            ->middleware('permission:view_deals');
+        Route::get('/tokens/create', [TokenController::class, 'create'])->middleware('permission:manage_tokens')->name('tokens.create');
+        Route::post('/tokens', [TokenController::class, 'store'])->middleware('permission:manage_tokens')->name('tokens.store');
+        Route::get('/tokens/{token}/edit', [TokenController::class, 'edit'])->middleware('permission:manage_tokens')->name('tokens.edit');
+        Route::put('/tokens/{token}', [TokenController::class, 'update'])->middleware('permission:manage_tokens')->name('tokens.update');
+        Route::delete('/tokens/{token}', [TokenController::class, 'destroy'])->middleware('permission:manage_tokens')->name('tokens.destroy');
         Route::resource('property-visits', PropertyVisitController::class)->middleware('permission:view_visits');
-        Route::resource('commissions', CommissionController::class)->middleware('permission:view_all_commissions|view_own_commissions');
+        Route::resource('commissions', CommissionController::class)
+            ->only(['index', 'show'])
+            ->middleware('permission:view_all_commissions|view_own_commissions');
+        Route::get('/commissions/create', [CommissionController::class, 'create'])->middleware('permission:manage_commissions')->name('commissions.create');
+        Route::post('/commissions', [CommissionController::class, 'store'])->middleware('permission:manage_commissions')->name('commissions.store');
+        Route::get('/commissions/{commission}/edit', [CommissionController::class, 'edit'])->middleware('permission:manage_commissions')->name('commissions.edit');
+        Route::put('/commissions/{commission}', [CommissionController::class, 'update'])->middleware('permission:manage_commissions')->name('commissions.update');
+        Route::delete('/commissions/{commission}', [CommissionController::class, 'destroy'])->middleware('permission:manage_commissions')->name('commissions.destroy');
         Route::patch('/commissions/{commission}/mark-paid', [CommissionController::class, 'markPaid'])->middleware('permission:mark_commission_paid')->name('commissions.mark-paid');
-        Route::resource('agent-payouts', AgentPayoutController::class)->middleware('permission:view_payouts');
+        Route::resource('agent-payouts', AgentPayoutController::class)
+            ->only(['index', 'show'])
+            ->middleware('permission:view_payouts');
+        Route::get('/agent-payouts/create', [AgentPayoutController::class, 'create'])->middleware('permission:create_payouts')->name('agent-payouts.create');
+        Route::post('/agent-payouts', [AgentPayoutController::class, 'store'])->middleware('permission:create_payouts')->name('agent-payouts.store');
+        Route::get('/agent-payouts/{agent_payout}/edit', [AgentPayoutController::class, 'edit'])->middleware('permission:create_payouts')->name('agent-payouts.edit');
+        Route::put('/agent-payouts/{agent_payout}', [AgentPayoutController::class, 'update'])->middleware('permission:create_payouts')->name('agent-payouts.update');
+        Route::delete('/agent-payouts/{agent_payout}', [AgentPayoutController::class, 'destroy'])->middleware('permission:approve_payouts')->name('agent-payouts.destroy');
 
         Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 

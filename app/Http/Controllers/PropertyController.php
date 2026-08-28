@@ -143,6 +143,16 @@ class PropertyController extends Controller
             $data['assigned_agent_id'] = auth()->user()->agent_id;
         }
 
+        // An agent who brings a property is recorded as the sourcing agent (context only).
+        if (auth()->user()->isAgent()) {
+            $data['sourced_by_agent_id'] = auth()->user()->agent_id;
+        }
+
+        // Conflict-of-interest guard: only admins may set the commission rate.
+        if (! auth()->user()->isAdmin() && $request->filled('commission_rate')) {
+            unset($data['commission_rate']);
+        }
+
         $data['owner_id'] = $this->resolveClient(
             $request->input('owner_id'),
             $request->input('owner_name'),
@@ -262,6 +272,11 @@ class PropertyController extends Controller
         $data['nearby_places'] = $request->has('nearby_places') ? $request->nearby_places : null;
         $data['utilities'] = $request->has('utilities') ? $request->utilities : null;
         $data['city_id'] = $request->city ? City::where('name', $request->city)->value('id') : null;
+
+        // Conflict-of-interest guard: only admins may change the commission rate.
+        if (! auth()->user()->isAdmin() && $request->filled('commission_rate')) {
+            unset($data['commission_rate']);
+        }
 
         $data['owner_id'] = $this->resolveClient(
             $request->input('owner_id'),

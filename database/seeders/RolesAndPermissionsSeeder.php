@@ -46,6 +46,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 ['slug' => 'edit_any_deals', 'name' => 'Edit Any Deals'],
                 ['slug' => 'close_deals', 'name' => 'Close Deals'],
                 ['slug' => 'delete_deals', 'name' => 'Delete Deals'],
+                ['slug' => 'manage_tokens', 'name' => 'Manage Tokens'],
             ],
             'Quotations' => [
                 ['slug' => 'view_quotations', 'name' => 'View Quotations'],

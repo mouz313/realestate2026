@@ -39,7 +39,16 @@ class TokenController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $token = Token::create($request->all());
+        $data = $request->all();
+        $data['company_id'] = current_company_id();
+
+        // Per-row authorization: only admins may mark a token as received;
+        // everyone else's tokens start pending (prevents status spoofing).
+        if (! auth()->user()->isAdmin()) {
+            $data['status'] = 'pending';
+        }
+
+        $token = Token::create($data);
 
         $recipients = [];
         if ($token->deal && $token->deal->agent && $token->deal->agent->user) {

@@ -198,9 +198,14 @@ class DealController extends Controller
 
     /**
      * Link a deal to its originating enquiry / visit and auto-create the
-     * closing agent's commission. The agent who closes the deal receives the
-     * full commission (agency_share = 0). Commission % defaults to the
-     * property's own commission_rate when not provided on the deal.
+     * closing agent's commission.
+     *
+     * Commission model (see project notes):
+     *  - The agency's fee = commission_rate% of the deal value (sale price, or
+     *    monthly rent for rentals), collected 50% from landlord + 50% from tenant.
+     *  - The agency keeps 90% and pays the closing agent 10% of the total
+     *    collected commission. commission_amount = full fee, agent_commission
+     *    = 10%, agency_share = 90%.
      */
     protected function syncDealExtras(Request $request, Deal $deal): void
     {
@@ -216,21 +221,28 @@ class DealController extends Controller
         }
 
         $percentage = $deal->commission_percentage ?? optional($deal->property)->commission_rate;
-        if (is_null($percentage) && ! $deal->commission_amount) {
+        $base = $deal->sale_price ?: optional($deal->property)->price;
+
+        if (is_null($percentage) && is_null($deal->commission_amount)) {
             return;
         }
 
-        $amount = $deal->commission_amount;
-        if (is_null($amount) && $deal->sale_price && ! is_null($percentage)) {
-            $amount = $deal->sale_price * $percentage / 100;
+        $total = $deal->commission_amount;
+        if (is_null($total) && $base && ! is_null($percentage)) {
+            $total = $base * $percentage / 100;
         }
-        if (is_null($amount)) {
+        if (is_null($total)) {
             return;
         }
-        $amount = round((float) $amount, 2);
+        $total = round((float) $total, 2);
 
-        $deal->agent_commission = $amount;
-        $deal->agency_share = 0;
+        $agentPayoutRate = 0.10;
+        $agentCommission = round($total * $agentPayoutRate, 2);
+        $agencyShare = round($total - $agentCommission, 2);
+
+        $deal->commission_amount = $total;
+        $deal->agent_commission = $agentCommission;
+        $deal->agency_share = $agencyShare;
         $deal->save();
 
         $deal->commissions()->updateOrCreate(
@@ -239,7 +251,7 @@ class DealController extends Controller
                 'company_id' => $deal->company_id,
                 'type' => $deal->type ?? 'sale',
                 'percentage' => $percentage,
-                'amount' => $amount,
+                'amount' => $agentCommission,
                 'status' => 'pending',
             ]
         );

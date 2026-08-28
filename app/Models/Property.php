@@ -20,6 +20,7 @@ class Property extends Model
 
     protected $fillable = [
         'company_id', 'property_code', 'title', 'category', 'transaction_type', 'status', 'commission_rate',
+        'sourced_by_agent_id',
         'possession_status', 'possession_year',
         'price', 'price_per_sqft', 'currency', 'location_address', 'city', 'city_id',
         'sector_town', 'block', 'plot_size', 'plot_size_unit', 'land_area',
@@ -54,6 +55,11 @@ class Property extends Model
             'expiry_date' => 'date',
             'views_count' => 'integer',
         ];
+    }
+
+    public function sourcedByAgent(): BelongsTo
+    {
+        return $this->belongsTo(Agent::class, 'sourced_by_agent_id');
     }
 
     public function owner(): BelongsTo

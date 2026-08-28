@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Agent;
 use App\Models\AgentPayout;
+use App\Models\Commission;
 use App\Notifications\CommissionPayoutMade;
 use Illuminate\Http\Request;
 
@@ -38,7 +39,26 @@ class AgentPayoutController extends Controller
         ]);
 
         $data = $request->all();
-        $data['commission_ids'] = $request->has('commission_ids') ? json_encode($request->commission_ids) : null;
+        $data['company_id'] = current_company_id();
+
+        // Per-row authorization: an agent may only create a payout for
+        // themselves, and referenced commissions must belong to that agent.
+        if (auth()->user()->isAgent()) {
+            $data['agent_id'] = auth()->user()->agent_id;
+        }
+
+        if ($request->has('commission_ids')) {
+            $ids = $request->commission_ids;
+            if (auth()->user()->isAgent()) {
+                $allowed = Commission::where('agent_id', $data['agent_id'])
+                    ->where('company_id', $data['company_id'])
+                    ->pluck('id')->all();
+                $ids = collect($ids)->intersect($allowed)->values()->all();
+            }
+            $data['commission_ids'] = json_encode($ids);
+        } else {
+            $data['commission_ids'] = null;
+        }
 
         $payout = AgentPayout::create($data);
 

@@ -286,6 +286,11 @@
         <h5><i class="ti ti-currency-dollar me-1"></i> Commissions <span class="urdu">(کمیشنز)</span></h5>
         <a href="{{ route('commissions.create', ['deal_id' => $deal->id]) }}" class="btn btn-sm btn-dark"><i class="ti ti-plus"></i> <span class="urdu">(کمیشن شامل کریں)</span></a>
     </div>
+    @if($deal->property && $deal->property->sourcedByAgent)
+    <div class="px-3 pt-2 pb-1 small text-secondary">
+        <i class="ti ti-user-plus"></i> Property sourced by <strong>{{ $deal->property->sourcedByAgent->name }}</strong>
+    </div>
+    @endif
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover mb-0">

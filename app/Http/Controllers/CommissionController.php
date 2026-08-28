@@ -40,7 +40,20 @@ class CommissionController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        Commission::create($request->all());
+        $data = $request->all();
+        $data['company_id'] = current_company_id();
+
+        // Per-row authorization: an agent may only create commissions for
+        // themselves, and only admins with the payout permission may set a
+        // non-pending status (prevents status spoofing via mass-assignment).
+        if (auth()->user()->isAgent()) {
+            $data['agent_id'] = auth()->user()->agent_id;
+        }
+        if (! auth()->user()->hasPermission('mark_commission_paid')) {
+            $data['status'] = 'pending';
+        }
+
+        Commission::create($data);
         toastr()->success('Commission added successfully.');
 
         return redirect()->route('commissions.index');

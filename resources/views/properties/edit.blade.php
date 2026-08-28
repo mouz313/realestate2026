@@ -74,9 +74,14 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Commission Rate <span class="urdu">(کمیشن ریٹ)</span> (%)</label>
-                        <input type="number" step="0.01" min="0" max="100" class="form-control @error('commission_rate') is-invalid @enderror" name="commission_rate" value="{{ old('commission_rate', $property->commission_rate) }}" placeholder="e.g. 2">
-                        <div class="form-text"><span class="urdu">(ڈیل مکمل ہونے پر ایجنٹ کا کمیشن)</span></div>
-                        @error('commission_rate') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        @if(auth()->user()->isAdmin())
+                            <input type="number" step="0.01" min="0" max="100" class="form-control @error('commission_rate') is-invalid @enderror" name="commission_rate" value="{{ old('commission_rate', $property->commission_rate) }}" placeholder="e.g. 2">
+                            <div class="form-text"><span class="urdu">(ڈیل مکمل ہونے پر ایجنٹ کا کمیشن)</span></div>
+                            @error('commission_rate') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        @else
+                            <input type="number" step="0.01" min="0" max="100" class="form-control" name="commission_rate" value="{{ old('commission_rate', $property->commission_rate) }}" disabled>
+                            <div class="form-text">Only admins can set the commission rate. <span class="urdu">(صرف ایڈمن کمیشن ریٹ سیٹ کر سکتا ہے)</span></div>
+                        @endif
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Possession Status <span class="urdu">(قبضے کی کیفیت)</span></label>
